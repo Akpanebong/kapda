@@ -1,0 +1,17 @@
+KAPDA application error report
+Report ID: {{ details.report_id }}
+Exception: {{ details.exception_type }}
+Message: {{ details.exception_message }}
+
+Request
+=======
+Method: {{ details.request.method }}
+Path: {{ details.request.path }}
+URL: {{ details.request.absolute_uri }}
+User: {{ details.request.user }} (ID: {{ details.request.user_id|default:"n/a" }})
+{% for key, value in details.request.meta.items %}{{ key }}: {{ value }}
+{% endfor %}
+
+Traceback
+=========
+{{ details.traceback }}

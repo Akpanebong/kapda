@@ -1,0 +1,5 @@
+{% extends "errors/status_base.html" %}
+{% block title %}Page not found | KAPDA{% endblock %}
+{% block heading %}Page not found{% endblock %}
+{% block message %}The page you requested does not exist or may have moved.{% endblock %}
+{% block detail %}<p class="small muted">Requested path: {{ requested_path }}</p>{% endblock %}

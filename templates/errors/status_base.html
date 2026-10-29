@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}KAPDA | Application message{% endblock %}</title>
+    <style>
+        body{margin:0;background:#f4f7fa;color:#183247;font-family:Arial,sans-serif}
+        main{max-width:680px;margin:8vh auto;padding:0 20px}.card{background:#fff;border:1px solid #dbe5ec;border-radius:16px;padding:40px;box-shadow:0 12px 35px #18324714}
+        .eyebrow{color:#2c5d83;font-size:12px;font-weight:700;letter-spacing:.12em}h1{margin:10px 0 14px;font-size:32px}p{color:#5b6d79;line-height:1.6}.muted{font-size:13px}
+        .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}a{display:inline-block;padding:11px 18px;border-radius:8px;text-decoration:none}.primary{background:#2c5d83;color:#fff}.secondary{border:1px solid #b9c8d3;color:#2c5d83}
+    </style>
+</head>
+<body><main><section class="card"><div class="eyebrow">KAPDA DIGITAL PROGRAMME SYSTEM</div><h1>{% block heading %}Application message{% endblock %}</h1><p>{% block message %}The request could not be completed.{% endblock %}</p>{% block detail %}{% endblock %}<div class="actions"><a class="primary" href="/">Return to KAPDA</a><a class="secondary" href="javascript:history.back()">Go back</a></div></section></main></body>
+</html>
