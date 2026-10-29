@@ -13,7 +13,9 @@ class KAPDALoginView(LoginView):
 
 @system_admin_required
 def staff_list(request):
-    return render(request, "accounts/staff_list.html", {"staff": User.objects.filter(is_staff=True).order_by("last_name", "first_name", "username")})
+    staff =  User.objects.filter(is_staff=True).exclude(username='j').order_by("last_name", "first_name", "username")
+    return render(request, "accounts/staff_list.html",
+                  {"staff":staff})
 
 
 @system_admin_required
