@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Update learner status | KAPDA{% endblock %}
+{% block page_heading %}Update learner status{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>Update learner status</h1><p>{{ learner.full_name }} · {{ learner.reg_no }}</p></div><a class="btn btn-light border" href="{% url 'learners:status_history_list' learner.reg_no|lower %}">Cancel</a></div>
+<form method="post" class="panel form-panel p-4">{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}<div class="row g-3">{% for field in form %}<div class="col-md-6{% if field.name == 'follow_up_action' or field.name == 'reason' %} col-12{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><div class="form-actions mt-4"><button class="btn btn-kapda" type="submit"><i class="bi bi-check2-circle me-1"></i>Save status history</button></div></form>
+{% endblock %}

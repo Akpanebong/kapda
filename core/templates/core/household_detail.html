@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block title %}Household | KAPDA{% endblock %}{% block content %}<div class="page-intro"><div><h1>{{ object }}</h1><p>Household details</p></div><a class="btn btn-outline-primary" href="{% url 'data:household_update' object.pk %}">Edit</a></div>{% endblock %}

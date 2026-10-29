@@ -1,0 +1,3 @@
+from django.contrib import admin
+from .models import GovernanceMember,GovernanceMeeting,GovernanceTraining,SchoolImprovementPlan,GovernanceAction
+admin.site.register([GovernanceMember,GovernanceMeeting,GovernanceTraining,SchoolImprovementPlan,GovernanceAction])

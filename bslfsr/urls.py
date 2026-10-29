@@ -1,0 +1,41 @@
+from django.urls import path
+from .views import livelihood_dashboard
+from .crud_views import (beneficiary_create, beneficiary_delete, beneficiary_detail, beneficiary_list, beneficiary_update,
+                         farmer_record_create, farmer_record_delete, farmer_record_detail, farmer_record_list, farmer_record_update,
+                         peace_activity_create, peace_activity_delete, peace_activity_detail, peace_activity_list, peace_activity_update,
+                         peace_committee_create, peace_committee_delete, peace_committee_detail, peace_committee_list, peace_committee_update)
+from .crud_views import (peace_committee_member_create, peace_committee_member_delete, peace_committee_member_detail, peace_committee_member_list, peace_committee_member_update,
+                         peace_committee_meeting_create, peace_committee_meeting_delete, peace_committee_meeting_detail, peace_committee_meeting_list, peace_committee_meeting_update)
+app_name="bslfsr"
+urlpatterns=[
+    path("",livelihood_dashboard,name="livelihood_dashboard"),
+    path("beneficiaries/", beneficiary_list, name="beneficiary_list"),
+    path("beneficiaries/add/", beneficiary_create, name="beneficiary_create"),
+    path("beneficiaries/<int:pk>/", beneficiary_detail, name="beneficiary_detail"),
+    path("beneficiaries/<int:pk>/edit/", beneficiary_update, name="beneficiary_update"),
+    path("beneficiaries/<int:pk>/delete/", beneficiary_delete, name="beneficiary_delete"),
+    path("farmers/", farmer_record_list, name="farmer_record_list"),
+    path("farmers/add/", farmer_record_create, name="farmer_record_create"),
+    path("farmers/<int:pk>/", farmer_record_detail, name="farmer_record_detail"),
+    path("farmers/<int:pk>/edit/", farmer_record_update, name="farmer_record_update"),
+    path("farmers/<int:pk>/delete/", farmer_record_delete, name="farmer_record_delete"),
+    path("peace-activities/", peace_activity_list, name="peace_activity_list"),
+    path("peace-activities/add/", peace_activity_create, name="peace_activity_create"),
+    path("peace-activities/<int:pk>/", peace_activity_detail, name="peace_activity_detail"),
+    path("peace-activities/<int:pk>/edit/", peace_activity_update, name="peace_activity_update"),
+    path("peace-activities/<int:pk>/delete/", peace_activity_delete, name="peace_activity_delete"),
+    path("peace-committees/", peace_committee_list, name="peace_committee_list"),
+    path("peace-committees/add/", peace_committee_create, name="peace_committee_create"),
+    path("peace-committees/<int:pk>/", peace_committee_detail, name="peace_committee_detail"),
+    path("peace-committees/<int:pk>/edit/", peace_committee_update, name="peace_committee_update"),
+    path("peace-committees/<int:pk>/delete/", peace_committee_delete, name="peace_committee_delete"),
+    path("peace-committee-members/", peace_committee_member_list, name="peace_committee_member_list"),
+    path("peace-committee-members/add/", peace_committee_member_create, name="peace_committee_member_create"),
+    path("peace-committee-members/<int:pk>/", peace_committee_member_detail, name="peace_committee_member_detail"),
+    path("peace-committee-members/<int:pk>/edit/", peace_committee_member_update, name="peace_committee_member_update"),
+    path("peace-committee-members/<int:pk>/delete/", peace_committee_member_delete, name="peace_committee_member_delete"),
+    path("peace-committee-meetings/", peace_committee_meeting_list, name="peace_committee_meeting_list"),
+    path("peace-committee-meetings/add/", peace_committee_meeting_create, name="peace_committee_meeting_create"),
+    path("peace-committee-meetings/<int:pk>/", peace_committee_meeting_detail, name="peace_committee_meeting_detail"),
+    path("peace-committee-meetings/<int:pk>/edit/", peace_committee_meeting_update, name="peace_committee_meeting_update"),
+    path("peace-committee-meetings/<int:pk>/delete/", peace_committee_meeting_delete, name="peace_committee_meeting_delete")]

@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block title %}Learner support | KAPDA{% endblock %}{% block content %}<div class="page-intro"><h1>{{ object }}</h1><a class="btn btn-outline-primary" href="{% url 'learners:learner_support_record_update' object.pk %}">Edit</a></div>{% endblock %}

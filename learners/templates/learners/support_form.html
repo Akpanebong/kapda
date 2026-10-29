@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Record learner support | KAPDA{% endblock %}
+{% block page_heading %}Learner support{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>Record learner support</h1><p>{{ learner.full_name }} · {{ learner.reg_no }}</p></div></div>
+<form method="post" class="panel form-panel">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="form-grid">
+        {% for field in form %}
+        <div id="field-wrap-{{ field.name }}"{% if field.name == "support_type_other" %} class="support-other-field"{% endif %}>
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="form-actions"><a class="btn btn-light border" href="{% url 'learners:detail' learner.pk %}">Cancel</a><button class="btn btn-kapda" type="submit"><i class="bi bi-check2-circle me-1"></i> Save support</button></div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const type = document.getElementById('id_support_type');
+    const otherWrap = document.getElementById('field-wrap-support_type_other');
+    const otherInput = document.getElementById('id_support_type_other');
+    function toggleOther() {
+        const visible = type && type.value === 'other';
+        if (otherWrap) otherWrap.hidden = !visible;
+        if (otherInput) otherInput.required = visible;
+    }
+    if (type) { type.addEventListener('change', toggleOther); toggleOther(); }
+});
+</script>
+{% endblock %}

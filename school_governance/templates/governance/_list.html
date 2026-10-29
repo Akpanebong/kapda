@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-intro d-flex justify-content-between align-items-center gap-3 flex-wrap">
+    <div><h1>{{ title }}</h1><p>Manage {{ description }}.</p></div>
+    <a class="btn btn-kapda" href="{{ create_url }}"><i class="bi bi-plus-lg me-1"></i> Add record</a>
+</div>
+<section class="panel p-3">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr>{% for heading in headings %}<th>{{ heading }}</th>{% endfor %}<th class="text-end">Actions</th></tr></thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    {% for value in row.values %}<td>{{ value|default:"—" }}</td>{% endfor %}
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-kapda" href="{{ row.edit_url }}"><i class="bi bi-pencil-square"></i></a>
+                        <form method="post" action="{{ row.delete_url }}" class="d-inline">
+                            {% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Delete this record?');"><i class="bi bi-trash3"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}<tr><td colspan="{{ headings|length|add:1 }}" class="text-center py-5">No records found.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

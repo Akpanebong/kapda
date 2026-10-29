@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Learner attendance | KAPDA{% endblock %}
+{% block content %}
+<div class="page-intro">
+    <div><h1>Learner attendance</h1><p>Filter attendance records by school, class and term.</p></div>
+    <a class="btn btn-kapda" href="{% url 'learners:attendance_record_create' %}"><i class="bi bi-plus-lg me-1"></i>Add attendance</a>
+</div>
+
+<section class="panel mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="attendance-school">School</label>
+            <select class="form-select" id="attendance-school" name="school">
+                <option value="">All schools</option>
+                {% for school in schools %}<option value="{{ school.pk }}"{% if selected_school|stringformat:"s" == school.pk|stringformat:"s" %} selected{% endif %}>{{ school.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="attendance-class">Class</label>
+            <select class="form-select" id="attendance-class" name="class">
+                <option value="">All classes</option>
+                {% for class_level in class_levels %}<option value="{{ class_level }}"{% if selected_class == class_level %} selected{% endif %}>{{ class_level }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="attendance-term">Term</label>
+            <select class="form-select" id="attendance-term" name="term">
+                <option value="">All terms</option>
+                {% for term in terms %}<option value="{{ term.pk }}"{% if selected_term|stringformat:"s" == term.pk|stringformat:"s" %} selected{% endif %}>{{ term.academic_year }} — {{ term.name }}</option>{% endfor %}
+            </select>
+        </div>
+        {% if selected_learner %}<input type="hidden" name="learner" value="{{ selected_learner }}">{% endif %}
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-kapda" type="submit">Filter</button>
+            <a class="btn btn-light border" href="{% url 'learners:attendance_record_list' %}">Clear</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Learner</th><th>School</th><th>Class</th><th>Term</th><th>Present / Open</th><th>Rate</th><th></th></tr></thead>
+            <tbody>
+            {% for item in attendance_records %}
+                <tr>
+                    <td><strong>{{ item.learner.full_name }}</strong><small class="d-block text-muted">{{ item.learner.reg_no }}</small></td>
+                    <td>{{ item.enrolment.school.name }}</td>
+                    <td>{{ item.enrolment.class_level }}</td>
+                    <td>{{ item.term.academic_year }} — {{ item.term.name }}</td>
+                    <td>{{ item.days_present }} / {{ item.days_open }}</td>
+                    <td>{{ item.attendance_rate }}%</td>
+                    <td><a class="btn btn-sm btn-outline-primary" href="{% url 'learners:attendance_record_update' item.pk %}">Edit</a></td>
+                </tr>
+            {% empty %}<tr><td colspan="7" class="text-center py-4 text-muted">No attendance records match the selected filters.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if attendance_records.paginator.num_pages > 1 %}<div class="d-flex justify-content-between align-items-center p-3 border-top"><span class="text-muted">Page {{ attendance_records.number }} of {{ attendance_records.paginator.num_pages }}</span><div class="d-flex gap-2">{% if attendance_records.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?school={{ selected_school }}&class={{ selected_class }}&term={{ selected_term }}&learner={{ selected_learner }}&page={{ attendance_records.previous_page_number }}">Previous</a>{% endif %}{% if attendance_records.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?school={{ selected_school }}&class={{ selected_class }}&term={{ selected_term }}&learner={{ selected_learner }}&page={{ attendance_records.next_page_number }}">Next</a>{% endif %}</div></div>{% endif %}
+</section>
+{% endblock %}

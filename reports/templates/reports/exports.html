@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Reports &amp; exports | KAPDA{% endblock %}
+{% block page_heading %}Reports &amp; exports{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <h1>Reports &amp; exports</h1>
+        <p>Apply filters once, then download any programme report. With no filters selected, each export includes all available records.</p>
+    </div>
+</div>
+
+<div class="d-flex justify-content-end mb-3">
+    <button type="button"
+            class="btn btn-outline-kapda"
+            id="exportFilterToggle"
+            aria-expanded="false"
+            aria-controls="exportFilterPanel">
+        <i class="bi bi-funnel"></i>
+        Filters
+    </button>
+</div>
+
+<section class="panel mb-4" id="exportFilterPanel" hidden>
+    <div class="panel-head">
+        <div>
+            <h2>Export filters</h2>
+            <p>Shared filters are applied wherever the selected report has a matching data field.</p>
+        </div>
+        <i class="bi bi-funnel"></i>
+    </div>
+
+    <form method="get" class="row g-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="project">Project</label>
+            <select name="project" id="project" class="form-select">
+                <option value="">All projects</option>
+                {% for project in projects %}
+                    <option value="{{ project.pk }}" {% if filters.project == project.pk|stringformat:'s' %}selected{% endif %}>{{ project.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="school">School</label>
+            <select name="school" id="school" class="form-select">
+                <option value="">All schools</option>
+                {% for school in schools %}
+                    <option value="{{ school.pk }}" {% if filters.school == school.pk|stringformat:'s' %}selected{% endif %}>{{ school.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="q">Search learner name or KAPDA ID</label>
+            <input type="search" name="q" id="q" class="form-control" value="{{ filters.q|default:'' }}" placeholder="Search...">
+        </div>
+
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="year">Reporting year</label>
+            <select name="year" id="year" class="form-select">
+                <option value="">All years</option>
+                {% for year in years %}
+                    <option value="{{ year.pk }}" {% if filters.year == year.pk|stringformat:'s' %}selected{% endif %}>{{ year.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="term">Term</label>
+            <select name="term" id="term" class="form-select">
+                <option value="">All terms</option>
+                {% for term in terms %}
+                    <option value="{{ term.pk }}" {% if filters.term == term.pk|stringformat:'s' %}selected{% endif %}>{{ term }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="class">Class</label>
+            <select name="class" id="class" class="form-select">
+                <option value="">All classes</option>
+                {% for value, label in class_choices %}
+                    <option value="{{ value }}" {% if filters.class == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="status">Learner status</label>
+            <select name="status" id="status" class="form-select">
+                <option value="">All learner statuses</option>
+                {% for value, label in statuses %}
+                    <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="sex">Sex</label>
+            <select name="sex" id="sex" class="form-select">
+                <option value="">All sexes</option>
+                {% for value, label in sex_choices %}
+                    <option value="{{ value }}" {% if filters.sex == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="age_group">Age group</label>
+            <select name="age_group" id="age_group" class="form-select">
+                <option value="">All age groups</option>
+                {% for value, label in age_groups %}
+                    <option value="{{ value }}" {% if filters.age_group == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="disability">Disability status</label>
+            <select name="disability" id="disability" class="form-select">
+                <option value="">All statuses</option>
+                <option value="yes" {% if filters.disability == 'yes' %}selected{% endif %}>With disability</option>
+                <option value="no" {% if filters.disability == 'no' %}selected{% endif %}>Without disability</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="participant_category">Participant category</label>
+            <select name="participant_category" id="participant_category" class="form-select">
+                <option value="">All categories</option>
+                {% for value, label in participant_categories %}
+                    <option value="{{ value }}" {% if filters.participant_category == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="sub_county">Sub-county</label>
+            <select name="sub_county" id="sub_county" class="form-select">
+                <option value="">All sub-counties</option>
+                {% for value in sub_counties %}
+                    <option value="{{ value }}" {% if filters.sub_county == value %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="parish">Parish</label>
+            <select name="parish" id="parish" class="form-select">
+                <option value="">All parishes</option>
+                {% for value in parishes %}
+                    <option value="{{ value }}" {% if filters.parish == value %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 mt-4">
+            <div class="border-top pt-3">
+                <h3 class="h6 mb-1">Field attendance filters</h3>
+                <p class="text-muted small mb-3">These fields affect only the attendance exports.</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="attendance_participant">Participant name</label>
+            <input type="search" name="attendance_participant" id="attendance_participant" class="form-control" value="{{ filters.attendance_participant|default:'' }}">
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="attendance_activity">Activity ID</label>
+            <input type="number" name="attendance_activity" id="attendance_activity" class="form-control" value="{{ filters.attendance_activity|default:'' }}">
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="attendance_district">District</label>
+            <input type="search" name="attendance_district" id="attendance_district" class="form-control" value="{{ filters.attendance_district|default:'' }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="attendance_date_from">Date from</label>
+            <input type="date" name="attendance_date_from" id="attendance_date_from" class="form-control" value="{{ filters.attendance_date_from|default:'' }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="attendance_date_to">Date to</label>
+            <input type="date" name="attendance_date_to" id="attendance_date_to" class="form-control" value="{{ filters.attendance_date_to|default:'' }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="attendance_status">Attendance status</label>
+            <select name="attendance_status" id="attendance_status" class="form-select">
+                <option value="">All attendance statuses</option>
+                <option value="draft" {% if filters.attendance_status == 'draft' %}selected{% endif %}>Draft</option>
+                <option value="submitted" {% if filters.attendance_status == 'submitted' %}selected{% endif %}>Submitted</option>
+                <option value="approved" {% if filters.attendance_status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if filters.attendance_status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="attendance_sex">Participant sex</label>
+            <select name="attendance_sex" id="attendance_sex" class="form-select">
+                <option value="">All sexes</option>
+                <option value="M" {% if filters.attendance_sex == 'M' %}selected{% endif %}>Male</option>
+                <option value="F" {% if filters.attendance_sex == 'F' %}selected{% endif %}>Female</option>
+                <option value="O" {% if filters.attendance_sex == 'O' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-kapda">Apply filters</button>
+            <a href="{% url 'reports:exports' %}" class="btn btn-outline-kapda">Reset</a>
+        </div>
+    </form>
+</section>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-1"></i>
+    Export buttons below use the filters above. If no filters are selected, they export all records; filters without a matching field are ignored for that report.
+</div>
+
+<div class="dashboard-grid">
+    <div class="panel">
+        <div class="panel-head"><div><h2>Learner register</h2><p>Category, population status, age, class and location.</p></div><i class="bi bi-mortarboard"></i></div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-kapda" href="{% url 'reports:learner_export' %}{% if filter_query %}?{{ filter_query }}{% endif %}">CSV</a>
+            <a class="btn btn-kapda" href="{% url 'reports:learner_export_xlsx' %}{% if filter_query %}?{{ filter_query }}{% endif %}">Excel</a>
+            <a class="btn btn-outline-kapda" href="{% url 'reports:learner_export_pdf' %}{% if filter_query %}?{{ filter_query }}{% endif %}">PDF</a>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="panel-head"><div><h2>Beneficiary register</h2><p>Host/refugee status, gender category, households and location.</p></div><i class="bi bi-people"></i></div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-kapda" href="{% url 'reports:beneficiary_export_xlsx' %}{% if filter_query %}?{{ filter_query }}{% endif %}">Excel</a>
+            <a class="btn btn-outline-kapda" href="{% url 'reports:beneficiary_export_pdf' %}{% if filter_query %}?{{ filter_query }}{% endif %}">PDF</a>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="panel-head"><div><h2>Field attendance</h2><p>Participant sheets with male, female and total summaries.</p></div><i class="bi bi-calendar-check"></i></div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-kapda" href="{% url 'data:field_attendance_export_csv' %}{% if filter_query %}?{{ filter_query }}{% endif %}">CSV</a>
+            <a class="btn btn-kapda" href="{% url 'data:field_attendance_export_xlsx' %}{% if filter_query %}?{{ filter_query }}{% endif %}">Excel</a>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="panel-head"><div><h2>Peacebuilding report</h2><p>Committees, meetings, dialogues, messages, reach, women and youth participation.</p></div><i class="bi bi-chat-square-heart"></i></div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-kapda" href="{% url 'reports:peacebuilding_export_xlsx' %}{% if filter_query %}?{{ filter_query }}{% endif %}">Excel</a>
+            <a class="btn btn-outline-kapda" href="{% url 'reports:peacebuilding_export_pdf' %}{% if filter_query %}?{{ filter_query }}{% endif %}">PDF</a>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="panel-head"><div><h2>Full programme report</h2><p>Livelihoods, food security, VSLA and peacebuilding registers in one export.</p></div><i class="bi bi-file-earmark-bar-graph"></i></div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-kapda" href="{% url 'reports:livelihoods_food_security_peacebuilding_export_xlsx' %}{% if filter_query %}?{{ filter_query }}{% endif %}">Excel</a>
+            <a class="btn btn-outline-kapda" href="{% url 'reports:livelihoods_food_security_peacebuilding_export_pdf' %}{% if filter_query %}?{{ filter_query }}{% endif %}">PDF</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const filterToggle = document.getElementById("exportFilterToggle");
+    const filterPanel = document.getElementById("exportFilterPanel");
+
+    if (!filterToggle || !filterPanel) {
+        return;
+    }
+
+    filterToggle.addEventListener("click", function () {
+        const visible = filterPanel.hidden;
+        filterPanel.hidden = !visible;
+        filterToggle.setAttribute("aria-expanded", String(visible));
+        filterToggle.innerHTML = visible
+            ? '<i class="bi bi-funnel-fill"></i> Hide filters'
+            : '<i class="bi bi-funnel"></i> Filters';
+    });
+});
+</script>
+{% endblock %}

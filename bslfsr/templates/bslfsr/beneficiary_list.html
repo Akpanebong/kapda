@@ -1,0 +1,604 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Beneficiaries | KAPDA
+{% endblock %}
+
+{% block page_heading %}
+    Beneficiary Register
+{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <span class="text-muted small fw-semibold text-uppercase">
+            BSLFSR Programme
+        </span>
+        <h1 class="mb-1">Beneficiaries</h1>
+        <p class="text-muted mb-0">
+            Register, search and manage beneficiary records.
+        </p>
+    </div>
+
+    <a href="{% url 'bslfsr:beneficiary_create' %}"
+       class="btn btn-kapda">
+        <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
+        Add Beneficiary
+    </a>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="panel beneficiary-stat h-100">
+            <div class="p-3 d-flex align-items-center gap-3">
+                <div class="beneficiary-stat-icon">
+                    <i class="bi bi-people" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Displayed Records</div>
+                    <div class="fs-4 fw-bold">
+                        {{ beneficiaries|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="panel beneficiary-stat h-100">
+            <div class="p-3 d-flex align-items-center gap-3">
+                <div class="beneficiary-stat-icon">
+                    <i class="bi bi-person-check" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Active Records</div>
+                    <div class="fs-4 fw-bold" id="activeCount">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="panel beneficiary-stat h-100">
+            <div class="p-3 d-flex align-items-center gap-3">
+                <div class="beneficiary-stat-icon">
+                    <i class="bi bi-person-wheelchair" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">With Disabilities</div>
+                    <div class="fs-4 fw-bold" id="disabilityCount">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="panel beneficiary-stat h-100">
+            <div class="p-3 d-flex align-items-center gap-3">
+                <div class="beneficiary-stat-icon">
+                    <i class="bi bi-house-heart" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Refugees</div>
+                    <div class="fs-4 fw-bold" id="refugeeCount">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Beneficiary register -->
+<div class="panel">
+    <div class="section-heading">
+        <span aria-hidden="true">
+            <i class="bi bi-people"></i>
+        </span>
+        <div>
+            <h2>Beneficiary Register</h2>
+            <p>Search records, filter beneficiaries and access individual profiles.</p>
+        </div>
+    </div>
+
+    <!-- Search and filters -->
+    <div class="p-3 border-bottom">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-5">
+                <label for="beneficiarySearch"
+                       class="form-label fw-semibold">
+                    Search beneficiaries
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </span>
+                    <input type="search"
+                           id="beneficiarySearch"
+                           class="form-control"
+                           placeholder="Name, beneficiary ID, phone, project..."
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <label for="categoryFilter" class="form-label fw-semibold">
+                    Category
+                </label>
+                <select id="categoryFilter" class="form-select">
+                    <option value="">All categories</option>
+                    <option value="girl">Girl</option>
+                    <option value="boy">Boy</option>
+                    <option value="woman">Woman</option>
+                    <option value="man">Man</option>
+                    <option value="other">Other / not stated</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <label for="displacementFilter"
+                       class="form-label fw-semibold">
+                    Displacement
+                </label>
+                <select id="displacementFilter" class="form-select">
+                    <option value="">All statuses</option>
+                    <option value="host">Host community</option>
+                    <option value="refugee">Refugee</option>
+                    <option value="idp">Internally displaced</option>
+                    <option value="returnee">Returnee</option>
+                    <option value="asylum_seeker">Asylum seeker</option>
+                    <option value="other">Other / not stated</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-lg-1">
+                <label for="statusFilter" class="form-label fw-semibold">
+                    Status
+                </label>
+                <select id="statusFilter" class="form-select">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <label for="disabilityFilter"
+                       class="form-label fw-semibold">
+                    Disability
+                </label>
+                <select id="disabilityFilter" class="form-select">
+                    <option value="">All</option>
+                    <option value="yes">With disability</option>
+                    <option value="no">Without disability</option>
+                </select>
+            </div>
+
+            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <small class="text-muted" id="resultCount" aria-live="polite">
+                    Showing records
+                </small>
+
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        id="resetFilters">
+                    <i class="bi bi-arrow-counterclockwise me-1"
+                       aria-hidden="true"></i>
+                    Reset filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0"
+               id="beneficiaryTable">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Beneficiary</th>
+                    <th scope="col">Demographics</th>
+<!--                    <th scope="col">Displacement</th>-->
+<!--                    <th scope="col">Household &amp; Location</th>-->
+                    <th scope="col">Project</th>
+                    <th scope="col">Disability</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in beneficiaries %}
+                    <tr class="beneficiary-row"
+                        data-search="{{ item.beneficiary_id|default_if_none:''|lower }}
+                                     {{ item.full_name|default_if_none:''|lower }}
+                                     {{ item.phone|default_if_none:''|lower }}
+                                     {{ item.project|default_if_none:''|lower }}
+                                     {{ item.household|default_if_none:''|lower }}
+                                     {{ item.location|default_if_none:''|lower }}
+                                     {{ item.disability_type|default_if_none:''|lower }}
+                                     {{ item.vulnerability_category|default_if_none:''|lower }}"
+                        data-category="{{ item.participant_category|default_if_none:'' }}"
+                        data-displacement="{{ item.displacement_status|default_if_none:'' }}"
+                        data-status="{% if item.active %}active{% else %}inactive{% endif %}"
+                        data-disability="{% if item.disability_status %}yes{% else %}no{% endif %}">
+
+                        <td class="text-muted small row-number">
+                            {{ forloop.counter }}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'bslfsr:beneficiary_detail' item.pk %}"
+                               class="beneficiary-name fw-semibold">
+                                {{ item.full_name }}
+                            </a>
+                            <div class="small text-muted mt-1">
+                                {{ item.beneficiary_id }}
+                            </div>
+                            {% if item.phone %}
+                                <div class="small text-muted mt-1">
+                                    <i class="bi bi-telephone me-1"
+                                       aria-hidden="true"></i>
+                                    {{ item.phone }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">
+                                {{ item.get_sex_display|default:"—" }}
+                            </div>
+                            <div class="small text-muted">
+                                {% if item.date_of_birth %}
+                                    {{ item.date_of_birth|date:"d M Y" }}
+                                {% elif item.estimated_age != None %}
+                                    {{ item.estimated_age }} years
+                                {% else %}
+                                    Age not recorded
+                                {% endif %}
+                            </div>
+                            <div class="small text-muted">
+                                {{ item.get_participant_category_display }}
+                            </div>
+                        </td>
+
+<!--                        <td>-->
+<!--                            <span class="displacement-label">-->
+<!--                                {{ item.get_displacement_status_display }}-->
+<!--                            </span>-->
+<!--                        </td>-->
+
+<!--                        <td>-->
+<!--                            <div class="fw-semibold">-->
+<!--                                {% if item.household %}-->
+<!--                                    {{ item.household }}-->
+<!--                                {% else %}-->
+<!--                                    <span class="text-muted">Not assigned</span>-->
+<!--                                {% endif %}-->
+<!--                            </div>-->
+<!--                            <div class="small text-muted mt-1">-->
+<!--                                {% if item.location %}-->
+<!--                                    {{ item.location }}-->
+<!--                                {% else %}-->
+<!--                                    Location not assigned-->
+<!--                                {% endif %}-->
+<!--                            </div>-->
+<!--                        </td>-->
+
+                        <td>
+                            {{ item.project|default:"—" }}
+                        </td>
+
+                        <td>
+                            {% if item.disability_status %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis">
+                                    <i class="bi bi-check-circle me-1"
+                                       aria-hidden="true"></i>
+                                    Yes
+                                </span>
+                                {% if item.disability_type %}
+                                    <div class="small text-muted mt-1">
+                                        {{ item.disability_type }}
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-secondary border">
+                                    No
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.active %}
+                                <span class="status-pill status-active">
+                                    <span class="status-dot"></span>
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="status-pill status-inactive">
+                                    <span class="status-dot"></span>
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+<!--                                <a href="{% url 'bslfsr:beneficiary_detail' item.pk %}"-->
+<!--                                   class="btn btn-sm btn-outline-secondary"-->
+<!--                                   aria-label="View {{ item.full_name }}">-->
+<!--                                    <i class="bi bi-eye" aria-hidden="true"></i>-->
+<!--                                </a>-->
+
+                                <a href="{% url 'bslfsr:beneficiary_update' item.pk %}"
+                                   class="btn btn-sm btn-outline-kapda"
+                                   aria-label="Edit {{ item.full_name }}">
+                                    <i class="bi bi-pencil-square"
+                                       aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="bi bi-people fs-1 text-muted"
+                               aria-hidden="true"></i>
+                            <h3 class="h5 mt-3">No beneficiaries registered</h3>
+                            <p class="text-muted">
+                                Add the first beneficiary to start building your register.
+                            </p>
+                            <a href="{% url 'bslfsr:beneficiary_create' %}"
+                               class="btn btn-kapda">
+                                <i class="bi bi-person-plus me-1"
+                                   aria-hidden="true"></i>
+                                Add Beneficiary
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                <tr id="noFilterResults" class="d-none">
+                    <td colspan="9" class="text-center py-5">
+                        <i class="bi bi-search fs-2 text-muted"
+                           aria-hidden="true"></i>
+                        <h3 class="h6 mt-3">No matching beneficiaries</h3>
+                        <p class="text-muted mb-0">
+                            Try changing your search or filter criteria.
+                        </p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="p-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <small class="text-muted">
+            KAPDA · Beneficiary Register
+        </small>
+        <small class="text-muted">
+            Use View to inspect a complete beneficiary profile.
+        </small>
+    </div>
+</div>
+
+<style>
+    .beneficiary-stat {
+        border: 1px solid #e7ecef;
+        border-radius: 12px;
+        box-shadow: none;
+    }
+
+    .beneficiary-stat-icon {
+        width: 46px;
+        height: 46px;
+        flex: 0 0 46px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: #e9f2f7;
+        color: #2c5d83;
+        font-size: 1.3rem;
+    }
+
+    .beneficiary-name {
+        color: #2c5d83;
+        text-decoration: none;
+    }
+
+    .beneficiary-name:hover {
+        color: #1d4566;
+        text-decoration: underline;
+    }
+
+    #beneficiaryTable thead th {
+        background: #f5f8fa;
+        color: #425466;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.035em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        padding: 0.9rem 0.8rem;
+        border-bottom: 1px solid #e4eaee;
+    }
+
+    #beneficiaryTable tbody td {
+        padding: 0.95rem 0.8rem;
+        font-size: 0.875rem;
+        vertical-align: middle;
+    }
+
+    .displacement-label {
+        color: #425466;
+        font-size: 0.82rem;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 30px;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .status-active {
+        color: #176b43;
+        background: #e8f6ee;
+    }
+
+    .status-inactive {
+        color: #64748b;
+        background: #eef1f4;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    #beneficiaryTable .btn {
+        min-width: 32px;
+    }
+
+    @media (max-width: 767.98px) {
+        .page-intro {
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        #beneficiaryTable {
+            min-width: 1050px;
+        }
+    }
+
+    @media print {
+        .page-intro .btn,
+        #beneficiaryTable .btn,
+        .input-group,
+        #categoryFilter,
+        #displacementFilter,
+        #statusFilter,
+        #disabilityFilter,
+        #resetFilters,
+        .panel > .p-3.border-bottom {
+            display: none !important;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const table = document.getElementById("beneficiaryTable");
+    if (!table) return;
+
+    const rows = Array.from(
+        table.querySelectorAll("tbody tr.beneficiary-row")
+    );
+
+    const searchInput = document.getElementById("beneficiarySearch");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const displacementFilter = document.getElementById("displacementFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const disabilityFilter = document.getElementById("disabilityFilter");
+    const resultCount = document.getElementById("resultCount");
+    const noResults = document.getElementById("noFilterResults");
+
+    const activeCount = document.getElementById("activeCount");
+    const disabilityCount = document.getElementById("disabilityCount");
+    const refugeeCount = document.getElementById("refugeeCount");
+
+    activeCount.textContent = rows.filter(
+        row => row.dataset.status === "active"
+    ).length;
+
+    disabilityCount.textContent = rows.filter(
+        row => row.dataset.disability === "yes"
+    ).length;
+
+    refugeeCount.textContent = rows.filter(
+        row => row.dataset.displacement === "refugee"
+    ).length;
+
+    function filterRows() {
+        const query = searchInput.value.trim().toLowerCase();
+        const category = categoryFilter.value;
+        const displacement = displacementFilter.value;
+        const status = statusFilter.value;
+        const disability = disabilityFilter.value;
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const matchesSearch =
+                !query || row.dataset.search.includes(query);
+
+            const matchesCategory =
+                !category || row.dataset.category === category;
+
+            const matchesDisplacement =
+                !displacement ||
+                row.dataset.displacement === displacement;
+
+            const matchesStatus =
+                !status || row.dataset.status === status;
+
+            const matchesDisability =
+                !disability || row.dataset.disability === disability;
+
+            const visible =
+                matchesSearch &&
+                matchesCategory &&
+                matchesDisplacement &&
+                matchesStatus &&
+                matchesDisability;
+
+            row.classList.toggle("d-none", !visible);
+
+            if (visible) {
+                visibleCount += 1;
+                row.querySelector(".row-number").textContent = visibleCount;
+            }
+        });
+
+        resultCount.textContent =
+            `Showing ${visibleCount} of ${rows.length} beneficiaries`;
+
+        noResults.classList.toggle(
+            "d-none",
+            visibleCount > 0 || rows.length === 0
+        );
+    }
+
+    [
+        searchInput,
+        categoryFilter,
+        displacementFilter,
+        statusFilter,
+        disabilityFilter
+    ].forEach(control => {
+        control.addEventListener(
+            control === searchInput ? "input" : "change",
+            filterRows
+        );
+    });
+
+    document.getElementById("resetFilters").addEventListener("click", () => {
+        searchInput.value = "";
+        categoryFilter.value = "";
+        displacementFilter.value = "";
+        statusFilter.value = "";
+        disabilityFilter.value = "";
+        filterRows();
+        searchInput.focus();
+    });
+
+    filterRows();
+});
+</script>
+{% endblock %}

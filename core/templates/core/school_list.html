@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Schools | KAPDA{% endblock %}
+{% block page_heading %}School directory{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>School directory</h1><p>Browse schools and open an independent school profile.</p></div><a class="btn btn-kapda" href="{% url 'data:school_create' %}"><i class="bi bi-plus-lg me-1"></i>Add school</a></div>
+<section class="panel p-3">
+  <form method="get" class="row g-2 mb-3"><div class="col-md-8"><label class="form-label" for="school-search">Search schools</label><input id="school-search" class="form-control" name="q" value="{{ query }}" placeholder="Name, school code or district"></div><div class="col-md-4 d-flex align-items-end gap-2"><button class="btn btn-kapda" type="submit">Search</button><a class="btn btn-light border" href="{% url 'schools:list' %}">Clear</a></div></form>
+  <div class="table-responsive"><table class="table align-middle"><thead><tr><th>School</th><th>Code</th><th>Type</th><th>Learners</th><th class="text-end">Actions</th></tr></thead><tbody>
+  {% for school in schools %}<tr><td><strong>{{ school.name }}</strong><small class="d-block text-muted">{{ school.location|default:"Location not recorded" }}</small></td><td>{{ school.school_code }}</td><td>{{ school.get_school_type_display }}</td><td>{{ school.learner_total }}</td><td class="text-end"><a class="btn btn-sm btn-outline-kapda" href="{% url 'data:school_detail' school.pk %}"><i class="bi bi-eye me-1"></i>View</a> <a class="btn btn-sm btn-light border" href="{% url 'data:school_update' school.pk %}">Edit</a></td></tr>{% empty %}<tr><td colspan="5" class="text-center py-4">No schools found.</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% if schools.has_other_pages %}<nav class="d-flex justify-content-between"><span>Page {{ schools.number }} of {{ schools.paginator.num_pages }}</span><div>{% if schools.has_previous %}<a class="btn btn-sm btn-light border" href="?q={{ query|urlencode }}&page={{ schools.previous_page_number }}">Previous</a>{% endif %} {% if schools.has_next %}<a class="btn btn-sm btn-light border" href="?q={{ query|urlencode }}&page={{ schools.next_page_number }}">Next</a>{% endif %}</div></nav>{% endif %}
+</section>
+{% endblock %}

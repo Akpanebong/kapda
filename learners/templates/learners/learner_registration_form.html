@@ -1,0 +1,71 @@
+{% extends "base.html" %}{% block title %}Register learner | KAPDA{% endblock %}{% block page_heading %}Register learner{% endblock %}{% block content %}
+<div class="page-intro"><div><h1>Register a learner</h1><p>Create one permanent learner identity. Project participation and annual enrolments are linked separately.</p></div><a class="btn btn-light border" href="{% url 'learners:list' %}">Cancel</a></div>
+<form method="post" class="panel form-panel">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+    <div class="section-heading">
+        <span>01</span>
+        <div>
+            <h2>Basic information</h2>
+            <p>Enter the learner's name and demographic information.</p>
+        </div></div>
+    <div class="form-grid row g-3">
+    {% for field in form %}
+    {% if field.name != "projectm" %}
+    <div class="{% if field.name == 'notes' %}span-2{% endif %}">
+        <label class="form-label" for="{{ field.id_for_label }}">
+            {{ field.label }}{% if field.field.required %}<span class="required">*</span>
+            {% endif %}</label>
+        {{ field }}{% if field.help_text %}
+        <div class="form-hint">
+        {{ field.help_text }}
+    </div>
+        {% endif %}
+        {% for error in field.errors %}
+        <div class="text-danger small">{{ error }}</div>
+        {% endfor %}</div>
+    {% endif %}
+    {% endfor %}
+    <div>
+
+<!--    <label class="form-label" for="{{ form.project.id_for_label }}">-->
+<!--        Initial project<span class="required">*</span>-->
+<!--    </label>{{ form.project }}-->
+<!--    <div class="form-hint">Each learner must be linked to at least one project.-->
+<!--        Additional project links can be added later.-->
+<!--    </div>-->
+    {% for error in form.project.errors %}
+    <div class="text-danger small">{{ error }}</div>
+    {% endfor %}</div></div><div class="form-actions">
+    <span class="hint">Required fields are marked with an asterisk.</span>
+    <button class="btn btn-kapda" type="submit">
+        <i class="bi bi-check2-circle me-1"></i> Save learner</button></div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const dob = document.getElementById("id_date_of_birth");
+    const age = document.getElementById("id_estimated_age");
+    if (!dob || !age) return;
+    function updateAge() {
+        if (!dob.value) { age.value = ""; return; }
+        const birth = new Date(dob.value + "T00:00:00");
+        const today = new Date();
+        let years = today.getFullYear() - birth.getFullYear();
+        const beforeBirthday = today.getMonth() < birth.getMonth() ||
+            (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+        if (beforeBirthday) years--;
+        age.value = years >= 0 ? years : "";
+    }
+    dob.addEventListener("input", updateAge);
+    dob.addEventListener("change", updateAge);
+    updateAge();
+})();
+</script>
+{% endblock %}

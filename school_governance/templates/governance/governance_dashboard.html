@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}SMC & PTA | KAPDA{% endblock %}
+{% block page_heading %}School governance{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>SMC &amp; PTA tracking</h1><p>Monitor committee membership, meetings, training, school improvement plans and actions.</p></div><a class="btn btn-kapda" href="{% url 'governance:governance_member_create' %}"><i class="bi bi-plus-lg me-1"></i> Add member</a></div>
+<div class="metric-grid"><div class="metric-card"><span>Active members</span><strong>{{ members }}</strong></div><div class="metric-card"><span>SMC / BOG members</span><strong>{{ smc }}</strong></div><div class="metric-card"><span>PTA members</span><strong>{{ pta }}</strong></div><div class="metric-card"><span>Meetings</span><strong>{{ meetings }}</strong></div><div class="metric-card"><span>Training records</span><strong>{{ trainings }}</strong></div><div class="metric-card"><span>Open actions</span><strong>{{ open_actions }}</strong></div></div>
+<div class="quick-links">
+    <a href="{% url 'governance:governance_member_list' %}"><i class="bi bi-people"></i><span><b>Governance members</b><small>SMC/BOG and PTA membership</small></span><i class="bi bi-arrow-up-right ms-auto"></i></a>
+    <a href="{% url 'governance:governance_meeting_list' %}"><i class="bi bi-calendar-event"></i><span><b>Meetings</b><small>Record SMC and PTA meetings</small></span><i class="bi bi-arrow-up-right ms-auto"></i></a>
+    <a href="{% url 'governance:governance_training_list' %}"><i class="bi bi-mortarboard"></i><span><b>Training</b><small>Track governance capacity building</small></span><i class="bi bi-arrow-up-right ms-auto"></i></a>
+    <a href="{% url 'governance:school_improvement_plan_list' %}"><i class="bi bi-journal-check"></i><span><b>School improvement plans</b><small>Create and monitor school improvement plans</small></span><i class="bi bi-arrow-up-right ms-auto"></i></a>
+    <a href="{% url 'governance:governance_action_list' %}"><i class="bi bi-list-check"></i><span><b>Governance actions</b><small>Follow up agreed actions and responsibilities</small></span><i class="bi bi-arrow-up-right ms-auto"></i></a>
+</div>
+{% endblock %}

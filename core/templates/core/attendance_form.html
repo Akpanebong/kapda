@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} field attendance | KAPDA{% endblock %}
+{% block page_heading %}{% if object %}Edit{% else %}Add{% endif %} field attendance{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>{% if object %}Edit{% else %}Add{% endif %} field attendance</h1><p>Capture the activity details and add multiple participants in one submission.</p></div><a class="btn btn-light border" href="{% url 'data:field_attendance_list' %}">Back to attendance</a></div>
+<form method="post" class="panel form-panel" novalidate>{% csrf_token %}
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+<h2 class="h5 mb-3">Activity details</h2><div class="row g-3">{% for field in form %}<div class="col-md-6"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-2"><div><h2 class="h5 mb-1">Participants</h2><p class="text-muted small mb-0">Add up to 25 people. Initials are generated automatically: Amara john peter → AJP; gracia Etim → GE.</p></div><button type="button" class="btn btn-outline-kapda" id="add-participant"><i class="bi bi-person-plus me-1"></i>Add participant</button></div>
+{{ formset.management_form }}<div class="table-responsive"><table class="table align-middle" id="participants-table"><thead><tr><th>Name</th><th>Sex</th><th>Title / role</th><th>Email / telephone</th><th>Signature</th><th></th></tr></thead><tbody>{% for participant in formset %}<tr class="participant-row">{% for hidden in participant.hidden_fields %}{{ hidden }}{% endfor %}<td><label class="visually-hidden" for="{{ participant.name.id_for_label }}">Participant name</label>{{ participant.name }}{% for error in participant.name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td><label class="visually-hidden" for="{{ participant.sex.id_for_label }}">Sex</label>{{ participant.sex }}{% for error in participant.sex.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td><label class="visually-hidden" for="{{ participant.title_role.id_for_label }}">Title or role</label>{{ participant.title_role }}{% for error in participant.title_role.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td><label class="visually-hidden" for="{{ participant.contact.id_for_label }}">Email or telephone</label>{{ participant.contact }}{% for error in participant.contact.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td><label class="visually-hidden" for="{{ participant.signature.id_for_label }}">Signature</label>{{ participant.signature }}{% for error in participant.signature.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td>{% if participant.DELETE %}{{ participant.DELETE }}<label class="small" for="{{ participant.DELETE.id_for_label }}">Remove</label>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+<div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top"><a class="btn btn-light border" href="{% url 'data:field_attendance_list' %}">Cancel</a><button class="btn btn-kapda" type="submit">Save attendance sheet</button></div>
+</form>
+{% endblock %}
+{% block scripts %}<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const total = document.getElementById('id_participants-TOTAL_FORMS');
+  const table = document.querySelector('#participants-table tbody');
+  const add = document.getElementById('add-participant');
+  function initials(name) {
+    const words = name.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '';
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return words.slice(0, 3).map(function (word) { return word.charAt(0); }).join('').toUpperCase();
+  }
+  table.addEventListener('input', function (event) {
+    if (!event.target.name || !event.target.name.endsWith('-name')) return;
+    const row = event.target.closest('.participant-row');
+    const signature = row.querySelector('input[name$="-signature"]');
+    if (signature && signature.dataset.autoInitials !== 'locked') signature.value = initials(event.target.value);
+  });
+  table.querySelectorAll('.participant-row').forEach(function (row) {
+    const name = row.querySelector('input[name$="-name"]');
+    const signature = row.querySelector('input[name$="-signature"]');
+    if (name && signature && !signature.value) signature.value = initials(name.value);
+  });
+  add.addEventListener('click', function () {
+    const index = Number(total.value);
+    if (index >= 25) { add.disabled = true; return; }
+    const source = table.querySelector('.participant-row');
+    const row = source.cloneNode(true);
+    row.innerHTML = row.innerHTML.replace(/participants-\\d+/g, 'participants-' + index);
+    row.querySelectorAll('input, select').forEach(function (input) { if (input.type !== 'hidden' && input.type !== 'checkbox') input.value = ''; if (input.type === 'checkbox') input.checked = false; });
+    table.appendChild(row); total.value = index + 1; if (index + 1 >= 25) add.disabled = true;
+  });
+});
+</script>{% endblock %}

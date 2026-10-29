@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}
+    Livelihoods &amp; peacebuilding | KAPDA
+{% endblock %}
+
+{% block page_heading %}
+    Livelihoods &amp; peacebuilding
+{% endblock %}
+{% block content %}
+<div class="page-intro">
+    <div>
+        <h1>Livelihoods, food security &amp; peacebuilding</h1>
+        <p>
+            Track beneficiaries, agriculture, VSLA, savings, loans, group performance
+            and peacebuilding in one simple workspace.
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-kapda"
+           href="{% url 'bslfsr:beneficiary_list' %}">
+            Beneficiaries
+        </a>
+        <a class="btn btn-kapda"
+           href="{% url 'bslfsr:beneficiary_create' %}">
+            <i class="bi bi-plus-lg me-1"></i>
+            Add beneficiary
+        </a>
+    </div>
+</div>
+<div class="metric-grid">
+    <div class="metric-card">
+        <span>Active beneficiaries</span>
+        <strong>{{ beneficiaries }}</strong>
+    </div>
+    <div class="metric-card">
+        <span>Farmers tracked</span>
+        <strong>{{ farmers }}</strong>
+    </div>
+    <div class="metric-card">
+        <span>Peace activities</span>
+        <strong>{{ peace_activities }}</strong>
+    </div>
+</div>
+{% include "bslfsr/_reach_kpis.html" %}
+<div class="quick-links">
+    <a href="{% url 'bslfsr:beneficiary_list' %}">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>
+            <b>Beneficiaries</b>
+            <small>Manage identities and programme reach</small>
+        </span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+    </a>
+    <a href="{% url 'bslfsr:farmer_record_list' %}">
+        <i class="bi bi-flower1"></i>
+        <span>
+            <b>Agriculture and food security</b>
+            <small>Inputs, crops, practices and yields</small>
+        </span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+    </a>
+    <a href="{% url 'vsla:vsla_dashboard' %}">
+        <i class="bi bi-wallet2"></i>
+        <span>
+            <b>VSLA, savings and loans</b>
+            <small>Groups, members, savings and loan performance</small>
+        </span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+    </a>
+    <a href="{% url 'bslfsr:peace_activity_list' %}">
+        <i class="bi bi-chat-square-heart"></i>
+        <span>
+            <b>Peacebuilding activities</b>
+            <small>Dialogues, peace messages and participant reach</small>
+        </span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+    </a>
+    <a href="{% url 'bslfsr:peace_committee_list' %}">
+        <i class="bi bi-shield-heart"></i>
+        <span>
+            <b>Peace committees</b>
+            <small>Committee register and supported members</small>
+        </span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+    </a>
+    <a href="{% url 'bslfsr:peace_committee_member_list' %}">
+        <i class="bi bi-people"></i>
+        <span>
+            <b>Committee members supported</b>
+            <small>Sex, age, position and location</small>
+        </span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+    </a>
+    <a href="{% url 'bslfsr:peace_committee_meeting_list' %}">
+        <i class="bi bi-calendar-event"></i>
+        <span>
+            <b>Committee meetings</b>
+            <small>Parish, sub-county and periodic meeting dates</small>
+        </span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+    </a>
+</div>
+<section class="panel mt-4 p-4">
+    <div class="panel-head p-0 pb-3 mb-3">
+        <div>
+            <h2>Programme data export</h2>
+            <p>
+                Download a complete report covering livelihoods, food security,
+                VSLA/financial inclusion and peacebuilding records.
+            </p>
+        </div>
+        <i class="bi bi-file-earmark-bar-graph fs-3 text-muted"></i>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-kapda"
+           href="{% url 'reports:livelihoods_food_security_peacebuilding_export_xlsx' %}">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+            Download Excel report
+        </a>
+        <a class="btn btn-outline-kapda"
+           href="{% url 'reports:livelihoods_food_security_peacebuilding_export_pdf' %}">
+            <i class="bi bi-file-earmark-pdf me-1"></i>
+            Download PDF report
+        </a>
+    </div>
+</section>
+{% endblock %}

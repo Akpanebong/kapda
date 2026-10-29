@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Peace Committee Members | KAPDA
+{% endblock %}
+
+{% block page_heading %}
+    Peace Committee Members
+{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <span class="text-muted small fw-semibold text-uppercase">BSLFSR Programme</span>
+        <h1 class="mb-1">Peace Committee Members</h1>
+        <p class="text-muted mb-0">Manage members supported through peace committees.</p>
+    </div>
+    <a class="btn btn-kapda" href="{% url 'bslfsr:peace_committee_member_create' %}">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Add Member
+    </a>
+</div>
+
+<div class="panel">
+    <div class="section-heading">
+        <span aria-hidden="true"><i class="bi bi-people"></i></span>
+        <div>
+            <h2>Member Register</h2>
+            <p>Review committee members and update their information.</p>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in peace_committee_members %}
+                    <tr>
+                        <td>{{ item }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-kapda"
+                               href="{% url 'bslfsr:peace_committee_member_update' item.pk %}">
+                                <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center py-5 text-muted">No members found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

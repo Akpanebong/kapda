@@ -1,0 +1,2020 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}Programme Dashboard | KAPDA{% endblock %}
+
+{% block page_heading %}
+    Programme Dashboard
+{% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --kapda-primary: #2c5d83;
+        --kapda-primary-dark: #1d4566;
+        --kapda-green: #198a52;
+        --kapda-red: #9d3b3b;
+        --kapda-ink: #243746;
+        --kapda-muted: #718096;
+        --kapda-border: #e5ebf0;
+        --kapda-bg: #f5f8fb;
+        --kapda-white: #ffffff;
+    }
+
+    .kapda-dashboard {
+        color: var(--kapda-ink);
+        padding-bottom: 32px;
+    }
+
+    .kapda-dashboard * {
+        box-sizing: border-box;
+    }
+
+    .kapda-dashboard a {
+        text-decoration: none;
+    }
+
+    .dashboard-hero {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 30px;
+        margin-bottom: 24px;
+        color: #fff;
+        border-radius: 18px;
+        background: linear-gradient(
+            125deg,
+            var(--kapda-primary-dark),
+            var(--kapda-primary)
+        );
+        box-shadow: 0 12px 30px rgba(29, 69, 102, .13);
+    }
+
+    .dashboard-hero::after {
+        content: "";
+        position: absolute;
+        width: 250px;
+        height: 250px;
+        right: -70px;
+        top: -120px;
+        border: 35px solid rgba(255,255,255,.07);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .hero-copy,
+    .hero-actions {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        color: #dbeaf6;
+        font-size: .74rem;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+    }
+
+    .hero-copy h2 {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: clamp(1.55rem, 3vw, 2.15rem);
+        font-weight: 800;
+        letter-spacing: -.035em;
+    }
+
+    .hero-copy p {
+        max-width: 720px;
+        margin: 0;
+        color: #e3edf5;
+        font-size: .94rem;
+        line-height: 1.7;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .btn-kapda,
+    .btn-kapda-light,
+    .btn-kapda-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 10px 15px;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        font-size: .84rem;
+        font-weight: 750;
+        transition: .2s ease;
+    }
+
+    .btn-kapda {
+        color: #fff;
+        background: var(--kapda-primary);
+        border-color: var(--kapda-primary);
+    }
+
+    .btn-kapda:hover {
+        color: #fff;
+        background: var(--kapda-primary-dark);
+    }
+
+    .btn-kapda-light {
+        color: var(--kapda-primary-dark);
+        background: #fff;
+    }
+
+    .btn-kapda-light:hover {
+        color: var(--kapda-primary-dark);
+        background: #eef5fa;
+    }
+
+    .btn-kapda-outline {
+        color: var(--kapda-primary);
+        background: #fff;
+        border-color: #d5e0e9;
+    }
+
+    .btn-kapda-outline:hover {
+        color: var(--kapda-primary-dark);
+        background: #f1f6fa;
+    }
+
+    .dashboard-section {
+        margin-bottom: 26px;
+    }
+
+    .section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+    }
+
+    .section-heading h3 {
+        margin: 0;
+        color: var(--kapda-ink);
+        font-size: 1.02rem;
+        font-weight: 800;
+    }
+
+    .section-heading p {
+        margin: 5px 0 0;
+        color: var(--kapda-muted);
+        font-size: .82rem;
+    }
+
+    .section-kicker {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--kapda-primary);
+        font-size: .69rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .programme-heading {
+        margin-bottom: 20px;
+        padding: 22px 24px;
+        border-radius: 15px;
+        border: 1px solid var(--kapda-border);
+    }
+
+    .programme-heading h2 {
+        margin: 0;
+        color: var(--kapda-ink);
+        font-size: 1.35rem;
+        font-weight: 850;
+    }
+
+    .programme-heading p {
+        max-width: 900px;
+        margin: 7px 0 0;
+        color: var(--kapda-muted);
+        font-size: .86rem;
+    }
+
+    .programme-epick {
+        background: linear-gradient(120deg, #eef6fb, #ffffff);
+        border-left: 5px solid var(--kapda-primary);
+    }
+
+    .programme-bslfsr {
+        background: linear-gradient(120deg, #eef9f3, #ffffff);
+        border-left: 5px solid var(--kapda-green);
+    }
+
+    .filter-panel,
+    .dashboard-panel {
+        background: var(--kapda-white);
+        border: 1px solid var(--kapda-border);
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(31, 55, 77, .035);
+    }
+
+    .filter-panel {
+        padding: 19px;
+        margin-bottom: 26px;
+    }
+
+    .filter-toggle-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 14px;
+    }
+
+    .filter-toggle {
+        min-height: 40px;
+    }
+
+    .filter-panel[hidden] {
+        display: none;
+    }
+
+    .filter-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 15px;
+        font-size: .9rem;
+        font-weight: 800;
+    }
+
+    .filter-title i {
+        color: var(--kapda-primary);
+    }
+
+    .filter-panel .form-label {
+        margin-bottom: 6px;
+        color: #526477;
+        font-size: .77rem;
+        font-weight: 750;
+    }
+
+    .filter-panel .form-select {
+        min-height: 42px;
+        border-color: #dce5ed;
+        border-radius: 8px;
+        font-size: .85rem;
+        box-shadow: none;
+    }
+
+    .filter-panel .form-select:focus {
+        border-color: var(--kapda-primary);
+        box-shadow: 0 0 0 3px rgba(44, 93, 131, .1);
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 15px;
+    }
+
+    .metric-card {
+        position: relative;
+        min-width: 0;
+        overflow: hidden;
+        padding: 18px;
+        background: #fff;
+        border: 1px solid var(--kapda-border);
+        border-radius: 13px;
+        box-shadow: 0 4px 14px rgba(31, 55, 77, .025);
+    }
+
+    .metric-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--metric-color, var(--kapda-primary));
+    }
+
+    .metric-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 17px;
+    }
+
+    .metric-label {
+        color: var(--kapda-muted);
+        font-size: .78rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .metric-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 39px;
+        width: 39px;
+        height: 39px;
+        color: var(--metric-color, var(--kapda-primary));
+        background: var(--metric-bg, #edf4fa);
+        border-radius: 11px;
+        font-size: 1.05rem;
+    }
+
+    .metric-value {
+        color: var(--kapda-ink);
+        font-size: clamp(1.45rem, 2.2vw, 1.95rem);
+        font-weight: 850;
+        letter-spacing: -.045em;
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+    }
+
+    .metric-foot {
+        margin-top: 8px;
+        color: var(--kapda-muted);
+        font-size: .73rem;
+        line-height: 1.5;
+    }
+
+    .metric-primary {
+        --metric-color: var(--kapda-primary);
+        --metric-bg: #edf4fa;
+    }
+
+    .metric-green {
+        --metric-color: var(--kapda-green);
+        --metric-bg: #eaf6ef;
+    }
+
+    .metric-red {
+        --metric-color: var(--kapda-red);
+        --metric-bg: #faeeee;
+    }
+
+    .metric-amber {
+        --metric-color: #a76b13;
+        --metric-bg: #fff5e5;
+    }
+
+    .metric-purple {
+        --metric-color: #7156a5;
+        --metric-bg: #f2eef9;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .dashboard-panel {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--kapda-border);
+    }
+
+    .panel-header h4 {
+        margin: 0;
+        color: var(--kapda-ink);
+        font-size: .91rem;
+        font-weight: 800;
+    }
+
+    .panel-header p {
+        margin: 5px 0 0;
+        color: var(--kapda-muted);
+        font-size: .76rem;
+    }
+
+    .panel-body {
+        padding: 20px;
+    }
+
+    .chart-wrap {
+        position: relative;
+        min-height: 245px;
+        height: 270px;
+    }
+
+    .chart-wrap canvas {
+        max-width: 100%;
+    }
+
+    .chart-empty {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        color: var(--kapda-muted);
+        font-size: .85rem;
+        text-align: center;
+    }
+
+    .chart-empty.visible {
+        display: flex;
+    }
+
+    .module-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .module-card {
+        display: block;
+        padding: 17px;
+        color: inherit;
+        background: #fff;
+        border: 1px solid var(--kapda-border);
+        border-radius: 12px;
+        transition: border-color .2s ease, transform .2s ease,
+                    box-shadow .2s ease;
+    }
+
+    .module-card:hover {
+        color: inherit;
+        border-color: #c6d8e6;
+        box-shadow: 0 8px 20px rgba(31, 55, 77, .06);
+        transform: translateY(-2px);
+    }
+
+    .module-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin-bottom: 13px;
+        color: var(--kapda-primary);
+        background: #edf4fa;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+
+    .module-card h5 {
+        margin: 0 0 7px;
+        font-size: .83rem;
+        font-weight: 800;
+    }
+
+    .module-value {
+        color: var(--kapda-primary);
+        font-size: 1.45rem;
+        font-weight: 850;
+        line-height: 1.2;
+    }
+
+    .module-note {
+        margin-top: 7px;
+        color: var(--kapda-muted);
+        font-size: .72rem;
+        line-height: 1.5;
+    }
+
+    .reach-progress {
+        height: 9px;
+        overflow: hidden;
+        background: #eaf0f5;
+        border-radius: 999px;
+    }
+
+    .reach-progress-bar {
+        height: 100%;
+        max-width: 100%;
+        background: var(--kapda-green);
+        border-radius: inherit;
+    }
+
+    .reach-summary {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .reach-summary strong {
+        display: block;
+        color: var(--kapda-ink);
+        font-size: 1.75rem;
+        font-weight: 850;
+    }
+
+    .reach-summary span {
+        color: var(--kapda-muted);
+        font-size: .76rem;
+    }
+
+    .reach-percent {
+        color: var(--kapda-green);
+        font-size: 1.1rem;
+        font-weight: 850;
+    }
+
+    .reach-breakdown {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 22px;
+    }
+
+    .reach-item {
+        padding: 12px;
+        background: var(--kapda-bg);
+        border-radius: 9px;
+    }
+
+    .reach-item span {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--kapda-muted);
+        font-size: .72rem;
+    }
+
+    .reach-item strong {
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .table-responsive {
+        width: 100%;
+    }
+
+    .dashboard-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .dashboard-table thead th {
+        padding: 12px 16px;
+        color: #667789;
+        background: #f7f9fb;
+        border-bottom: 1px solid var(--kapda-border);
+        font-size: .69rem;
+        font-weight: 800;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .dashboard-table tbody td {
+        padding: 14px 16px;
+        color: #445669;
+        border-bottom: 1px solid #edf1f5;
+        font-size: .8rem;
+        vertical-align: middle;
+    }
+
+    .dashboard-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .table-primary-text {
+        color: var(--kapda-ink);
+        font-weight: 750;
+    }
+
+    .table-secondary-text {
+        display: block;
+        margin-top: 4px;
+        color: var(--kapda-muted);
+        font-size: .72rem;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        color: #536579;
+        background: #edf1f5;
+        border-radius: 999px;
+        font-size: .69rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .status-active,
+    .status-completed {
+        color: #167342;
+        background: #e8f6ee;
+    }
+
+    .status-dropout,
+    .status-delayed,
+    .status-cancelled {
+        color: #963b3b;
+        background: #faecec;
+    }
+
+    .status-in_progress,
+    .status-planned {
+        color: #285c88;
+        background: #eaf2fa;
+    }
+
+    .status-on_hold,
+    .status-pending {
+        color: #8a601c;
+        background: #fff4df;
+    }
+
+    .empty-state {
+        padding: 30px 20px;
+        color: var(--kapda-muted);
+        font-size: .84rem;
+        text-align: center;
+    }
+
+    .empty-state i {
+        display: block;
+        margin-bottom: 9px;
+        color: #a4b3c0;
+        font-size: 1.6rem;
+    }
+
+    .panel-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 12px 18px;
+        background: #fcfdfe;
+        border-top: 1px solid var(--kapda-border);
+    }
+
+    .panel-footer a {
+        color: var(--kapda-primary);
+        font-size: .79rem;
+        font-weight: 800;
+    }
+
+    .panel-footer a:hover {
+        color: var(--kapda-primary-dark);
+    }
+
+    .dashboard-note {
+        padding: 12px 15px;
+        color: #5b6f81;
+        background: #eef5fa;
+        border: 1px solid #dce9f2;
+        border-radius: 10px;
+        font-size: .76rem;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 1199px) {
+        .metric-grid,
+        .module-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .dashboard-hero {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 23px;
+        }
+
+        .hero-actions {
+            width: 100%;
+        }
+
+        .metric-grid,
+        .module-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 11px;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .metric-card {
+            padding: 14px;
+        }
+
+        .metric-top {
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            width: 34px;
+            height: 34px;
+            flex-basis: 34px;
+        }
+
+        .panel-header,
+        .panel-body {
+            padding: 15px;
+        }
+
+        .reach-breakdown {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 380px) {
+        .metric-grid,
+        .module-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .hero-actions > a {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="kapda-dashboard">
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+    <section class="dashboard-hero">
+        <div class="hero-copy">
+            <div class="hero-eyebrow">
+                <i class="bi bi-grid-1x2-fill"></i>
+                KAPDA NGO · Programme Portfolio
+            </div>
+
+            <h2>Good work starts with clear data.</h2>
+
+            <p>
+                Monitor education outcomes, programme delivery, beneficiary
+                reach, community systems, livelihoods, and implementation
+                progress from one consolidated workspace.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a href="{% url 'learners:create' %}" class="btn-kapda-light">
+                <i class="bi bi-person-plus"></i>
+                Register learner
+            </a>
+
+            <a href="{% url 'reports:learner_export' %}?{{ filter_query }}"
+               class="btn-kapda-light">
+                <i class="bi bi-download"></i>
+                Export learners
+            </a>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         FILTERS
+    ====================================================== -->
+    <div class="filter-toggle-row">
+        <button type="button" class="btn-kapda-outline filter-toggle" id="dashboardFilterToggle"
+                aria-expanded="false" aria-controls="dashboardFilterPanel">
+            <i class="bi bi-funnel"></i>
+            Filters
+        </button>
+    </div>
+
+    <section class="filter-panel" id="dashboardFilterPanel" hidden>
+        <div class="filter-title">
+            <i class="bi bi-funnel"></i>
+            Filter dashboard
+            <button type="button" class="btn-close ms-auto" id="dashboardFilterClose"
+                    aria-label="Close filters"></button>
+        </div>
+
+        <form method="get" action="{% url 'reports:reports_dashboard' %}">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label for="project" class="form-label">Project</label>
+                    <select name="project" id="project" class="form-select">
+                        <option value="">All projects</option>
+                        {% for p in projects %}
+                            <option value="{{ p.pk }}"
+                                {% if project_filter == p.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ p.name }}{% if p.code %} ({{ p.code }}){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="school" class="form-label">School</label>
+                    <select name="school" id="school" class="form-select">
+                        <option value="">All schools</option>
+                        {% for s in schools %}
+                            <option value="{{ s.pk }}"
+                                {% if school_filter == s.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="phase" class="form-label">Project phase</label>
+                    <select name="phase" id="phase" class="form-select"><option value="">All phases</option>{% for value,label in phases %}<option value="{{ value }}" {% if filters.phase == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+                </div>
+
+                <div class="col-6 col-md-3"><label for="year" class="form-label">Reporting year</label><select name="year" id="year" class="form-select"><option value="">All years</option>{% for y in years %}<option value="{{ y.pk }}" {% if filters.year == y.pk|stringformat:'s' %}selected{% endif %}>{{ y.name }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="quarter" class="form-label">Quarter</label><select name="quarter" id="quarter" class="form-select"><option value="">All quarters</option>{% for q in '1234' %}<option value="{{ q }}" {% if filters.quarter == q %}selected{% endif %}>Q{{ q }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="month" class="form-label">Month</label><select name="month" id="month" class="form-select"><option value="">All months</option>{% for value,label in months %}<option value="{{ value }}" {% if filters.month == value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="term" class="form-label">Term</label><select name="term" id="term" class="form-select"><option value="">All terms</option>{% for t in terms %}<option value="{{ t.pk }}" {% if filters.term == t.pk|stringformat:'s' %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="class" class="form-label">Class</label><select name="class" id="class" class="form-select"><option value="">All classes</option>{% for value,label in class_choices %}<option value="{{ value }}" {% if filters.class == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="status" class="form-label">Learner status</label><select name="status" id="status" class="form-select"><option value="">All learner statuses</option>{% for value,label in statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="sex" class="form-label">Sex</label><select name="sex" id="sex" class="form-select"><option value="">All sexes</option>{% for value,label in sex_choices %}<option value="{{ value }}" {% if filters.sex == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="age_group" class="form-label">Age group</label><select name="age_group" id="age_group" class="form-select"><option value="">All age groups</option>{% for value,label in age_groups %}<option value="{{ value }}" {% if filters.age_group == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="disability" class="form-label">Disability status</label><select name="disability" id="disability" class="form-select"><option value="">All statuses</option><option value="yes" {% if filters.disability == 'yes' %}selected{% endif %}>With disability</option><option value="no" {% if filters.disability == 'no' %}selected{% endif %}>Without disability</option></select></div>
+                <div class="col-6 col-md-3"><label for="participant_category" class="form-label">Participant category</label><select name="participant_category" id="participant_category" class="form-select"><option value="">All categories</option>{% for value,label in participant_categories %}<option value="{{ value }}" {% if filters.participant_category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="sub_county" class="form-label">Sub-county</label><select name="sub_county" id="sub_county" class="form-select"><option value="">All sub-counties</option>{% for value in sub_counties %}<option value="{{ value }}" {% if filters.sub_county == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-3"><label for="parish" class="form-label">Parish</label><select name="parish" id="parish" class="form-select"><option value="">All parishes</option>{% for value in parishes %}<option value="{{ value }}" {% if filters.parish == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+                <div class="col-6 col-md-2 d-grid"><button type="submit" class="btn-kapda">Apply filters</button></div>
+                <div class="col-6 col-md-2 d-grid"><a href="{% url 'reports:reports_dashboard' %}" class="btn-kapda-outline">Reset</a></div>
+            </div>
+        </form>
+    </section>
+
+    <!-- =====================================================
+         EDUCATION KPIs
+    ====================================================== -->
+    <section class="dashboard-section">
+        <div class="programme-heading programme-epick">
+            <span class="section-kicker">EPICK programme</span>
+            <h2>Education, protection and institutional capacity</h2>
+            <p>Enrolment, attendance, retention, completion, assessment and examination performance, transition, MHM support, and SMC/PTA participation.</p>
+        </div>
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">Education outcomes</span>
+                <h3>Learner overview</h3>
+                <p>Registration, participation, inclusion, and progression.</p>
+            </div>
+
+            <a href="{% url 'learners:list' %}" class="btn-kapda-outline">
+                Learner directory
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="metric-grid">
+            <article class="metric-card metric-primary">
+                <div class="metric-top">
+                    <span class="metric-label">Total learners</span>
+                    <span class="metric-icon"><i class="bi bi-people"></i></span>
+                </div>
+                <div class="metric-value">{{ total|intcomma }}</div>
+                <div class="metric-foot">Learners matching current filters</div>
+            </article>
+
+            <article class="metric-card metric-green">
+                <div class="metric-top">
+                    <span class="metric-label">Active learners</span>
+                    <span class="metric-icon"><i class="bi bi-person-check"></i></span>
+                </div>
+                <div class="metric-value">{{ active|intcomma }}</div>
+                <div class="metric-foot">Currently marked active</div>
+            </article>
+
+            <article class="metric-card metric-primary">
+                <div class="metric-top">
+                    <span class="metric-label">Girls</span>
+                    <span class="metric-icon"><i class="bi bi-gender-female"></i></span>
+                </div>
+                <div class="metric-value">{{ girls|intcomma }}</div>
+                <div class="metric-foot">Female learners recorded</div>
+            </article>
+
+            <article class="metric-card metric-primary">
+                <div class="metric-top">
+                    <span class="metric-label">Boys</span>
+                    <span class="metric-icon"><i class="bi bi-gender-male"></i></span>
+                </div>
+                <div class="metric-value">{{ boys|intcomma }}</div>
+                <div class="metric-foot">Male learners recorded</div>
+            </article>
+
+            <article class="metric-card metric-purple">
+                <div class="metric-top">
+                    <span class="metric-label">Learners with disabilities</span>
+                    <span class="metric-icon"><i class="bi bi-universal-access"></i></span>
+                </div>
+                <div class="metric-value">{{ pwd|intcomma }}</div>
+                <div class="metric-foot">Disability status recorded</div>
+            </article>
+
+            <article class="metric-card metric-red">
+                <div class="metric-top">
+                    <span class="metric-label">Dropouts</span>
+                    <span class="metric-icon"><i class="bi bi-person-x"></i></span>
+                </div>
+                <div class="metric-value">{{ dropouts|intcomma }}</div>
+                <div class="metric-foot">Learners marked as dropout</div>
+            </article>
+
+            <article class="metric-card metric-green">
+                <div class="metric-top">
+                    <span class="metric-label">Completed learners</span>
+                    <span class="metric-icon"><i class="bi bi-mortarboard"></i></span>
+                </div>
+                <div class="metric-value">{{ completed|intcomma }}</div>
+                <div class="metric-foot">Learner status marked completed</div>
+            </article>
+
+            <article class="metric-card metric-amber">
+                <div class="metric-top">
+                    <span class="metric-label">Class transitions</span>
+                    <span class="metric-icon"><i class="bi bi-arrow-left-right"></i></span>
+                </div>
+                <div class="metric-value">{{ transition|intcomma }}</div>
+                <div class="metric-foot">Recorded transition movements</div>
+            </article>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         EDUCATION CHARTS
+    ====================================================== -->
+    <section class="dashboard-section" id="education-charts">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">Data and distribution</span>
+                <h3>Education performance snapshot</h3>
+                <p>Explore class distribution, gender disaggregation, and learner status.</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Active learners by class</h4>
+                        <p>Current class distribution</p>
+                    </div>
+                    <i class="bi bi-bar-chart-line" style="color:var(--kapda-primary)"></i>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-wrap" id="classChartWrap">
+                        <canvas id="classChart"></canvas>
+                    </div>
+                    <div class="chart-empty" id="classChartEmpty">
+                        No class distribution data is available for these filters.
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header"><div><h4>Scholarship learners by school</h4><p>Active learners with current enrolments</p></div><i class="bi bi-building-check" style="color:var(--kapda-primary)"></i></div>
+                <div class="panel-body"><div class="chart-wrap"><canvas id="scholarshipSchoolChart"></canvas></div><div class="chart-empty" id="scholarshipSchoolChartEmpty">No school scholarship data is available.</div></div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header"><div><h4>Completed learners employed</h4><p>Employment outcomes by year employed</p></div><i class="bi bi-briefcase" style="color:var(--kapda-primary)"></i></div>
+                <div class="panel-body"><div class="chart-wrap"><canvas id="employmentYearChart"></canvas></div><div class="chart-empty" id="employmentYearChartEmpty">No employment outcomes are recorded.</div></div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div><h4>Learners by age group</h4><p>Estimated age distribution</p></div>
+                    <i class="bi bi-bar-chart-steps" style="color:var(--kapda-primary)"></i>
+                </div>
+                <div class="panel-body"><div class="chart-wrap"><canvas id="ageChart"></canvas></div><div class="chart-empty" id="ageChartEmpty">No age data is available.</div></div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div><h4>Scholarship coverage</h4><p>Active learners only; completed learners excluded</p></div>
+                    <i class="bi bi-award" style="color:var(--kapda-primary)"></i>
+                </div>
+                <div class="panel-body"><div class="chart-wrap"><canvas id="scholarshipChart"></canvas></div><div class="chart-empty" id="scholarshipChartEmpty">No scholarship data is available.</div></div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Gender disaggregation</h4>
+                        <p>Registered learners by recorded sex</p>
+                    </div>
+                    <i class="bi bi-pie-chart" style="color:var(--kapda-primary)"></i>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-wrap" id="genderChartWrap">
+                        <canvas id="genderChart"></canvas>
+                    </div>
+                    <div class="chart-empty" id="genderChartEmpty">
+                        No gender data is available for these filters.
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Learner status distribution</h4>
+                        <p>Current status recorded in learner profiles</p>
+                    </div>
+                    <i class="bi bi-clipboard-data" style="color:var(--kapda-primary)"></i>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-wrap" id="statusChartWrap">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="chart-empty" id="statusChartEmpty">
+                        No learner status data is available.
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Learners by location</h4>
+                        <p>Top recorded locations in the current learner set</p>
+                    </div>
+                    <i class="bi bi-geo-alt" style="color:var(--kapda-primary)"></i>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-wrap" id="locationChartWrap">
+                        <canvas id="locationChart"></canvas>
+                    </div>
+                    <div class="chart-empty" id="locationChartEmpty">
+                        No location data is available.
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         EDUCATION RECORDS
+    ====================================================== -->
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">Learner register</span>
+                <h3>Recently registered learners</h3>
+                <p>The latest eight records matching the selected filters.</p>
+            </div>
+
+            <a href="{% url 'learners:list' %}" class="btn-kapda-outline">
+                View all learners
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="dashboard-panel">
+            <div class="table-responsive">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Registration number</th>
+                            <th>Learner</th>
+                            <th>Current class</th>
+                            <th>Sex</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for l in recent %}
+                            <tr>
+                                <td>
+                                    <span class="table-primary-text">{{ l.reg_no|default:"—" }}</span>
+                                </td>
+                                <td>
+                                    <span class="table-primary-text">{{ l.full_name|default:"Unnamed learner" }}</span>
+                                </td>
+                                <td>{{ l.current_class|default:"—" }}</td>
+                                <td>{{ l.get_sex_display|default:l.sex|default:"—" }}</td>
+                                <td>
+                                    <span class="status-pill
+                                        {% if l.status == 'active' %}status-active
+                                        {% elif l.status == 'dropout' %}status-dropout
+                                        {% elif l.status == 'completed' %}status-completed
+                                        {% endif %}">
+                                        {{ l.get_status_display|default:l.status|default:"Not recorded" }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'learners:detail' l.pk %}"
+                                       class="btn-kapda-outline"
+                                       style="min-height:32px;padding:6px 10px;font-size:.73rem">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="bi bi-people"></i>
+                                        No learners match the selected filters.
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         PROGRAMME DELIVERY
+    ====================================================== -->
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">Implementation monitoring</span>
+                <h3>Programme activity delivery</h3>
+                <p>Activity progress and reported participant reach.</p>
+            </div>
+        </div>
+
+        <div class="metric-grid" style="margin-bottom:18px">
+            <article class="metric-card metric-primary">
+                <div class="metric-top">
+                    <span class="metric-label">Recorded activities</span>
+                    <span class="metric-icon"><i class="bi bi-list-check"></i></span>
+                </div>
+                <div class="metric-value">{{ activity_count|intcomma }}</div>
+                <div class="metric-foot">Active activities matching the selected filters</div>
+            </article>
+
+            <article class="metric-card metric-green">
+                <div class="metric-top">
+                    <span class="metric-label">Completed activities</span>
+                    <span class="metric-icon"><i class="bi bi-check-circle"></i></span>
+                </div>
+                <div class="metric-value">{{ activity_completed|intcomma }}</div>
+                <div class="metric-foot">Marked completed</div>
+            </article>
+
+            <article class="metric-card metric-primary">
+                <div class="metric-top">
+                    <span class="metric-label">In progress</span>
+                    <span class="metric-icon"><i class="bi bi-arrow-repeat"></i></span>
+                </div>
+                <div class="metric-value">{{ activity_in_progress|intcomma }}</div>
+                <div class="metric-foot">Implementation ongoing</div>
+            </article>
+
+            <article class="metric-card metric-amber">
+                <div class="metric-top">
+                    <span class="metric-label">Planned activities</span>
+                    <span class="metric-icon"><i class="bi bi-calendar-plus"></i></span>
+                </div>
+                <div class="metric-value">{{ activity_planned|intcomma }}</div>
+                <div class="metric-foot">Activities awaiting implementation</div>
+            </article>
+
+            <article class="metric-card metric-red">
+                <div class="metric-top">
+                    <span class="metric-label">Delayed activities</span>
+                    <span class="metric-icon"><i class="bi bi-clock-history"></i></span>
+                </div>
+                <div class="metric-value">{{ activity_delayed|intcomma }}</div>
+                <div class="metric-foot">Marked delayed</div>
+            </article>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Participant reach against target</h4>
+                        <p>Aggregated activity participant figures</p>
+                    </div>
+                    <i class="bi bi-bullseye" style="color:var(--kapda-green)"></i>
+                </div>
+
+                <div class="panel-body">
+                    <div class="reach-summary">
+                        <div>
+                            <strong>{{ actual_reach|intcomma }}</strong>
+                            <span>Actual participants reported</span>
+                        </div>
+                        <div class="text-end">
+                            <div class="reach-percent">{{ reach_percentage|floatformat:1 }}%</div>
+                            <span>Of target</span>
+                        </div>
+                    </div>
+
+                    <div class="reach-progress"
+                         role="progressbar"
+                         aria-label="Participant reach against target"
+                         aria-valuemin="0"
+                         aria-valuemax="100"
+                         aria-valuenow="{{ reach_percentage }}">
+                        <div class="reach-progress-bar"
+                             style="width:{% if reach_percentage > 100 %}100{% else %}{{ reach_percentage }}{% endif %}%">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-2">
+                        <span class="text-muted small">Target: {{ target_reach|intcomma }}</span>
+                        <span class="text-muted small">Actual: {{ actual_reach|intcomma }}</span>
+                    </div>
+
+                    <div class="reach-breakdown">
+                        <div class="reach-item">
+                            <span>Women reached</span>
+                            <strong>{{ reach_women|intcomma }}</strong>
+                        </div>
+                        <div class="reach-item">
+                            <span>Men reached</span>
+                            <strong>{{ reach_men|intcomma }}</strong>
+                        </div>
+                        <div class="reach-item">
+                            <span>Persons with disabilities</span>
+                            <strong>{{ reach_pwd|intcomma }}</strong>
+                        </div>
+                        <div class="reach-item">
+                            <span>Girls reached</span>
+                            <strong>{{ reach_girls|intcomma }}</strong>
+                        </div>
+                        <div class="reach-item">
+                            <span>Boys reached</span>
+                            <strong>{{ reach_boys|intcomma }}</strong>
+                        </div>
+                        <div class="reach-item">
+                            <span>Reach target</span>
+                            <strong>{{ target_reach|intcomma }}</strong>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small mt-3 mb-0">
+                        Participant figures are summed from activity records.
+                        They may include repeat participation across activities
+                        and should not be interpreted as unique beneficiaries.
+                    </p>
+                </div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Activity status</h4>
+                        <p>Distribution of recorded implementation statuses</p>
+                    </div>
+                    <i class="bi bi-pie-chart-fill" style="color:var(--kapda-primary)"></i>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-wrap" id="activityChartWrap">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                    <div class="chart-empty" id="activityChartEmpty">
+                        No activity status data is available for these filters.
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="dashboard-panel mt-3">
+            <div class="panel-header">
+                <div>
+                    <h4>Recent programme activities</h4>
+                    <p>Latest recorded activities matching the selected filters.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Project</th>
+                            <th>Activity type</th>
+                            <th>Target</th>
+                            <th>Reached</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in activities %}
+                            <tr>
+                                <td>
+                                    <span class="table-primary-text">{{ a.name }}</span>
+                                    {% if a.activity_type %}
+                                        <span class="table-secondary-text">{{ a.activity_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ a.project.name|default:"—" }}</td>
+                                <td>{{ a.activity_type|default:"Activity / indicator" }}</td>
+                                <td>
+                                    {{ a.target|default_if_none:0|intcomma }} {{ a.unit }}
+                                </td>
+                                <td>
+                                    {{ a.reached_total|default_if_none:0|intcomma }}
+                                </td>
+                                <td>
+                                    <span class="status-pill {% if a.reached_total >= a.target %}status-completed{% else %}status-planned{% endif %}">
+                                        {% if a.reached_total >= a.target %}Target reached{% else %}In progress{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="bi bi-calendar2-check"></i>
+                                        No programme activities found for these filters.
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         EPICK EDUCATION INDICATORS
+    ====================================================== -->
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">Learning and progression</span>
+                <h3>Education records</h3>
+                <p>Coverage of assessment, attendance, transition, and learner support records.</p>
+            </div>
+        </div>
+
+        <div class="module-grid">
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-journal-check"></i></div>
+                <h5>Enrolment records</h5>
+                <div class="module-value">{{ enrolment_count|intcomma }}</div>
+                <div class="module-note">Enrolment records linked to the filtered learner set.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-calendar2-check"></i></div>
+                <h5>Attendance records</h5>
+                <div class="module-value">{{ attendance_count|intcomma }}</div>
+                <div class="module-note">Attendance entries recorded for filtered learners.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-clipboard-data"></i></div>
+                <h5>Assessments</h5>
+                <div class="module-value">{{ assessment_count|intcomma }}</div>
+                <div class="module-note">
+                    Average recorded score: {{ assessment_avg|floatformat:2 }}.
+                    This is a raw score, not a percentage.
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-award"></i></div>
+                <h5>UNEB results</h5>
+                <div class="module-value">{{ uneb_count|intcomma }}</div>
+                <div class="module-note">UNEB result records linked to the filtered learner set.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-heart"></i></div>
+                <h5>Learner support</h5>
+                <div class="module-value">{{ support_count|intcomma }}</div>
+                <div class="module-note">Recorded learner support entries.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-droplet-half"></i></div>
+                <h5>MHM / sanitary pad support</h5>
+                <div class="module-value">{{ sanitary_pad_support_count|intcomma }}</div>
+                <div class="module-note">Sanitary pad and MHM support records.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-check2-circle"></i></div>
+                <h5>Completed enrolments</h5>
+                <div class="module-value">{{ completion|intcomma }}</div>
+                <div class="module-note">Enrolments with completed outcome.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-arrow-repeat"></i></div>
+                <h5>Retained enrolments</h5>
+                <div class="module-value">{{ retention|intcomma }}</div>
+                <div class="module-note">Enrolments with retained outcome.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-person-check"></i></div>
+                <h5>Other sex / not recorded</h5>
+                <div class="module-value">{{ other_sex|intcomma }}</div>
+                <div class="module-note">Learners outside the recorded F and M categories.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         PROJECT PERFORMANCE
+    ====================================================== -->
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">Results management</span>
+                <h3>Project performance and reporting</h3>
+                <p>Portfolio coverage of projects, indicators, targets, actuals, and reporting periods.</p>
+            </div>
+        </div>
+
+        <div class="module-grid">
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-kanban"></i></div>
+                <h5>All projects</h5>
+                <div class="module-value">{{ project_count|intcomma }}</div>
+                <div class="module-note">Projects in the project register.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-folder-check"></i></div>
+                <h5>Active projects</h5>
+                <div class="module-value">{{ active_project_count|intcomma }}</div>
+                <div class="module-note">Projects currently marked active.</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-icon"><i class="bi bi-bullseye"></i></div>
+                <h5>Indicators</h5>
+                <div class="module-value">{{ indicator_count|intcomma }}</div>
+                <div class="module-note">Indicators in the results framework.</div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- =====================================================
+         BSLFSR INDICATORS
+    ====================================================== -->
+<!--    <section class="dashboard-section">-->
+<!--        <div class="programme-heading programme-bslfsr">-->
+<!--            <span class="section-kicker">BSLFSR programme</span>-->
+<!--            <h2>Livelihoods, financial inclusion and peacebuilding</h2>-->
+<!--            <p>Beneficiaries, agriculture, VSLA, savings and loans, group performance, social protection, and peacebuilding indicators.</p>-->
+<!--        </div>-->
+<!--        <div class="section-heading">-->
+<!--            <div>-->
+<!--                <span class="section-kicker">Community livelihoods</span>-->
+<!--                <h3>Beneficiaries, farmers and VSLA</h3>-->
+<!--                <p>Record coverage across livelihood and financial-inclusion modules.</p>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--    </section>-->
+
+    <!-- =====================================================
+         GOVERNANCE AND COMMUNITY SERVICES
+    ====================================================== -->
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">EPICK · SMC/PTA participation</span>
+                <h3>School governance and community services</h3>
+                <p>SMC/PTA membership, meetings, trainings, school improvement, MHM, WASH and peacebuilding records.</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>School and community governance</h4>
+                        <p>Records across governance-related modules</p>
+                    </div>
+                    <i class="bi bi-bank" style="color:var(--kapda-primary)"></i>
+                </div>
+
+                <div class="panel-body">
+                    <div class="module-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+                        <div class="module-card">
+                            <h5>Governance members</h5>
+                            <div class="module-value">{{ governance_summary.members|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>SMC members</h5>
+                            <div class="module-value">{{ governance_summary.smc_members|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>PTA members</h5>
+                            <div class="module-value">{{ governance_summary.pta_members|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>Governance meetings</h5>
+                            <div class="module-value">{{ governance_summary.meetings|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>SMC meetings</h5>
+                            <div class="module-value">{{ governance_summary.smc_meetings|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>PTA meetings</h5>
+                            <div class="module-value">{{ governance_summary.pta_meetings|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>Governance trainings</h5>
+                            <div class="module-value">{{ governance_summary.trainings|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>Improvement plans</h5>
+                            <div class="module-value">{{ governance_summary.improvement_plans|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>Governance actions</h5>
+                            <div class="module-value">{{ governance_summary.actions|intcomma }}</div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>EPICK services and BSLFSR peacebuilding</h4>
+                        <p>Field monitoring, MHM/WASH support and peacebuilding delivery records.</p>
+                    </div>
+                    <i class="bi bi-geo" style="color:var(--kapda-green)"></i>
+                </div>
+
+                <div class="panel-body">
+                    <div class="module-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+                        <div class="module-card">
+                            <h5>Field visits</h5>
+                            <div class="module-value">{{ service_summary.field_visits|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>Follow-up actions</h5>
+                            <div class="module-value">{{ service_summary.follow_up_actions|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>MHM sessions</h5>
+                            <div class="module-value">{{ service_summary.mhm_sessions|intcomma }}</div>
+                        </div>
+
+                        <div class="module-card">
+                            <h5>WASH facilities</h5>
+                            <div class="module-value">{{ service_summary.wash_facilities|intcomma }}</div>
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+{% if request.user.role == "admin" or request.user.is_superuser %}
+
+    <!-- =====================================================
+         AUDIT / ACCOUNTABILITY
+    ====================================================== -->
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">Accountability</span>
+                <h3>Recent audit events</h3>
+                <p>Latest entries from the system audit log.</p>
+            </div>
+        </div>
+
+
+<div class="dashboard-panel">
+    <div class="dashboard-panel-header d-flex flex-wrap align-items-center justify-content-between gap-2 p-3">
+        <div>
+            <h2 class="h5 mb-1">Audit trail</h2>
+            <p class="text-muted small mb-0">
+                Review system activities and recorded changes.
+            </p>
+        </div>
+
+        <span class="badge rounded-pill bg-light text-dark border">
+            {{ audit_events|length }} event{{ audit_events|length|pluralize }}
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="dashboard-table">
+            <thead>
+                <tr>
+                    <th scope="col">Activity</th>
+                    <th scope="col">Affected record</th>
+                    <th scope="col">Performed by</th>
+                    <th scope="col">Date &amp; time</th>
+                    <th scope="col">IP address</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for event in audit_events %}
+                    <tr>
+                        <td>
+                            <div class="table-primary-text">
+                                {{ event.action|default:"System activity" }}
+                            </div>
+
+                            {% if event.summary %}
+                                <div class="small text-muted mt-1">
+                                    {{ event.summary|truncatechars:140 }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="table-primary-text">
+                                {{ event.model_label|default:"—" }}
+                            </div>
+
+                            {% if event.object_id %}
+                                <div class="small text-muted mt-1">
+                                    ID: {{ event.object_id }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if event.actor %}
+                                <span class="table-primary-text">
+                                    {{ event.actor.get_full_name|default:event.actor.get_username }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">System / unavailable</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="table-primary-text">
+                                {{ event.created_at|date:"d M Y" }}
+                            </span>
+                            <div class="small text-muted mt-1">
+                                {{ event.created_at|date:"H:i" }}
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if event.ip_address %}
+                                <span class="small">{{ event.ip_address }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state text-center py-5">
+                                <i class="bi bi-shield-check fs-2 d-block mb-2"
+                                   aria-hidden="true"></i>
+                                <div class="fw-semibold">
+                                    No audit events recorded
+                                </div>
+                                <p class="text-muted small mb-0 mt-1">
+                                    System activities will appear here when recorded.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+    </section>
+{% endif %}
+    <!-- =====================================================
+         DATA SCOPE NOTE
+    ====================================================== -->
+    <div class="dashboard-note">
+        <strong>Reporting note:</strong>
+        learner and programme activity indicators use the selected filters
+        where the relevant relationships are available. Several governance,
+        livelihood, and community-service figures are portfolio-wide record
+        counts. They should not be interpreted as project-specific totals
+        until project-level filtering is implemented for those modules.
+    </div>
+
+</div>
+
+<!-- Safely serialize Python data for JavaScript charts. -->
+{{ class_data|json_script:"kapda-class-data" }}
+{{ sex_data|json_script:"kapda-sex-data" }}
+{{ status_data|json_script:"kapda-status-data" }}
+{{ location_data|json_script:"kapda-location-data" }}
+{{ age_data|json_script:"kapda-age-data" }}
+{{ scholarship_data|json_script:"kapda-scholarship-data" }}
+{{ scholarship_school_data|json_script:"kapda-scholarship-school-data" }}
+{{ employment_year_data|json_script:"kapda-employment-year-data" }}
+{{ activity_status_data|json_script:"kapda-activity-status-data" }}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+
+    const filterToggle = document.getElementById("dashboardFilterToggle");
+    const filterPanel = document.getElementById("dashboardFilterPanel");
+    const filterClose = document.getElementById("dashboardFilterClose");
+
+    function setFiltersVisible(visible) {
+        if (!filterToggle || !filterPanel) return;
+        filterPanel.hidden = !visible;
+        filterToggle.setAttribute("aria-expanded", String(visible));
+        filterToggle.innerHTML = visible
+            ? '<i class="bi bi-funnel-fill"></i> Hide filters'
+            : '<i class="bi bi-funnel"></i> Filters';
+    }
+
+    if (filterToggle) filterToggle.addEventListener("click", function () {
+        setFiltersVisible(filterPanel.hidden);
+    });
+    if (filterClose) filterClose.addEventListener("click", function () {
+        setFiltersVisible(false);
+    });
+
+    const palette = {
+        navy: "#2c5d83",
+        navyDark: "#1d4566",
+        green: "#198a52",
+        red: "#9d3b3b",
+        amber: "#d39a35",
+        purple: "#8064a2",
+        blueLight: "#8eb4d2",
+        grey: "#aab7c4"
+    };
+
+    function readJSON(id) {
+        const element = document.getElementById(id);
+        if (!element) return [];
+
+        try {
+            const value = JSON.parse(element.textContent);
+            return Array.isArray(value) ? value : [];
+        } catch (error) {
+            console.error("Could not read dashboard chart data:", id, error);
+            return [];
+        }
+    }
+
+    function showEmpty(canvasId, emptyId, hasData) {
+        const canvas = document.getElementById(canvasId);
+        const empty = document.getElementById(emptyId);
+
+        if (canvas) {
+            canvas.style.display = hasData ? "block" : "none";
+        }
+
+        if (empty) {
+            empty.classList.toggle("visible", !hasData);
+        }
+    }
+
+    function createChart(canvasId, emptyId, labels, values, config) {
+        const canvas = document.getElementById(canvasId);
+        const hasData = labels.length > 0 && values.some(
+            value => Number(value) > 0
+        );
+
+        showEmpty(canvasId, emptyId, hasData);
+
+        if (!canvas || !hasData || typeof Chart === "undefined") {
+            return;
+        }
+
+        new Chart(canvas, {
+            type: config.type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: config.datasetLabel || "Records",
+                    data: values,
+                    backgroundColor: config.colors,
+                    borderColor: config.borderColor || "#ffffff",
+                    borderWidth: config.borderWidth ?? 2,
+                    borderRadius: config.type === "bar" ? 6 : 0,
+                    maxBarThickness: 42,
+                    minBarLength: config.minBarLength || 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: config.indexAxis || "x",
+                plugins: {
+                    legend: {
+                        display: config.legend !== false,
+                        position: config.legendPosition || "bottom",
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            padding: 16,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const parsed = context.parsed || {};
+                                const value = context.chart.options.indexAxis === "y"
+                                    ? (parsed.x ?? context.raw)
+                                    : (parsed.y ?? parsed ?? context.raw);
+                                return " " + Number(value).toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: config.type === "bar" ? {
+                    x: {
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: { precision: 0 }
+                    },
+                    y: {
+                        grid: { color: "#edf1f5" },
+                        ticks: { font: { size: 10 } }
+                    }
+                } : {}
+            }
+        });
+    }
+
+    if (typeof Chart === "undefined") {
+        document.querySelectorAll(".chart-wrap").forEach(function (wrap) {
+            wrap.style.display = "none";
+        });
+
+        document.querySelectorAll(".chart-empty").forEach(function (empty) {
+            empty.textContent = "Charts could not be loaded. Check the Chart.js CDN connection.";
+            empty.classList.add("visible");
+        });
+
+        return;
+    }
+
+    // Active learners by current class
+    const classData = readJSON("kapda-class-data");
+    createChart(
+        "classChart",
+        "classChartEmpty",
+        classData.map(row => row.current_class || "Unassigned"),
+        classData.map(row => Number(row.total || 0)),
+        {
+            type: "bar",
+            legend: false,
+            indexAxis: "y",
+            colors: palette.navy
+        }
+    );
+
+    // Gender disaggregation
+    const sexData = readJSON("kapda-sex-data");
+
+    const sexLabels = sexData.map(function (row) {
+        const value = row.sex;
+
+        if (value === "F") return "Girls";
+        if (value === "M") return "Boys";
+        if (value === "O") return "Other";
+        if (!value) return "Not recorded";
+
+        return value;
+    });
+
+    createChart(
+        "genderChart",
+        "genderChartEmpty",
+        sexLabels,
+        sexData.map(row => Number(row.total || 0)),
+        {
+            type: "doughnut",
+            colors: [
+                palette.green,
+                palette.navy,
+                palette.purple,
+                palette.grey,
+                palette.amber
+            ]
+        }
+    );
+
+    // Learner status
+    const statusData = readJSON("kapda-status-data");
+
+    createChart(
+        "statusChart",
+        "statusChartEmpty",
+        statusData.map(row => {
+            const value = row.status || "Not recorded";
+            return value.replaceAll("_", " ");
+        }),
+        statusData.map(row => Number(row.total || 0)),
+        {
+            type: "doughnut",
+            colors: [
+                palette.green,
+                palette.red,
+                palette.navy,
+                palette.amber,
+                palette.purple,
+                palette.grey
+            ]
+        }
+    );
+
+    // Learners by location
+    const locationData = readJSON("kapda-location-data");
+
+    createChart(
+        "locationChart",
+        "locationChartEmpty",
+        locationData.map(row => row["location__district"] || "Not recorded"),
+        locationData.map(row => Number(row.total || 0)),
+        {
+            type: "bar",
+            legend: false,
+            indexAxis: "y",
+            colors: palette.green
+        }
+    );
+
+    const ageData = readJSON("kapda-age-data");
+    createChart("ageChart", "ageChartEmpty", ageData.map(row => row.age_group), ageData.map(row => Number(row.total || 0)), {
+        type: "bar", legend: false, colors: palette.navy
+    });
+
+    const scholarshipData = readJSON("kapda-scholarship-data");
+    createChart("scholarshipChart", "scholarshipChartEmpty", scholarshipData.map(row => row.status), scholarshipData.map(row => Number(row.total || 0)), {
+        type: "doughnut", colors: [palette.green, palette.grey]
+    });
+
+    const scholarshipSchoolData = readJSON("kapda-scholarship-school-data");
+    createChart("scholarshipSchoolChart", "scholarshipSchoolChartEmpty", scholarshipSchoolData.map(row => row["enrolments__school__name"] || "School not recorded"), scholarshipSchoolData.map(row => Number(row.total || 0)), {
+        type: "bar", legend: false, indexAxis: "y", colors: palette.green, minBarLength: 10
+    });
+
+    const employmentYearData = readJSON("kapda-employment-year-data");
+    createChart("employmentYearChart", "employmentYearChartEmpty", employmentYearData.map(row => String(row.year_employed)), employmentYearData.map(row => Number(row.total || 0)), {
+        type: "bar", legend: false, colors: palette.navy
+    });
+
+    // Programme activity status
+    const activityData = readJSON("kapda-activity-status-data");
+
+    createChart(
+        "activityChart",
+        "activityChartEmpty",
+        activityData.map(row => {
+            const value = row.status || "Not recorded";
+            return value.replaceAll("_", " ");
+        }),
+        activityData.map(row => Number(row.total || 0)),
+        {
+            type: "doughnut",
+            colors: [
+                palette.green,
+                palette.navy,
+                palette.amber,
+                palette.red,
+                palette.purple,
+                palette.grey
+            ]
+        }
+    );
+});
+</script>
+{% endblock %}

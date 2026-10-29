@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Employment outcome | KAPDA{% endblock %}
+{% block page_heading %}Employment outcome{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>Employment outcome</h1><p>Track employment after completion for {{ learner.full_name }}.</p></div><a class="btn btn-light border" href="{% url 'learners:detail' learner.pk %}">Cancel</a></div>
+<form method="post" class="panel form-panel p-4">{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}<div class="row g-3">{% for field in form %}<div class="col-md-6{% if field.name == 'notes' %} col-12{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><div class="form-actions mt-4"><button class="btn btn-kapda" type="submit"><i class="bi bi-check2-circle me-1"></i>Save employment outcome</button></div></form>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Supported learners by school | KAPDA{% endblock %}
+{% block page_heading %}Supported learners by school{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <h1>{{ school.name }}</h1>
+        <p>Supported learners broken down by project.</p>
+    </div>
+    <a class="btn btn-light border" href="{% url 'learners:list' %}">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back to learner register
+    </a>
+</div>
+
+<section class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Project breakdown</h2>
+            <p>Distinct supported learners with current enrolments at {{ school.name }}.</p>
+        </div>
+        <i class="bi bi-diagram-3"></i>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th class="text-end">Supported learners</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in project_breakdown %}
+                    <tr>
+                        <td>
+                            <strong>{{ row.project__code|default:"Project not recorded" }}</strong>
+                            <span class="muted-line">{{ row.project__name|default:"Project not recorded" }}</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="status-pill status-active">{{ row.total|default:0 }}</span>
+                        </td>
+                        <td class="text-end">
+                            {% if row.project_id %}
+                                <a class="btn btn-sm btn-outline-kapda" href="{% url 'learners:supported_learners_by_school_project' school.pk row.project_id %}">
+                                    View learners
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="empty-state">
+                            <i class="bi bi-inbox fs-4 d-block mb-2" aria-hidden="true"></i>
+                            No supported learners found for this school.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

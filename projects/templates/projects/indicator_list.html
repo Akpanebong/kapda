@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Indicators | KAPDA{% endblock %}
+{% block page_heading %}Indicators{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>Indicators</h1><p>Manage programme activity and indicator definitions.</p></div><a class="btn btn-kapda" href="{% url 'projects:indicator_create' %}">Add indicator</a></div>
+<div class="panel"><form method="get" class="d-flex gap-2 mb-3"><input class="form-control" type="search" name="q" value="{{ query }}" placeholder="Search by code or name"><button class="btn btn-outline-primary" type="submit">Search</button></form>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Code</th><th>Name</th><th>Project</th><th>Status</th><th></th></tr></thead><tbody>
+{% for indicator in indicators %}<tr><td><a href="{% url 'projects:indicator_detail' indicator.pk %}"><strong>{{ indicator.code }}</strong></a></td><td>{{ indicator.name }}</td><td>{{ indicator.project|default:"Not assigned" }}</td><td>{{ indicator.get_effective_status_display }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'projects:indicator_update' indicator.pk %}">Edit</a> <form class="d-inline" method="post" action="{% url 'projects:indicator_delete' indicator.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Delete this indicator?')">Delete</button></form></td></tr>
+{% empty %}<tr><td colspan="5" class="empty-state">No indicators found.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

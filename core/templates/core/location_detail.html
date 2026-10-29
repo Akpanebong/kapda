@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block title %}Location | KAPDA{% endblock %}{% block content %}<div class="page-intro"><div><h1>{{ object }}</h1><p>Location details</p></div><a class="btn btn-outline-primary" href="{% url 'data:location_update' object.pk %}">Edit</a></div>{% endblock %}

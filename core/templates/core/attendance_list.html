@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Field Attendance | KAPDA{% endblock %}
+{% block page_heading %}Field Attendance{% endblock %}
+
+{% block content %}
+
+<!-- Page introduction -->
+<div class="page-intro">
+    <div>
+        <h1>Field Attendance</h1>
+        <p>Record and monitor participant attendance across KAPDA programme activities.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a
+            class="btn btn-outline-kapda"
+            href="{% url 'data:field_attendance_export_csv' %}{% if filter_query %}?{{ filter_query }}{% endif %}"
+        >
+            <i class="bi bi-download me-1" aria-hidden="true"></i>
+            Export CSV
+        </a>
+
+        <a
+            class="btn btn-outline-kapda"
+            href="{% url 'data:field_attendance_export_xlsx' %}{% if filter_query %}?{{ filter_query }}{% endif %}"
+        >
+            <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>
+            Export Excel
+        </a>
+
+        <a
+            class="btn btn-kapda"
+            href="{% url 'data:field_attendance_create' %}"
+        >
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+            Add Attendance Sheet
+        </a>
+    </div>
+</div>
+
+<!-- Attendance filters -->
+<form
+    class="panel p-3 p-lg-4 mb-4"
+    method="get"
+    action="{% url 'data:field_attendance_list' %}"
+>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="h5 mb-1">Filter Attendance</h2>
+            <p class="text-muted small mb-0">
+                Narrow records by activity, date, location, participant, or status.
+            </p>
+        </div>
+
+        <a
+            class="btn btn-sm btn-outline-secondary"
+            href="{% url 'data:field_attendance_list' %}"
+        >
+            <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>
+            Clear Filters
+        </a>
+    </div>
+
+    <div class="row g-3">
+        <!-- Activity -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <label for="filter-activity" class="form-label">Activity</label>
+            <select
+                id="filter-activity"
+                name="activity"
+                class="form-select"
+            >
+                <option value="">All Activities</option>
+                {% for item in activities %}
+                    <option
+                        value="{{ item.pk }}"
+                        {% if filters.activity == item.pk|stringformat:"s" %}selected{% endif %}
+                    >
+                        {{ item.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Date range -->
+        <div class="col-12 col-md-6 col-xl-2">
+            <label for="filter-date-from" class="form-label">From Date</label>
+            <input
+                id="filter-date-from"
+                type="date"
+                name="date_from"
+                class="form-control"
+                value="{{ filters.date_from }}"
+            >
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-2">
+            <label for="filter-date-to" class="form-label">To Date</label>
+            <input
+                id="filter-date-to"
+                type="date"
+                name="date_to"
+                class="form-control"
+                value="{{ filters.date_to }}"
+            >
+        </div>
+
+        <!-- Location -->
+        <div class="col-12 col-md-6 col-xl-2">
+            <label for="filter-district" class="form-label">District</label>
+            <input
+                id="filter-district"
+                type="text"
+                name="district"
+                class="form-control"
+                value="{{ filters.district }}"
+                placeholder="Enter district"
+            >
+        </div>
+
+        <!-- Status -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <label for="filter-status" class="form-label">Approval Status</label>
+            <select
+                id="filter-status"
+                name="status"
+                class="form-select"
+            >
+                <option value="">All Statuses</option>
+                {% for value, label in status_choices %}
+                    <option
+                        value="{{ value }}"
+                        {% if filters.status == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Participant -->
+        <div class="col-12 col-md-6 col-xl-4">
+            <label for="filter-participant" class="form-label">Participant Name</label>
+            <input
+                id="filter-participant"
+                type="text"
+                name="participant"
+                class="form-control"
+                value="{{ filters.participant }}"
+                placeholder="Search participant name"
+            >
+        </div>
+
+        <!-- Sex -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <label for="filter-sex" class="form-label">Sex</label>
+            <select
+                id="filter-sex"
+                name="sex"
+                class="form-select"
+            >
+                <option value="">All Participants</option>
+                {% for value, label in sex_choices %}
+                    <option
+                        value="{{ value }}"
+                        {% if filters.sex == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-12 col-md-6 col-xl-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-kapda w-100">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>
+                Apply Filters
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Attendance register -->
+<div class="panel p-0 overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 p-lg-4 border-bottom">
+        <div>
+            <h2 class="h5 mb-1">Attendance Register</h2>
+            <p class="text-muted small mb-0">
+                Field attendance sheets and participant totals.
+            </p>
+        </div>
+
+        <span class="badge rounded-pill text-bg-light border">
+            {{ sheets|length }} record{{ sheets|length|pluralize }}
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="ps-3">Activity</th>
+                    <th scope="col">Activity Date</th>
+                    <th scope="col">Location</th>
+                    <th scope="col" class="text-center">Participants</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end pe-3">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for sheet in sheets %}
+                    <tr>
+                        <td class="ps-3">
+                            <div class="fw-semibold">{{ sheet.activity }}</div>
+                        </td>
+
+                        <td class="text-nowrap">
+                            {{ sheet.activity_date|date:"d M Y" }}
+                        </td>
+
+                        <td>
+                            {% firstof sheet.village sheet.parish sheet.sub_county sheet.district "—" %}
+                        </td>
+
+                        <td class="text-center">
+                            <span class="fw-semibold">{{ sheet.participant_total }}</span>
+                        </td>
+
+                        <td>
+                            <span class="status-pill {% if sheet.status == 'approved' %}status-active{% elif sheet.status == 'rejected' %}status-dropout{% endif %}">
+                                {{ sheet.get_status_display }}
+                            </span>
+
+                            {% if sheet.rejection_reason %}
+                                <small class="d-block text-danger mt-1">
+                                    {{ sheet.rejection_reason }}
+                                </small>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end pe-3">
+                            <div class="d-inline-flex align-items-center gap-1">
+                                <a
+                                    class="btn btn-sm btn-outline-kapda"
+                                    href="{% url 'data:field_attendance_detail' sheet.pk %}"
+                                    aria-label="View attendance sheet for {{ sheet.activity }}"
+                                    title="View attendance"
+                                >
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                    <span class="d-none d-lg-inline">View</span>
+                                </a>
+
+                                {% if sheet.status != 'approved' or can_review %}
+                                    <a
+                                        class="btn btn-sm btn-outline-kapda"
+                                        href="{% url 'data:field_attendance_update' sheet.pk %}"
+                                        aria-label="Edit attendance sheet for {{ sheet.activity }}"
+                                        title="Edit attendance"
+                                    >
+                                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                        <span class="d-none d-lg-inline">Edit</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-clipboard2-x fs-2 text-muted d-block mb-2" aria-hidden="true"></i>
+                            <h3 class="h6 mb-1">No Attendance Sheets Found</h3>
+                            <p class="text-muted small mb-3">
+                                No attendance sheets match your current filters.
+                            </p>
+                            <a
+                                class="btn btn-sm btn-outline-kapda"
+                                href="{% url 'data:field_attendance_list' %}"
+                            >
+                                Clear Filters
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+            {% if sheets %}
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">Participant Summary</th>
+                        <td class="text-center">
+                            <span class="fw-semibold">{{ totals.total }}</span>
+                        </td>
+                        <td colspan="2" class="pe-3">
+                            <div class="d-flex flex-wrap gap-2 small">
+                                <span>
+                                    <i class="bi bi-gender-male me-1" aria-hidden="true"></i>
+                                    Male: <strong>{{ totals.male }}</strong>
+                                </span>
+                                <span>
+                                    <i class="bi bi-gender-female me-1" aria-hidden="true"></i>
+                                    Female: <strong>{{ totals.female }}</strong>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
+{% endblock %}

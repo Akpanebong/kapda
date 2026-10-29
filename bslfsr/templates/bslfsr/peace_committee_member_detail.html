@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Peace Committee Member | KAPDA
+{% endblock %}
+
+{% block page_heading %}
+    Peace Committee Member
+{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <span class="text-muted small fw-semibold text-uppercase">BSLFSR Programme</span>
+        <h1 class="mb-1">{{ object }}</h1>
+        <p class="text-muted mb-0">Peace committee member details.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'bslfsr:peace_committee_member_list' %}">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to Members
+        </a>
+        <a class="btn btn-kapda" href="{% url 'bslfsr:peace_committee_member_update' object.pk %}">
+            <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Edit Member
+        </a>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="section-heading">
+        <span aria-hidden="true"><i class="bi bi-people"></i></span>
+        <div>
+            <h2>Committee Member</h2>
+            <p>Information recorded for this member.</p>
+        </div>
+    </div>
+    <div class="p-3">
+        <div class="text-muted small fw-semibold text-uppercase mb-1">Member</div>
+        <div class="fw-semibold">{{ object }}</div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ object.full_name }} | Beneficiary Details | KAPDA
+{% endblock %}
+
+{% block page_heading %}
+    Beneficiary Details
+{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <span class="text-muted small fw-semibold text-uppercase">
+            Beneficiary Record
+        </span>
+        <h1 class="mb-1">{{ object.full_name }}</h1>
+        <p class="text-muted mb-0">
+            {{ object.beneficiary_id }} ·
+            {{ object.get_participant_category_display }}
+        </p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'bslfsr:beneficiary_update' object.pk %}"
+           class="btn btn-kapda">
+            <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
+            Edit Beneficiary
+        </a>
+
+        <a href="{% url 'bslfsr:beneficiary_list' %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+            Back to List
+        </a>
+    </div>
+</div>
+
+<!-- Record status -->
+<div class="panel mb-4">
+    <div class="p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="text-muted small mb-1">Beneficiary ID</div>
+            <div class="fw-bold">{{ object.beneficiary_id }}</div>
+        </div>
+
+        <div>
+            <div class="text-muted small mb-1">Record Status</div>
+            {% if object.active %}
+                <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">
+                    <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
+                    Active
+                </span>
+            {% else %}
+                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis px-3 py-2">
+                    <i class="bi bi-pause-circle me-1" aria-hidden="true"></i>
+                    Inactive
+                </span>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="text-muted small mb-1">Participant Category</div>
+            <span class="fw-semibold">
+                {{ object.get_participant_category_display }}
+            </span>
+        </div>
+
+        <div>
+            <div class="text-muted small mb-1">Displacement Status</div>
+            <span class="fw-semibold">
+                {{ object.get_displacement_status_display }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Personal information -->
+<div class="panel mb-4">
+    <div class="section-heading">
+        <span aria-hidden="true">
+            <i class="bi bi-person-vcard"></i>
+        </span>
+        <div>
+            <h2>Personal Information</h2>
+            <p>Identity and demographic information.</p>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Full Name</div>
+                <div class="detail-value">{{ object.full_name|default:"—" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Beneficiary ID</div>
+                <div class="detail-value">{{ object.beneficiary_id|default:"—" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Sex</div>
+                <div class="detail-value">{{ object.get_sex_display|default:"—" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Date of Birth</div>
+                <div class="detail-value">
+                    {% if object.date_of_birth %}
+                        {{ object.date_of_birth|date:"d M Y" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Estimated Age</div>
+                <div class="detail-value">
+                    {% if object.estimated_age != None %}
+                        {{ object.estimated_age }} years
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Participant Category</div>
+                <div class="detail-value">
+                    {{ object.get_participant_category_display|default:"—" }}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Phone Number</div>
+                <div class="detail-value">
+                    {% if object.phone %}
+                        <a href="tel:{{ object.phone }}">{{ object.phone }}</a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vulnerability and disability -->
+<div class="panel mb-4">
+    <div class="section-heading">
+        <span aria-hidden="true">
+            <i class="bi bi-heart-pulse"></i>
+        </span>
+        <div>
+            <h2>Vulnerability and Disability</h2>
+            <p>Accessibility needs and relevant vulnerability information.</p>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Disability Status</div>
+                <div class="detail-value">
+                    {% if object.disability_status %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis">
+                            Yes
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success-subtle text-success-emphasis">
+                            No
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Disability Type</div>
+                <div class="detail-value">
+                    {{ object.disability_type|default:"Not specified" }}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Vulnerability Category</div>
+                <div class="detail-value">
+                    {{ object.vulnerability_category|default:"Not specified" }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Displacement and household -->
+<div class="panel mb-4">
+    <div class="section-heading">
+        <span aria-hidden="true">
+            <i class="bi bi-house-heart"></i>
+        </span>
+        <div>
+            <h2>Displacement and Household</h2>
+            <p>Displacement classification and household association.</p>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Displacement Status</div>
+                <div class="detail-value">
+                    {{ object.get_displacement_status_display|default:"—" }}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Household</div>
+                <div class="detail-value">
+                    {% if object.household %}
+                        {{ object.household }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project and location -->
+<div class="panel mb-4">
+    <div class="section-heading">
+        <span aria-hidden="true">
+            <i class="bi bi-geo-alt"></i>
+        </span>
+        <div>
+            <h2>Project and Location</h2>
+            <p>Programme affiliation and geographical assignment.</p>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Project</div>
+                <div class="detail-value">
+                    {% if object.project %}
+                        {{ object.project }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Location</div>
+                <div class="detail-value">
+                    {% if object.location %}
+                        {{ object.location }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audit information -->
+<div class="panel mb-4">
+    <div class="section-heading">
+        <span aria-hidden="true">
+            <i class="bi bi-clock-history"></i>
+        </span>
+        <div>
+            <h2>Record History</h2>
+            <p>Record creation and last modification timestamps.</p>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Date Created</div>
+                <div class="detail-value">
+                    {% if object.created_at %}
+                        {{ object.created_at|date:"d M Y, H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Last Updated</div>
+                <div class="detail-value">
+                    {% if object.updated_at %}
+                        {{ object.updated_at|date:"d M Y, H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="detail-label">Database Record ID</div>
+                <div class="detail-value">{{ object.pk }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+    <a href="{% url 'bslfsr:beneficiary_list' %}"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+        Back to Beneficiaries
+    </a>
+
+    <a href="{% url 'bslfsr:beneficiary_update' object.pk %}"
+       class="btn btn-kapda">
+        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
+        Edit Beneficiary
+    </a>
+</div>
+
+<style>
+    .detail-label {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.045em;
+        margin-bottom: 0.45rem;
+        text-transform: uppercase;
+    }
+
+    .detail-value {
+        color: #18323a;
+        font-size: 0.96rem;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    .detail-value a {
+        color: #2c5d83;
+        text-decoration: none;
+    }
+
+    .detail-value a:hover {
+        text-decoration: underline;
+    }
+
+    .section-heading h2 {
+        margin-bottom: 0.25rem;
+    }
+
+    .section-heading p {
+        color: #64748b;
+        margin-bottom: 0;
+        font-size: 0.875rem;
+    }
+
+    @media print {
+        .page-intro .btn,
+        .d-flex.justify-content-end {
+            display: none !important;
+        }
+
+        .panel {
+            break-inside: avoid;
+            box-shadow: none !important;
+        }
+    }
+</style>
+{% endblock %}

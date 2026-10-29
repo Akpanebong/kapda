@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ model_name|default:"Record" }} | KAPDA{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>{% if creating %}Add{% else %}Edit{% endif %} {{ model_name|default:"record" }}</h1><p>Complete the fields below and save the record.</p></div></div>
+<form method="post" enctype="multipart/form-data" class="panel form-panel">
+{% csrf_token %}
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+<div class="row g-3">{% for field in form %}<div class="col-md-6{% if field.field.widget.attrs.rows %} col-12{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+<div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-light border" href="javascript:history.back()">Cancel</a><button class="btn btn-kapda" type="submit">{% if creating %}Save{% else %}Update{% endif %}</button></div>
+</form>
+{% endblock %}

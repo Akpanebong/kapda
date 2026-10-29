@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{% if creating %}Define{% else %}Edit{% endif %} monitoring fields | KAPDA{% endblock %}
+{% block page_heading %}{% if creating %}Define{% else %}Edit{% endif %} monitoring fields{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h1>{% if creating %}Define{% else %}Edit{% endif %} monitoring fields</h1><p>{{ indicator.code }} · {{ indicator.name }}</p></div><a class="btn btn-light border" href="{% url 'projects:indicator_detail' indicator.pk %}">Back to indicator</a></div>
+<form method="post" class="panel form-panel" id="monitoring-form" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-12"><label class="form-label" for="{{ form.indicator.id_for_label }}">Indicator</label>{{ form.indicator }}{% for error in form.indicator.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+    <div class="col-12"><label class="form-label" for="{{ form.description.id_for_label }}">Instructions for users</label>{{ form.description }}<small class="form-text text-muted">Explain what should be captured for this activity.</small>{% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2"><div><h2 class="h5 mb-1">Activity data fields</h2><p class="text-muted small mb-0">Create the sections and fields users will complete. No JSON knowledge is needed.</p></div><button type="button" class="btn btn-outline-primary" id="add-section">Add section</button></div>
+      <div id="schema-builder" class="vstack gap-3"></div>
+      <div id="empty-schema" class="border rounded p-4 text-center text-muted">No custom fields yet. Click <strong>Add section</strong> to start.</div>
+      {{ form.schema }}
+      {% for error in form.schema.errors %}<div class="text-danger small mt-2">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="col-12 form-check ms-2">{{ form.is_active }}<label class="form-check-label" for="{{ form.is_active.id_for_label }}">Use these fields when collecting activity data</label></div>
+  </div>
+  <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top"><a class="btn btn-light border" href="{% url 'projects:indicator_detail' indicator.pk %}">Cancel</a><button class="btn btn-kapda" type="submit">Save monitoring fields</button></div>
+</form>
+<style>.schema-section{background:#f8fafc}.schema-field{background:#fff}.field-key{font-size:.78rem;color:#6c757d}</style>
+<script id="initial-schema" type="application/json">{{ schema_json|safe }}</script>
+<script>
+(function () {
+  const builder = document.getElementById('schema-builder'), empty = document.getElementById('empty-schema'), schemaInput = document.getElementById('{{ form.schema.id_for_label }}');
+  const types = [['text','Short text'],['textarea','Long text'],['email','Email'],['integer','Whole number'],['decimal','Decimal number'],['date','Date'],['boolean','Yes / No'],['choice','Dropdown choices'],['foreign_key','Linked record']];
+  function slug(value){return value.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||'field'}
+  const crossCuttingFields=['collection_date','actual_value','reporting_period','phase'];
+  function uniqueKey(value,current){const used=Array.from(document.querySelectorAll('.field-key-input')).filter(x=>x!==current).map(x=>x.value);const base=slug(value);let key=base,n=2;while(used.includes(key)||crossCuttingFields.includes(key))key=base+'_'+n++;return key}
+  function updateEmpty(){empty.style.display=builder.children.length?'none':'block'}
+  function addField(container,definition){
+    definition=definition||{};const card=document.createElement('div');card.className='schema-field border rounded p-3';
+    card.innerHTML='<div class="row g-2 align-items-end"><div class="col-md-4"><label class="form-label small">Field label</label><input class="form-control field-label-input" type="text"></div><div class="col-md-3"><label class="form-label small">Field type</label><select class="form-select field-type-input"></select></div><div class="col-md-3"><label class="form-label small">Field key <span class="field-key">(automatic)</span></label><input class="form-control field-key-input" type="text"></div><div class="col-md-2 d-flex justify-content-end"><button type="button" class="btn btn-sm btn-outline-danger remove-field">Remove</button></div><div class="col-12 choice-wrap" style="display:none"><label class="form-label small">Dropdown choices</label><input class="form-control choices-input" type="text" placeholder="Example: Yes, No, Not sure"><small class="text-muted">Separate choices with commas.</small></div><div class="col-md-6 target-wrap" style="display:none"><label class="form-label small">Linked record</label><select class="form-select target-input"></select><small class="text-muted">The selected record is stored as a linked model/object reference for reporting and filtering.</small></div><div class="col-12"><div class="form-check"><input class="form-check-input required-input" type="checkbox"><label class="form-check-label small">Required field</label></div></div></div>';
+    const label=card.querySelector('.field-label-input'),key=card.querySelector('.field-key-input'),type=card.querySelector('.field-type-input'),choices=card.querySelector('.choices-input'),choiceWrap=card.querySelector('.choice-wrap'),targetWrap=card.querySelector('.target-wrap'),target=card.querySelector('.target-input');types.forEach(item=>type.add(new Option(item[1],item[0])));linkedModels.forEach(item=>target.add(new Option(item.label,item.value)));label.value=definition.label||'';key.value=definition.name||slug(definition.label||'field');type.value=definition.type||'text';choices.value=Array.isArray(definition.choices)?definition.choices.map(item=>typeof item==='object'?(item.label||item.value):item).join(', '):'';target.value=definition.target||linkedModels[0].value;card.querySelector('.required-input').checked=!!definition.required;
+    function toggleInputs(){choiceWrap.style.display=type.value==='choice'?'block':'none';targetWrap.style.display=type.value==='foreign_key'?'block':'none'}label.addEventListener('input',function(){if(!key.dataset.edited)key.value=uniqueKey(label.value,key)});key.addEventListener('input',function(){key.dataset.edited='true'});type.addEventListener('change',toggleInputs);card.querySelector('.remove-field').addEventListener('click',()=>card.remove());toggleInputs();container.appendChild(card)
+  }
+  function addSection(section){section=section||{};const card=document.createElement('div');card.className='schema-section border rounded p-3';card.innerHTML='<div class="d-flex justify-content-between align-items-center gap-2 mb-3"><input class="form-control section-title-input fw-semibold" type="text" placeholder="Section title, e.g. Participant details"><button type="button" class="btn btn-sm btn-outline-danger remove-section">Remove section</button></div><div class="section-fields vstack gap-2"></div><button type="button" class="btn btn-sm btn-outline-secondary add-field mt-3">Add field</button>';card.querySelector('.section-title-input').value=section.title||'';const fields=card.querySelector('.section-fields');(section.fields||[]).forEach(field=>addField(fields,field));card.querySelector('.add-field').addEventListener('click',()=>addField(fields));card.querySelector('.remove-section').addEventListener('click',()=>{card.remove();updateEmpty()});builder.appendChild(card);updateEmpty()}
+  document.getElementById('add-section').addEventListener('click',()=>addSection({title:'',fields:[{}]}));
+  document.getElementById('monitoring-form').addEventListener('submit',function(){const schema=Array.from(builder.querySelectorAll('.schema-section')).map(section=>({title:section.querySelector('.section-title-input').value.trim(),fields:Array.from(section.querySelectorAll('.schema-field')).map(field=>{const type=field.querySelector('.field-type-input').value,item={name:field.querySelector('.field-key-input').value.trim(),label:field.querySelector('.field-label-input').value.trim(),type:type,required:field.querySelector('.required-input').checked};if(type==='choice')item.choices=field.querySelector('.choices-input').value.split(',').map(value=>value.trim()).filter(Boolean);if(type==='foreign_key')item.target=field.querySelector('.target-input').value;return item})}));schemaInput.value=JSON.stringify(schema)});
+  let initial=[];let linkedModels=[];try{initial=JSON.parse(document.getElementById('initial-schema').textContent||'[]');linkedModels=JSON.parse('{{ linked_models_json|escapejs }}')}catch(error){initial=[];linkedModels=[]}initial.forEach(addSection);updateEmpty();
+})();
+</script>
+{% endblock %}

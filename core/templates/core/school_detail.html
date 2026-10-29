@@ -1,0 +1,852 @@
+
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ school.name }} | KAPDA{% endblock %}
+{% block page_heading %}School profile{% endblock %}
+
+{% block extra_head %}
+<style>
+    .school-profile {
+        --sp-primary: var(--kapda-primary, #2c5d83);
+        --sp-dark: var(--logo-navy-dark, #1d4566);
+        --sp-green: var(--logo-green, #198a52);
+        --sp-border: #e5ebf0;
+        --sp-muted: #6b7785;
+        --sp-surface: #fff;
+        --sp-radius: 14px;
+        color: #344252;
+    }
+
+    .school-profile .page-intro {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .school-profile .school-heading {
+        min-width: 0;
+    }
+
+    .school-profile .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        margin-bottom: 10px;
+        border: 1px solid #d9e7f1;
+        border-radius: 7px;
+        background: #eef5fa;
+        color: var(--sp-primary);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .055em;
+    }
+
+    .school-profile .page-intro h1 {
+        margin: 0 0 7px;
+        color: var(--sp-dark);
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -.035em;
+        overflow-wrap: anywhere;
+    }
+
+    .school-profile .page-intro p {
+        margin: 0;
+        color: var(--sp-muted);
+        font-size: .88rem;
+        line-height: 1.6;
+    }
+
+    .school-profile .heading-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .school-profile .heading-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        gap: 6px;
+        padding: 9px 14px;
+        border-radius: 9px;
+        font-size: .83rem;
+        font-weight: 700;
+    }
+
+    .school-profile .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .school-profile .metric-card {
+        position: relative;
+        min-width: 0;
+        padding: 19px;
+        overflow: hidden;
+        background: var(--sp-surface);
+        border: 1px solid var(--sp-border);
+        border-radius: var(--sp-radius);
+        box-shadow: 0 3px 12px rgba(27, 48, 65, .035);
+    }
+
+    .school-profile .metric-card::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: var(--sp-primary);
+        content: "";
+    }
+
+    .school-profile .metric-card:nth-child(2)::before {
+        background: var(--sp-green);
+    }
+
+    .school-profile .metric-card:nth-child(3)::before {
+        background: #9a6bba;
+    }
+
+    .school-profile .metric-card:nth-child(4)::before {
+        background: #c48a2c;
+    }
+
+    .school-profile .metric-label {
+        display: block;
+        color: var(--sp-muted);
+        font-size: .77rem;
+        font-weight: 650;
+        line-height: 1.45;
+    }
+
+    .school-profile .metric-value {
+        display: block;
+        margin: 10px 0 6px;
+        color: var(--sp-dark);
+        font-size: clamp(1.65rem, 2.5vw, 2.1rem);
+        font-weight: 800;
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+    }
+
+    .school-profile .metric-note {
+        display: block;
+        color: var(--sp-muted);
+        font-size: .74rem;
+        line-height: 1.5;
+    }
+
+    .school-profile .detail-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+        align-items: start;
+        gap: 18px;
+    }
+
+    .school-profile .panel {
+        min-width: 0;
+        overflow: hidden;
+        background: var(--sp-surface);
+        border: 1px solid var(--sp-border);
+        border-radius: var(--sp-radius);
+        box-shadow: 0 3px 12px rgba(27, 48, 65, .035);
+    }
+
+    .school-profile .panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--sp-border);
+    }
+
+    .school-profile .panel-head h2 {
+        margin: 0 0 5px;
+        color: var(--sp-dark);
+        font-size: .98rem;
+        font-weight: 800;
+        line-height: 1.4;
+    }
+
+    .school-profile .panel-head p {
+        margin: 0;
+        color: var(--sp-muted);
+        font-size: .79rem;
+        line-height: 1.55;
+    }
+
+    .school-profile .panel-body {
+        padding: 18px 20px;
+    }
+
+    .school-profile .demographic-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 24px;
+        padding: 20px;
+    }
+
+    .school-profile .demographic-group {
+        min-width: 0;
+    }
+
+    .school-profile .demographic-group h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 11px;
+        color: var(--sp-dark);
+        font-size: .82rem;
+        font-weight: 750;
+    }
+
+    .school-profile .demographic-group h3 i {
+        color: var(--sp-primary);
+        font-size: .95rem;
+    }
+
+    .school-profile .demographic-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #edf1f4;
+        font-size: .81rem;
+    }
+
+    .school-profile .demographic-row:last-child {
+        border-bottom: 0;
+    }
+
+    .school-profile .demographic-row > span {
+        color: #596778;
+        overflow-wrap: anywhere;
+    }
+
+    .school-profile .demographic-row > strong {
+        flex: 0 0 auto;
+        color: var(--sp-dark);
+        font-size: .83rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .school-profile .detail-list {
+        padding: 7px 20px 14px;
+    }
+
+    .school-profile .detail-list > div {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+        gap: 14px;
+        padding: 13px 0;
+        border-bottom: 1px solid #edf1f4;
+        font-size: .82rem;
+    }
+
+    .school-profile .detail-list > div:last-child {
+        border-bottom: 0;
+    }
+
+    .school-profile .detail-list span {
+        color: var(--sp-muted);
+        line-height: 1.5;
+    }
+
+    .school-profile .detail-list b {
+        color: #344252;
+        font-weight: 700;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .school-profile .support-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 750;
+    }
+
+    .school-profile .support-flag.yes {
+        background: #e8f6ee;
+        color: #176b43;
+    }
+
+    .school-profile .support-flag.no {
+        background: #edf0f3;
+        color: #5d6671;
+    }
+
+    .school-profile .table-responsive {
+        width: 100%;
+    }
+
+    .school-profile .table {
+        margin: 0;
+        --bs-table-bg: transparent;
+    }
+
+    .school-profile .table > :not(caption) > * > * {
+        padding: 13px 16px;
+        border-bottom-color: #edf1f4;
+        vertical-align: middle;
+    }
+
+    .school-profile .table thead th {
+        background: #f7f9fb;
+        color: #647181;
+        font-size: .7rem;
+        font-weight: 750;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .school-profile .table tbody td {
+        color: #344252;
+        font-size: .82rem;
+    }
+
+    .school-profile .table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .school-profile .table tbody tr:hover {
+        background: #f8fbfd;
+    }
+
+    .school-profile .learner-link {
+        color: var(--sp-primary);
+        font-weight: 750;
+        text-decoration: none;
+    }
+
+    .school-profile .learner-link:hover {
+        color: var(--sp-dark);
+        text-decoration: underline;
+    }
+
+    .school-profile .muted-line {
+        display: block;
+        margin-top: 4px;
+        color: var(--sp-muted);
+        font-size: .74rem;
+        line-height: 1.45;
+    }
+
+    .school-profile .class-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border: 1px solid #dce8f2;
+        border-radius: 7px;
+        background: #eef4f9;
+        color: var(--sp-dark);
+        font-size: .75rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .school-profile .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #edf0f3;
+        color: #526173;
+        font-size: .71rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .school-profile .status-pill.current {
+        background: #e8f6ee;
+        color: #176b43;
+    }
+
+    .school-profile .status-pill.historical {
+        background: #edf0f3;
+        color: #5d6671;
+    }
+
+    .school-profile .activity-list {
+        padding: 5px 20px 14px;
+    }
+
+    .school-profile .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #edf1f4;
+    }
+
+    .school-profile .activity-item:last-child {
+        border-bottom: 0;
+    }
+
+    .school-profile .activity-icon {
+        display: inline-flex;
+        flex: 0 0 36px;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #eef4f9;
+        color: var(--sp-primary);
+        font-size: .95rem;
+    }
+
+    .school-profile .activity-item strong {
+        display: block;
+        color: #344252;
+        font-size: .84rem;
+        font-weight: 750;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .school-profile .activity-item small {
+        display: block;
+        margin-top: 4px;
+        color: var(--sp-muted);
+        font-size: .75rem;
+        line-height: 1.5;
+    }
+
+    .school-profile .summary-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: #eef4f9;
+        color: var(--sp-primary);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .school-profile .empty-state {
+        padding: 28px 16px !important;
+        color: var(--sp-muted);
+        text-align: center;
+        font-size: .82rem;
+    }
+
+    .school-profile .empty-state i {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 1.5rem;
+        color: #9aa8b6;
+    }
+
+    @media (max-width: 1100px) {
+        .school-profile .metric-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .school-profile .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .school-profile .page-intro {
+            align-items: stretch;
+        }
+
+        .school-profile .heading-actions {
+            width: 100%;
+        }
+
+        .school-profile .heading-actions .btn {
+            flex: 1 1 auto;
+        }
+
+        .school-profile .demographic-grid {
+            padding: 16px;
+            gap: 18px;
+        }
+
+        .school-profile .panel-head {
+            padding: 16px;
+        }
+
+        .school-profile .panel-body {
+            padding: 16px;
+        }
+
+        .school-profile .detail-list {
+            padding-right: 16px;
+            padding-left: 16px;
+        }
+
+        .school-profile .activity-list {
+            padding-right: 16px;
+            padding-left: 16px;
+        }
+
+        .school-profile .table > :not(caption) > * > * {
+            padding: 11px 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .school-profile .metric-grid {
+            gap: 10px;
+        }
+
+        .school-profile .metric-card {
+            padding: 14px;
+        }
+
+        .school-profile .metric-value {
+            font-size: 1.55rem;
+        }
+
+        .school-profile .demographic-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .school-profile .detail-list > div {
+            grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="school-profile">
+
+    <!-- School heading -->
+    <div class="page-intro">
+        <div class="school-heading">
+            <span class="eyebrow">
+                <i class="bi bi-building me-1" aria-hidden="true"></i>
+                {{ school.school_code|default:"School profile" }}
+            </span>
+            <h1>{{ school.name }}</h1>
+            <p>
+                {{ school.get_school_type_display|default:"School type not recorded" }}
+                <span aria-hidden="true"> · </span>
+                {{ school.location|default:"Location not recorded" }}
+            </p>
+        </div>
+
+        <div class="heading-actions">
+            <a class="btn btn-light border"
+               href="{% url 'data:school_list' %}">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                Back to schools
+            </a>
+            <a class="btn btn-kapda"
+               href="{% url 'data:school_update' school.pk %}">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+                Edit school
+            </a>
+        </div>
+    </div>
+
+    <!-- School metrics -->
+    <div class="metric-grid">
+        <div class="metric-card">
+            <span class="metric-label">Currently enrolled</span>
+            <strong class="metric-value">{{ enrolled_count|intcomma }}</strong>
+            <small class="metric-note">Active annual enrolments</small>
+        </div>
+
+        <div class="metric-card">
+            <span class="metric-label">All linked learners</span>
+            <strong class="metric-value">{{ total_learner_count|intcomma }}</strong>
+            <small class="metric-note">Learners assigned to this school</small>
+        </div>
+
+        <div class="metric-card">
+            <span class="metric-label">Projects represented</span>
+            <strong class="metric-value">{{ project_counts|length|intcomma }}</strong>
+            <small class="metric-note">Across school enrolments</small>
+        </div>
+
+        <div class="metric-card">
+            <span class="metric-label">WASH facilities</span>
+            <strong class="metric-value">{{ wash_facilities|length|intcomma }}</strong>
+            <small class="metric-note">Registered facilities</small>
+        </div>
+    </div>
+
+    <!-- Demographics and school details -->
+    <div class="detail-grid">
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2><i class="bi bi-people me-1" aria-hidden="true"></i> Enrolled learner profile</h2>
+                    <p>Current learners by status, gender, participant category and displacement status.</p>
+                </div>
+            </div>
+
+            <div class="demographic-grid">
+
+                <div class="demographic-group">
+                    <h3><i class="bi bi-person-check" aria-hidden="true"></i> Learner status</h3>
+                    {% for item in status_counts %}
+                    <div class="demographic-row">
+                        <span>{{ item.learner__status|default:"Not recorded"|title }}</span>
+                        <strong>{{ item.total|intcomma }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No current enrolments.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="demographic-group">
+                    <h3><i class="bi bi-gender-ambiguous" aria-hidden="true"></i> Gender</h3>
+                    {% for item in gender_counts %}
+                    <div class="demographic-row">
+                        <span>{{ item.learner__sex|default:"Not recorded" }}</span>
+                        <strong>{{ item.total|intcomma }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No gender data available.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="demographic-group">
+                    <h3><i class="bi bi-people" aria-hidden="true"></i> Participant category</h3>
+                    {% for item in participant_counts %}
+                    <div class="demographic-row">
+                        <span>{{ item.learner__participant_category|default:"Not recorded"|title }}</span>
+                        <strong>{{ item.total|intcomma }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No participant category data.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="demographic-group">
+                    <h3><i class="bi bi-globe-africa" aria-hidden="true"></i> Displacement status</h3>
+                    {% for item in displacement_counts %}
+                    <div class="demographic-row">
+                        <span>{{ item.learner__displacement_status|default:"Not recorded"|title }}</span>
+                        <strong>{{ item.total|intcomma }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No displacement data available.</p>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2><i class="bi bi-card-list me-1" aria-hidden="true"></i> School information</h2>
+                    <p>Core details and programme coverage.</p>
+                </div>
+            </div>
+
+            <div class="detail-list">
+                <div>
+                    <span>School code</span>
+                    <b>{{ school.school_code|default:"Not recorded" }}</b>
+                </div>
+                <div>
+                    <span>School type</span>
+                    <b>{{ school.get_school_type_display|default:"Not recorded" }}</b>
+                </div>
+                <div>
+                    <span>Ownership</span>
+                    <b>{{ school.ownership|default:"Not recorded" }}</b>
+                </div>
+                <div>
+                    <span>Location</span>
+                    <b>{{ school.location|default:"Not recorded" }}</b>
+                </div>
+                <div>
+                    <span>KAPDA supported</span>
+                    <b>
+                        {% if school.kapda_supported %}
+                        <span class="support-flag yes">
+                            <i class="bi bi-check-circle-fill" aria-hidden="true"></i> Yes
+                        </span>
+                        {% else %}
+                        <span class="support-flag no">
+                            <i class="bi bi-dash-circle" aria-hidden="true"></i> No
+                        </span>
+                        {% endif %}
+                    </b>
+                </div>
+                <div>
+                    <span>Contact person</span>
+                    <b>{{ school.contact_person|default:"Not recorded" }}</b>
+                </div>
+                <div>
+                    <span>Phone</span>
+                    <b>{{ school.phone|default:"Not recorded" }}</b>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Enrolment history -->
+    <section class="panel mt-4">
+        <div class="panel-head">
+            <div>
+                <h2><i class="bi bi-journal-check me-1" aria-hidden="true"></i> Enrolment history</h2>
+                <p>Recent and historical learner enrolments at this school.</p>
+            </div>
+            <span class="summary-count">{{ enrolments|length|intcomma }}</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Learner</th>
+                        <th scope="col">Academic year</th>
+                        <th scope="col">Project</th>
+                        <th scope="col">Class</th>
+                        <th scope="col">Outcome</th>
+                        <th scope="col">Enrolment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrolment in enrolments %}
+                    <tr>
+                        <td>
+                            <a class="learner-link"
+                               href="{% url 'learners:detail' enrolment.learner.pk %}">
+                                {{ enrolment.learner.full_name }}
+                            </a>
+                            <span class="muted-line">{{ enrolment.learner.reg_no|default:"ID not recorded" }}</span>
+                        </td>
+                        <td>{{ enrolment.academic_year.name|default:"—" }}</td>
+                        <td>{{ enrolment.project.name|default:"Not assigned" }}</td>
+                        <td><span class="class-chip">{{ enrolment.class_level|default:"—" }}</span></td>
+                        <td>{{ enrolment.get_outcome_display|default:"Not recorded" }}</td>
+                        <td>
+                            {% if enrolment.is_current %}
+                            <span class="status-pill current">
+                                <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i> Current
+                            </span>
+                            {% else %}
+                            <span class="status-pill historical">Historical</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-journal-x" aria-hidden="true"></i>
+                            No enrolments recorded for this school.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Activities and governance -->
+    <div class="detail-grid mt-4">
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2><i class="bi bi-clipboard2-check me-1" aria-hidden="true"></i> Project activities</h2>
+                    <p>Activities with data recorded at this school.</p>
+                </div>
+                <span class="summary-count">{{ activities|length|intcomma }}</span>
+            </div>
+
+            <div class="activity-list">
+                {% for activity in activities %}
+                <div class="activity-item">
+                    <span class="activity-icon">
+                        <i class="bi bi-clipboard-data" aria-hidden="true"></i>
+                    </span>
+                    <div>
+                        <strong>{{ activity.name }}</strong>
+                        <small>
+                            {{ activity.activity_type|default:"Activity / indicator" }}
+                            <span aria-hidden="true"> · </span>
+                            {{ activity.project.name|default:"Project not recorded" }}
+                        </small>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-clipboard-x" aria-hidden="true"></i>
+                    No project activities recorded.
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-3 p-3 border rounded bg-light d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                <div>
+                    <strong><i class="bi bi-calendar2-check me-1" aria-hidden="true"></i> School learners' attendance</strong>
+                    <small class="d-block text-muted">Attendance records captured for learners enrolled at this school.</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="summary-count">{{ school_attendance_count|intcomma }}</span>
+                    <a class="btn btn-sm btn-outline-kapda" href="{% url 'learners:attendance_record_list' %}?school={{ school.pk }}">View attendance</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2><i class="bi bi-people-fill me-1" aria-hidden="true"></i> Governance and support</h2>
+                    <p>School-based engagement and facilities.</p>
+                </div>
+            </div>
+
+            <div class="detail-list">
+                <div>
+                    <span>Active governance members</span>
+                    <b><span class="summary-count">{{ governance_members|length|intcomma }}</span></b>
+                </div>
+                <div>
+                    <span>Governance meetings</span>
+                    <b><span class="summary-count">{{ governance_meetings|length|intcomma }}</span></b>
+                </div>
+                <div>
+                    <span>Governance trainings</span>
+                    <b><span class="summary-count">{{ governance_trainings|length|intcomma }}</span></b>
+                </div>
+                <div>
+                    <span>Field visits</span>
+                    <b><span class="summary-count">{{ field_visits|length|intcomma }}</span></b>
+                </div>
+                <div>
+                    <span>MHM sessions</span>
+                    <b><span class="summary-count">{{ mhm_sessions|length|intcomma }}</span></b>
+                </div>
+                <div>
+                    <span>WASH facilities</span>
+                    <b><span class="summary-count">{{ wash_facilities|length|intcomma }}</span></b>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</div>
+{% endblock %}

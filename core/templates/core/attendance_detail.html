@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Field attendance details | KAPDA{% endblock %}
+{% block page_heading %}Field attendance details{% endblock %}
+{% block content %}
+<div class="page-intro">
+    <div><h1>Field attendance details</h1><p>Review the submitted activity attendance before approval.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-light border" href="{% url 'data:field_attendance_list' %}">Back to attendance</a>{% if sheet.status != 'approved' or can_review %}<a class="btn btn-outline-kapda" href="{% url 'data:field_attendance_update' sheet.pk %}"><i class="bi bi-pencil-square me-1"></i>Edit</a>{% endif %}</div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <section class="panel mb-4">
+            <div class="panel-head"><div><h2>Activity information</h2><p class="text-muted mb-0">{{ sheet.activity_date }} · {{ sheet.get_status_display }}</p></div><span class="status-pill {% if sheet.status == 'approved' %}status-active{% elif sheet.status == 'rejected' %}status-dropout{% endif %}">{{ sheet.get_status_display }}</span></div>
+            <div class="row g-3"><div class="col-md-6"><small class="text-muted d-block">Activity</small><strong>{{ sheet.activity }}</strong></div><div class="col-md-6"><small class="text-muted d-block">Location</small><strong>{{ sheet.village|default:sheet.parish|default:sheet.sub_county|default:sheet.district }}</strong><span class="d-block small text-muted">{{ sheet.district }}{% if sheet.county %}, {{ sheet.county }}{% endif %}</span></div></div>
+        </section>
+        <section class="panel"><div class="panel-head"><div><h2>Participants</h2><p class="text-muted mb-0">{{ sheet.participants.count }} participant{{ sheet.participants.count|pluralize }}</p></div></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>#</th><th>Name</th><th>Sex</th><th>Title / role</th><th>Contact</th><th>Initials</th></tr></thead><tbody>{% for participant in sheet.participants.all %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ participant.name }}</strong></td><td>{{ participant.get_sex_display }}</td><td>{{ participant.title_role|default:"—" }}</td><td>{{ participant.contact|default:"—" }}</td><td>{{ participant.signature|default:"—" }}</td></tr>{% empty %}<tr><td colspan="6" class="empty-state">No participants recorded.</td></tr>{% endfor %}</tbody></table></div></section>
+    </div>
+    <div class="col-lg-4">
+        <section class="panel mb-4"><div class="panel-head"><div><h2>Review</h2><p class="text-muted mb-0">Approval controls</p></div></div>{% if sheet.status == 'rejected' and sheet.rejection_reason %}<div class="alert alert-danger"><strong>Rejection reason</strong><br>{{ sheet.rejection_reason }}</div>{% endif %}{% if can_review %}<form method="post" action="{% url 'data:field_attendance_approve' sheet.pk %}" class="mb-3">{% csrf_token %}<button class="btn btn-success w-100" type="submit"><i class="bi bi-check-circle me-1"></i>Approve attendance</button></form><form method="post" action="{% url 'data:field_attendance_reject' sheet.pk %}">{% csrf_token %}<label class="form-label" for="rejection_reason">Reason for rejection</label><textarea class="form-control mb-2" id="rejection_reason" name="rejection_reason" rows="3" placeholder="Explain what should be corrected"></textarea><button class="btn btn-outline-danger w-100" type="submit"><i class="bi bi-x-circle me-1"></i>Reject attendance</button></form>{% else %}<p class="text-muted mb-0">Only the ED or a superuser can approve or reject this attendance sheet.</p>{% endif %}</section>
+        <section class="panel"><div class="panel-head"><div><h2>Sign-off</h2></div></div><dl class="row mb-0"><dt class="col-6">Submitted by</dt><dd class="col-6">{{ sheet.submitted_by|default:"—" }}</dd><dt class="col-6">Submitted initials</dt><dd class="col-6">{{ sheet.submitted_signature|default:"—" }}</dd><dt class="col-6">Approved by</dt><dd class="col-6">{{ sheet.approved_by|default:"—" }}</dd><dt class="col-6">Approved initials</dt><dd class="col-6">{{ sheet.approved_signature|default:"—" }}</dd></dl></section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,756 @@
+
+{% extends "base.html" %}
+{% block title %}Learner Register | KAPDA{% endblock %}
+{% block page_heading %}Learner register{% endblock %}
+
+{% block extra_head %}
+<style>
+    .learner-register {
+        --lr-primary: var(--kapda-primary, #2c5d83);
+        --lr-primary-dark: var(--logo-navy-dark, #1d4566);
+        --lr-green: var(--logo-green, #198a52);
+        --lr-border: #e5ebf0;
+        --lr-muted: #6b7785;
+        --lr-surface: #fff;
+        --lr-radius: 14px;
+    }
+
+    .learner-register .page-intro {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .learner-register .page-intro h1 {
+        margin: 0 0 6px;
+        color: var(--lr-primary-dark);
+        font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+        font-weight: 800;
+        letter-spacing: -.035em;
+    }
+
+    .learner-register .page-intro p {
+        margin: 0;
+        color: var(--lr-muted);
+        font-size: .91rem;
+        line-height: 1.6;
+    }
+
+    .learner-register .register-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .learner-register .register-actions .btn {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 9px;
+        font-weight: 650;
+    }
+
+    .learner-register .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .learner-register .metric-card {
+        position: relative;
+        min-width: 0;
+        padding: 18px;
+        background: var(--lr-surface);
+        border: 1px solid var(--lr-border);
+        border-radius: var(--lr-radius);
+        box-shadow: 0 3px 12px rgba(27, 48, 65, .035);
+        overflow: hidden;
+    }
+
+    .learner-register .metric-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: var(--lr-primary);
+    }
+
+    .learner-register .metric-card:nth-child(2)::before,
+    .learner-register .metric-card:nth-child(4)::before {
+        background: var(--lr-green);
+    }
+
+    .learner-register .metric-card span {
+        display: block;
+        color: var(--lr-muted);
+        font-size: .78rem;
+        font-weight: 650;
+        line-height: 1.45;
+    }
+
+    .learner-register .metric-card strong {
+        display: block;
+        margin: 9px 0 5px;
+        color: var(--lr-primary-dark);
+        font-size: clamp(1.55rem, 2.5vw, 2rem);
+        font-weight: 800;
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+    }
+
+    .learner-register .metric-card small {
+        display: block;
+        color: var(--lr-muted);
+        font-size: .74rem;
+        line-height: 1.5;
+    }
+
+    .learner-register .panel {
+        min-width: 0;
+        background: var(--lr-surface);
+        border: 1px solid var(--lr-border);
+        border-radius: var(--lr-radius);
+        box-shadow: 0 3px 12px rgba(27, 48, 65, .035);
+        overflow: hidden;
+    }
+
+    .learner-register .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--lr-border);
+    }
+
+    .learner-register .panel-head h2 {
+        margin: 0 0 5px;
+        color: var(--lr-primary-dark);
+        font-size: 1rem;
+        font-weight: 750;
+    }
+
+    .learner-register .panel-head p {
+        margin: 0;
+        color: var(--lr-muted);
+        font-size: .81rem;
+        line-height: 1.5;
+    }
+
+    .learner-register .table-responsive {
+        width: 100%;
+    }
+
+    .learner-register .table {
+        margin: 0;
+        --bs-table-bg: transparent;
+    }
+
+    .learner-register .table > :not(caption) > * > * {
+        padding: 13px 16px;
+        border-bottom-color: #edf1f4;
+        vertical-align: middle;
+    }
+
+    .learner-register .table thead th {
+        background: #f7f9fb;
+        color: #647181;
+        font-size: .7rem;
+        font-weight: 750;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .learner-register .table tbody td {
+        color: #344252;
+        font-size: .84rem;
+    }
+
+    .learner-register .table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .learner-register .table tbody tr:hover {
+        background: #f8fbfd;
+    }
+
+    .learner-register .filter-bar {
+        display: grid;
+        grid-template-columns: minmax(200px, 1.5fr) repeat(4, minmax(130px, 1fr)) auto;
+        align-items: end;
+        gap: 12px;
+        padding: 17px;
+        margin-bottom: 16px;
+        background: #fff;
+        border: 1px solid var(--lr-border);
+        border-radius: var(--lr-radius);
+    }
+
+    .learner-register .filter-bar label {
+        display: block;
+        margin-bottom: 6px;
+        color: #526173;
+        font-size: .76rem;
+        font-weight: 700;
+    }
+
+    .learner-register .filter-bar .form-control,
+    .learner-register .filter-bar .form-select {
+        min-height: 39px;
+        border-color: #dce4eb;
+        border-radius: 8px;
+        font-size: .82rem;
+    }
+
+    .learner-register .filter-bar .form-control:focus,
+    .learner-register .filter-bar .form-select:focus {
+        border-color: var(--lr-primary);
+        box-shadow: 0 0 0 .2rem rgba(44, 93, 131, .1);
+    }
+
+    .learner-register .filter-actions {
+        display: flex;
+        gap: 7px;
+    }
+
+    .learner-register .filter-actions .btn {
+        min-height: 39px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .learner-register .id-link {
+        color: var(--lr-primary);
+        font-weight: 750;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .learner-register .id-link:hover {
+        color: var(--lr-primary-dark);
+        text-decoration: underline;
+    }
+
+    .learner-register .learner-name {
+        display: block;
+        color: #25384a;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    .learner-register .muted-line {
+        display: block;
+        margin-top: 4px;
+        color: var(--lr-muted);
+        font-size: .75rem;
+        line-height: 1.45;
+    }
+
+    .learner-register .class-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 43px;
+        padding: 5px 9px;
+        background: #eef4f9;
+        border: 1px solid #dce8f2;
+        border-radius: 7px;
+        color: var(--lr-primary-dark);
+        font-size: .76rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .learner-register .status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: .71rem;
+        font-weight: 750;
+        line-height: 1.3;
+        white-space: nowrap;
+    }
+
+    .learner-register .status-active {
+        color: #176b43;
+        background: #e8f6ee;
+    }
+
+    .learner-register .status-completed {
+        color: #245b91;
+        background: #eaf2fb;
+    }
+
+    .learner-register .status-dropout {
+        color: #a12f37;
+        background: #fdecee;
+    }
+
+    .learner-register .status-transferred,
+    .learner-register .status-transitioned,
+    .learner-register .status-on_hold {
+        color: #8a5a0a;
+        background: #fff4d9;
+    }
+
+    .learner-register .status-inactive {
+        color: #5d6671;
+        background: #edf0f3;
+    }
+
+    .learner-register .status-default {
+        color: #475569;
+        background: #f1f5f9;
+    }
+
+    .learner-register .disability-yes,
+    .learner-register .disability-no {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: .78rem;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .learner-register .disability-yes {
+        color: #8a5a0a;
+    }
+
+    .learner-register .disability-no {
+        color: #526173;
+    }
+
+    .learner-register .icon-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--lr-border);
+        border-radius: 9px;
+        color: var(--lr-primary);
+        text-decoration: none;
+        transition: background .15s ease, border-color .15s ease;
+    }
+
+    .learner-register .icon-action:hover {
+        background: #edf4fa;
+        border-color: #c7d9e8;
+    }
+
+    .learner-register .empty-state {
+        padding: 35px 16px !important;
+        color: var(--lr-muted);
+        text-align: center;
+    }
+
+    .learner-register .pagination-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 14px 18px;
+        border-top: 1px solid var(--lr-border);
+    }
+
+    .learner-register .pagination-row > span {
+        color: var(--lr-muted);
+        font-size: .79rem;
+    }
+
+    .learner-register .pagination-row .btn {
+        border-radius: 8px;
+    }
+
+    @media (max-width: 1200px) {
+        .learner-register .filter-bar {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .learner-register .filter-bar .search-field {
+            grid-column: span 2;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .learner-register .page-intro {
+            align-items: stretch;
+        }
+
+        .learner-register .register-actions {
+            width: 100%;
+        }
+
+        .learner-register .register-actions .btn {
+            flex: 1 1 180px;
+        }
+
+        .learner-register .metric-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .learner-register .metric-card {
+            padding: 14px;
+        }
+
+        .learner-register .filter-bar {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 11px;
+        }
+
+        .learner-register .filter-bar .search-field {
+            grid-column: 1 / -1;
+        }
+
+        .learner-register .filter-actions {
+            grid-column: 1 / -1;
+        }
+
+        .learner-register .filter-actions .btn {
+            flex: 1;
+        }
+
+        .learner-register .panel-head {
+            padding: 15px;
+        }
+
+        .learner-register .table > :not(caption) > * > * {
+            padding: 11px 12px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .learner-register .metric-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .learner-register .metric-card strong {
+            font-size: 1.45rem;
+        }
+
+        .learner-register .filter-bar {
+            grid-template-columns: 1fr;
+        }
+
+        .learner-register .filter-bar .search-field,
+        .learner-register .filter-actions {
+            grid-column: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="learner-register">
+
+    <div class="page-intro">
+        <div>
+            <h1>Learner register</h1>
+            <p>Search the master register and review reach across projects, schools and support services.</p>
+        </div>
+
+        <div class="register-actions">
+            <a class="btn btn-outline-kapda"
+               href="{% url 'reports:learner_export_xlsx' %}?q={{ q|urlencode }}&project={{ project_filter|urlencode }}&support_type={{ support_type_filter|urlencode }}&class={{ class_filter|urlencode }}&status={{ status_filter|urlencode }}">
+                <i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i>
+                Export filtered Excel
+            </a>
+            <a class="btn btn-kapda" href="{% url 'learners:create' %}">
+                <i class="bi bi-person-plus" aria-hidden="true"></i>
+                Register learner
+            </a>
+        </div>
+    </div>
+
+    <!-- Register KPIs -->
+    <div class="metric-grid">
+        <div class="metric-card">
+            <span>Total learners</span>
+            <strong>{{ kpis.total_learners|default:0 }}</strong>
+            <small>Learners in the selected register scope</small>
+        </div>
+        <div class="metric-card">
+            <span>Supported learners</span>
+            <strong>{{ kpis.supported_learners|default:0 }}</strong>
+            <small>Distinct learners receiving support</small>
+        </div>
+        <div class="metric-card">
+            <span>Girls / women reached</span>
+            <strong>{{ kpis.girls_women_reached|default:0 }}</strong>
+            <small>Supported female participants</small>
+        </div>
+        <div class="metric-card">
+            <span>Pad distributions</span>
+            <strong>{{ kpis.pad_distribution|default:0 }}</strong>
+            <small>Sanitary-pad support records</small>
+        </div>
+        <div class="metric-card">
+            <span>Back-to-school support</span>
+            <strong>{{ kpis.back_to_school|default:0 }}</strong>
+            <small>Back-to-school support records</small>
+        </div>
+        <div class="metric-card">
+            <span>MHM sessions</span>
+            <strong>{{ kpis.mhm_sessions|default:0 }}</strong>
+            <small>Sessions in the selected scope</small>
+        </div>
+        <div class="metric-card">
+            <span>WASH facilities</span>
+            <strong>{{ kpis.wash_facilities|default:0 }}</strong>
+            <small>Facilities in the selected scope</small>
+        </div>
+        <div class="metric-card">
+            <span>Follow-up actions</span>
+            <strong>{{ kpis.follow_up|default:0 }}</strong>
+            <small>Related follow-up records</small>
+        </div>
+    </div>
+
+
+    <!-- Learner filters -->
+    <form class="filter-bar" method="get" id="learnerFilters">
+        <div class="search-field">
+            <label for="learnerSearch">Search learners</label>
+            <input
+                id="learnerSearch"
+                class="form-control form-control-sm"
+                type="search"
+                name="q"
+                value="{{ q }}"
+                placeholder="Name, KAPDA ID or guardian phone"
+                autocomplete="off">
+        </div>
+
+        <div>
+            <label for="projectFilter">Project</label>
+            <select id="projectFilter" class="form-select form-select-sm" name="project">
+                <option value="">All projects</option>
+                {% for p in projects %}
+                <option value="{{ p.id }}" {% if project_filter == p.id|stringformat:"s" %}selected{% endif %}>
+                    {{ p.code }} — {{ p.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="supportTypeFilter">Support type</label>
+            <select id="supportTypeFilter" class="form-select form-select-sm" name="support_type">
+                <option value="">All support types</option>
+                {% for val, label in support_types %}
+                <option value="{{ val }}" {% if support_type_filter == val %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="classFilter">Class</label>
+            <select id="classFilter" class="form-select form-select-sm" name="class">
+                <option value="">All classes</option>
+                {% for val, label in classes %}
+                <option value="{{ val }}" {% if class_filter == val %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="statusFilter">Status</label>
+            <select id="statusFilter" class="form-select form-select-sm" name="status">
+                <option value="">All statuses</option>
+                {% for val, label in statuses %}
+                <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn btn-outline-secondary btn-sm" type="submit">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i> Filter
+            </button>
+            <a class="btn btn-light btn-sm border"
+               href="{% url 'learners:list' %}"
+               aria-label="Clear all filters"
+               title="Clear filters">
+                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+            </a>
+        </div>
+    </form>
+
+    <!-- Master learner register -->
+    <section class="panel mb-4">
+        <div class="panel-head">
+            <div>
+                <h2>Master learner register</h2>
+                <p>Open a learner record to view education history, attendance, support and results.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">KAPDA ID</th>
+                        <th scope="col">Learner</th>
+                        <th scope="col">Sex / age</th>
+<!--                        <th scope="col">Admission class</th>-->
+                        <th scope="col">Current class</th>
+<!--                        <th scope="col">Disability</th>-->
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in learners %}
+                    <tr>
+                        <td>
+                            <a class="id-link" href="{% url 'learners:detail' l.pk %}">
+                                {{ l.reg_no|default:"Not assigned" }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="learner-name">{{ l.full_name }}</span>
+                            <span class="muted-line">{{ l.location|default:"Location not recorded" }}</span>
+                        </td>
+                        <td>
+                            {{ l.get_sex_display|default:"—" }}
+                            <span class="muted-line">Age: {{ l.age|default_if_none:"—" }}</span>
+                        </td>
+<!--                        <td>{{ l.class_of_admission|default:"—" }}</td>-->
+                        <td>
+                            <span class="class-chip">{{ l.current_class|default:"—" }}</span>
+                        </td>
+<!--                        <td>-->
+<!--                            {% if l.disability_status %}-->
+<!--                            <span class="disability-yes">-->
+<!--                                <i class="bi bi-check-circle-fill" aria-hidden="true"></i> Yes-->
+<!--                            </span>-->
+<!--                            {% else %}-->
+<!--                            <span class="disability-no">-->
+<!--                                <i class="bi bi-dash-circle" aria-hidden="true"></i> No / not recorded-->
+<!--                            </span>-->
+<!--                            {% endif %}-->
+<!--                        </td>-->
+                        <td>
+                            {% with status=l.status|lower %}
+                            <span class="status-pill
+                                {% if status == 'active' %}status-active
+                                {% elif status == 'completed' %}status-completed
+                                {% elif status == 'dropout' %}status-dropout
+                                {% elif status == 'transferred' %}status-transferred
+                                {% elif status == 'transitioned' %}status-transitioned
+                                {% elif status == 'inactive' %}status-inactive
+                                {% elif status == 'on_hold' %}status-on_hold
+                                {% else %}status-default{% endif %}">
+                                {{ l.get_status_display|default:l.status|default:"Unknown" }}
+                            </span>
+                            {% endwith %}
+                        </td>
+                        <td class="text-end">
+                            <a class="icon-action"
+                               href="{% url 'learners:detail' l.pk %}"
+                               aria-label="View {{ l.full_name }}"
+                               title="View learner">
+                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="bi bi-search fs-4 d-block mb-2" aria-hidden="true"></i>
+                            <strong class="d-block mb-1">No matching learners found</strong>
+                            <span>Try changing the filters or register a new learner.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-row">
+            <span>
+                Page {{ learners.number|default:1 }}
+                of {{ learners.paginator.num_pages|default:1 }}
+                · {{ learners.paginator.count|default:0 }} learners
+            </span>
+
+            <nav class="d-flex gap-2" aria-label="Learner register pagination">
+                {% if learners.has_previous %}
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="?q={{ q|urlencode }}&project={{ project_filter|urlencode }}&support_type={{ support_type_filter|urlencode }}&class={{ class_filter|urlencode }}&status={{ status_filter|urlencode }}&page={{ learners.previous_page_number }}">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i> Previous
+                </a>
+                {% endif %}
+
+                {% if learners.has_next %}
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="?q={{ q|urlencode }}&project={{ project_filter|urlencode }}&support_type={{ support_type_filter|urlencode }}&class={{ class_filter|urlencode }}&status={{ status_filter|urlencode }}&page={{ learners.next_page_number }}">
+                    Next <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </section>
+
+      <!-- Supported learners by school -->
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Supported learners by school</h2>
+                <p>Distinct supported learners grouped by school. Select a school to view its project breakdown.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">School</th>
+                        <th scope="col" class="text-end">Supported learners</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in school_project_support %}
+                    <tr>
+                        <td>
+                            <strong>{{ row.project__code|default:"—" }}</strong>
+                            <a href="{{ row.school_url }}">{{ row.learner__enrolments__school__name|default:"School not recorded" }}</a>
+                        </td>
+                        <td class="text-end">
+                            <span class="status-pill status-active">{{ row.total|default:0 }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="empty-state">
+                            <i class="bi bi-inbox fs-4 d-block mb-2" aria-hidden="true"></i>
+                            No supported learners found for the selected scope.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+
+</div>
+{% endblock %}

@@ -1,0 +1,420 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ model_name }} | KAPDA{% endblock %}
+{% block page_heading %}{{ model_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* =====================================================
+       KAPDA RECORD FORM
+       ===================================================== */
+
+    .record-form-page {
+        --form-primary: var(--kapda-primary, #2c5d83);
+        --form-primary-dark: var(--logo-navy-dark, #1d4566);
+        --form-border: #dfe7ed;
+        --form-muted: #64748b;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding-bottom: 2rem;
+    }
+
+    .record-form-intro {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+        padding: 1.4rem 1.5rem;
+        background: #fff;
+        border: 1px solid var(--form-border);
+        border-left: 4px solid var(--form-primary);
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(31, 55, 76, 0.04);
+    }
+
+    .record-form-intro h1 {
+        margin: 0 0 .4rem;
+        color: #243b53;
+        font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+        font-weight: 750;
+        letter-spacing: -.025em;
+    }
+
+    .record-form-intro p {
+        margin: 0;
+        color: var(--form-muted);
+        font-size: .9rem;
+        line-height: 1.6;
+    }
+
+    .record-form-panel {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--form-border);
+        border-radius: 16px;
+        box-shadow: 0 8px 28px rgba(31, 55, 76, 0.055);
+    }
+
+    .record-form-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: .85rem;
+        padding: 1.4rem 1.6rem;
+        background: linear-gradient(135deg, #f7fafc, #fff);
+        border-bottom: 1px solid var(--form-border);
+    }
+
+    .record-form-heading-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        color: var(--form-primary);
+        background: #eaf1f7;
+        border-radius: 12px;
+        font-size: 1.3rem;
+    }
+
+    .record-form-heading h2 {
+        margin: 0 0 .3rem;
+        color: #243b53;
+        font-size: 1.05rem;
+        font-weight: 750;
+    }
+
+    .record-form-heading p {
+        margin: 0;
+        color: var(--form-muted);
+        font-size: .84rem;
+    }
+
+    .record-form-body {
+        padding: 1.6rem;
+    }
+
+    .record-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.3rem 1.5rem;
+    }
+
+    .record-form-field {
+        min-width: 0;
+    }
+
+    .record-form-field.span-2 {
+        grid-column: 1 / -1;
+    }
+
+    .record-form-field[hidden] {
+        display: none !important;
+    }
+
+    .record-form-field .form-label {
+        display: block;
+        margin-bottom: .5rem;
+        color: #34495e;
+        font-size: .875rem;
+        font-weight: 650;
+    }
+
+    .record-form-field .required {
+        margin-left: .25rem;
+        color: #c0392b;
+    }
+
+    .record-form-field input:not([type="checkbox"]):not([type="radio"]),
+    .record-form-field select,
+    .record-form-field textarea {
+        display: block;
+        width: 100%;
+        min-height: 44px;
+        padding: .65rem .85rem;
+        color: #263746;
+        background-color: #fff;
+        border: 1px solid #cfd9e2;
+        border-radius: 9px;
+        font-size: .9rem;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .record-form-field textarea {
+        min-height: 115px;
+        resize: vertical;
+    }
+
+    .record-form-field input[type="file"] {
+        height: auto;
+        padding: .55rem;
+        background: #f8fafc;
+    }
+
+    .record-form-field input:focus,
+    .record-form-field select:focus,
+    .record-form-field textarea:focus {
+        border-color: var(--form-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 93, 131, .12);
+    }
+
+    .record-form-field input[type="checkbox"],
+    .record-form-field input[type="radio"] {
+        accent-color: var(--form-primary);
+    }
+
+    .record-form-field .form-check {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        min-height: 42px;
+        margin: 0;
+        padding: .65rem .8rem;
+        background: #f8fafc;
+        border: 1px solid var(--form-border);
+        border-radius: 9px;
+    }
+
+    .record-form-field .form-check-input {
+        float: none;
+        flex: 0 0 auto;
+        margin: 0;
+    }
+
+    .record-form-field .form-check-label {
+        margin: 0;
+        color: #34495e;
+        font-size: .875rem;
+    }
+
+    .record-form-field .form-hint,
+    .record-form-field .helptext {
+        display: block;
+        margin-top: .4rem;
+        color: var(--form-muted);
+        font-size: .79rem;
+        line-height: 1.55;
+    }
+
+    .record-form-field .text-danger {
+        display: block;
+        margin-top: .4rem;
+        font-size: .8rem;
+    }
+
+    .record-form-field ul.errorlist {
+        margin: .4rem 0 0;
+        padding-left: 1.1rem;
+        color: #b42318;
+        font-size: .8rem;
+    }
+
+    .record-form-alert {
+        margin: 1.25rem 1.6rem 0;
+        padding: .9rem 1rem;
+        border-radius: 10px;
+    }
+
+    .record-form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.8rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--form-border);
+    }
+
+    .btn-kapda {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: .65rem 1.2rem;
+        color: #fff;
+        background: var(--form-primary);
+        border: 1px solid var(--form-primary);
+        border-radius: 9px;
+        font-size: .875rem;
+        font-weight: 650;
+        text-decoration: none;
+        transition: background .18s ease, transform .18s ease;
+    }
+
+    .btn-kapda:hover {
+        color: #fff;
+        background: var(--form-primary-dark);
+        border-color: var(--form-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    .record-form-actions .btn-light {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: .65rem 1.1rem;
+        border-radius: 9px;
+        font-size: .875rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 700px) {
+        .record-form-intro {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 1.15rem;
+        }
+
+        .record-form-heading,
+        .record-form-body {
+            padding: 1.15rem;
+        }
+
+        .record-form-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1.1rem;
+        }
+
+        .record-form-field.span-2 {
+            grid-column: auto;
+        }
+
+        .record-form-alert {
+            margin: 1rem 1.15rem 0;
+        }
+
+        .record-form-actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+        }
+
+        .record-form-actions .btn,
+        .record-form-actions .btn-kapda {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="record-form-page">
+
+    <div class="record-form-intro">
+        <div>
+            <h1>
+                <i class="bi {% if creating %}bi-plus-circle{% else %}bi-pencil-square{% endif %} me-2"></i>
+                {% if creating %}Add{% else %}Edit{% endif %} {{ model_name|lower }}
+            </h1>
+            <p>
+                Maintain accurate programme records using the KAPDA management system.
+                Complete all required fields before saving.
+            </p>
+        </div>
+
+        <a class="btn btn-light border"
+           href="{% url 'projects:indicator_list' %}">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to records
+        </a>
+    </div>
+
+    <form method="post"
+          enctype="multipart/form-data"
+          class="record-form-panel"
+          novalidate>
+        {% csrf_token %}
+
+        <div class="record-form-heading">
+            <span class="record-form-heading-icon">
+                <i class="bi bi-clipboard2-data"></i>
+            </span>
+            <div>
+                <h2>Record information</h2>
+                <p>Fields marked with an asterisk (*) are required.</p>
+            </div>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger record-form-alert" role="alert">
+                <div class="fw-semibold mb-1">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Please review the following
+                </div>
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="record-form-body">
+            <div class="record-form-grid">
+                {% for field in form %}
+                    <div
+                        id="field-wrap-{{ field.name }}"
+                        class="record-form-field
+                            {% if field.field.widget.attrs.rows or field.field.widget.input_type == 'file' %}
+                                span-2
+                            {% endif %}
+                            {% if field.name == 'support_type_other' %}
+                                support-other-field
+                            {% endif %}"
+                    >
+                        {% if field.field.widget.input_type == "checkbox" %}
+                            <div class="form-check">
+                                {{ field }}
+                                <label class="form-check-label"
+                                       for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="required">*</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        {% else %}
+                            <label class="form-label"
+                                   for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="required">*</span>
+                                {% endif %}
+                            </label>
+                            {{ field }}
+                        {% endif %}
+
+                        {% if field.help_text %}
+                            <div class="form-hint">{{ field.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <div class="text-danger" role="alert">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="record-form-actions">
+                <a class="btn btn-light border"
+                   href="{% url 'projects:indicator_list' %}">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancel
+                </a>
+
+                <button class="btn-kapda" type="submit">
+                    <i class="bi bi-check2-circle me-2"></i>
+                    {% if creating %}Save record{% else %}Update record{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+
+{% endblock %}

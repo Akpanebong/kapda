@@ -1,0 +1,92 @@
+<section class="reach-kpis" aria-labelledby="reach-kpis-title">
+    <div class="section-heading">
+        <span aria-hidden="true">
+            <i class="bi bi-people"></i>
+        </span>
+        <div>
+            <h2 id="reach-kpis-title">Gender &amp; Population Reach</h2>
+            <p>
+                Beneficiaries and farmers disaggregated by participant category
+                and host/refugee status.
+            </p>
+        </div>
+    </div>
+
+    <div class="metric-grid reach-kpi-grid">
+        <!-- Girls -->
+        <article class="metric-card">
+            <div class="metric-icon pink" aria-hidden="true">
+                <i class="bi bi-gender-female"></i>
+            </div>
+            <span>Host Girls</span>
+            <strong>{{ girl_host|default:0 }}</strong>
+            <small>{{ girl_host_farmers|default:0 }} farmers</small>
+        </article>
+
+        <article class="metric-card">
+            <div class="metric-icon pink" aria-hidden="true">
+                <i class="bi bi-gender-female"></i>
+            </div>
+            <span>Refugee Girls</span>
+            <strong>{{ girl_refugee|default:0 }}</strong>
+            <small>{{ girl_refugee_farmers|default:0 }} farmers</small>
+        </article>
+
+        <!-- Boys -->
+        <article class="metric-card">
+            <div class="metric-icon blue" aria-hidden="true">
+                <i class="bi bi-gender-male"></i>
+            </div>
+            <span>Host Boys</span>
+            <strong>{{ boy_host|default:0 }}</strong>
+            <small>{{ boy_host_farmers|default:0 }} farmers</small>
+        </article>
+
+        <article class="metric-card">
+            <div class="metric-icon blue" aria-hidden="true">
+                <i class="bi bi-gender-male"></i>
+            </div>
+            <span>Refugee Boys</span>
+            <strong>{{ boy_refugee|default:0 }}</strong>
+            <small>{{ boy_refugee_farmers|default:0 }} farmers</small>
+        </article>
+
+        <!-- Women -->
+        <article class="metric-card">
+            <div class="metric-icon green" aria-hidden="true">
+                <i class="bi bi-person-standing"></i>
+            </div>
+            <span>Host Women</span>
+            <strong>{{ woman_host|default:0 }}</strong>
+            <small>{{ woman_host_farmers|default:0 }} farmers</small>
+        </article>
+
+        <article class="metric-card">
+            <div class="metric-icon green" aria-hidden="true">
+                <i class="bi bi-person-standing"></i>
+            </div>
+            <span>Refugee Women</span>
+            <strong>{{ woman_refugee|default:0 }}</strong>
+            <small>{{ woman_refugee_farmers|default:0 }} farmers</small>
+        </article>
+
+        <!-- Men -->
+        <article class="metric-card">
+            <div class="metric-icon teal" aria-hidden="true">
+                <i class="bi bi-person-standing"></i>
+            </div>
+            <span>Host Men</span>
+            <strong>{{ man_host|default:0 }}</strong>
+            <small>{{ man_host_farmers|default:0 }} farmers</small>
+        </article>
+
+        <article class="metric-card">
+            <div class="metric-icon teal" aria-hidden="true">
+                <i class="bi bi-person-standing"></i>
+            </div>
+            <span>Refugee Men</span>
+            <strong>{{ man_refugee|default:0 }}</strong>
+            <small>{{ man_refugee_farmers|default:0 }} farmers</small>
+        </article>
+    </div>
+</section>

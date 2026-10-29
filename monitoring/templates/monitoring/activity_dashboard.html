@@ -1,0 +1,1124 @@
+
+{% extends "base.html" %}
+
+{% block title %}Activities & MHM/WASH | KAPDA{% endblock %}
+{% block page_heading %}Activities & MHM/WASH{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* =====================================================
+       KAPDA ACTIVITY MONITORING DASHBOARD
+       ===================================================== */
+    .activity-dashboard {
+        --activity-primary: var(--kapda-primary, #2c5d83);
+        --activity-dark: var(--logo-navy-dark, #1d4566);
+        --activity-border: #dfe7ed;
+        --activity-muted: #64748b;
+        padding-bottom: 2rem;
+    }
+
+    .activity-dashboard .page-intro {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        background: #fff;
+        border: 1px solid var(--activity-border);
+        border-left: 4px solid var(--activity-primary);
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(31, 55, 76, .04);
+    }
+
+    .activity-dashboard .page-intro h1 {
+        margin: .3rem 0 .45rem;
+        color: #243b53;
+        font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+        font-weight: 750;
+        letter-spacing: -.025em;
+    }
+
+    .activity-dashboard .page-intro p {
+        margin: 0;
+        color: var(--activity-muted);
+        font-size: .9rem;
+        line-height: 1.6;
+    }
+
+    .activity-eyebrow {
+        color: var(--activity-primary);
+        font-size: .72rem;
+        font-weight: 750;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+    }
+
+    .activity-dashboard .btn-kapda {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .3rem;
+        min-height: 40px;
+        padding: .6rem 1rem;
+        color: #fff;
+        background: var(--activity-primary);
+        border: 1px solid var(--activity-primary);
+        border-radius: 9px;
+        font-size: .85rem;
+        font-weight: 650;
+        text-decoration: none;
+        transition: background .18s ease, transform .18s ease;
+    }
+
+    .activity-dashboard .btn-kapda:hover {
+        color: #fff;
+        background: var(--activity-dark);
+        border-color: var(--activity-dark);
+    }
+
+    .activity-dashboard .btn-outline-kapda {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        min-height: 38px;
+        padding: .5rem .85rem;
+        color: var(--activity-primary);
+        background: #fff;
+        border: 1px solid #c8d7e4;
+        border-radius: 8px;
+        font-size: .82rem;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .activity-dashboard .btn-outline-kapda:hover {
+        color: var(--activity-dark);
+        background: #f0f5f9;
+        border-color: var(--activity-primary);
+    }
+
+    /* Performance metrics */
+    .activity-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .activity-metric {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: .9rem;
+        min-width: 0;
+        padding: 1.2rem;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--activity-border);
+        border-radius: 13px;
+        box-shadow: 0 4px 16px rgba(31, 55, 76, .035);
+    }
+
+    .activity-metric::after {
+        position: absolute;
+        right: -18px;
+        bottom: -25px;
+        width: 75px;
+        height: 75px;
+        background: #f1f6fa;
+        border-radius: 50%;
+        content: "";
+    }
+
+    .activity-metric-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 43px;
+        width: 43px;
+        height: 43px;
+        color: var(--activity-primary);
+        background: #eaf1f7;
+        border-radius: 11px;
+        font-size: 1.2rem;
+    }
+
+    .activity-metric-label {
+        display: block;
+        margin-bottom: .4rem;
+        color: var(--activity-muted);
+        font-size: .79rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .activity-metric-value {
+        display: block;
+        color: #243b53;
+        font-size: clamp(1.45rem, 2.3vw, 1.9rem);
+        font-weight: 800;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+
+    /* Panels */
+    .activity-dashboard .panel {
+        min-width: 0;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--activity-border);
+        border-radius: 15px;
+        box-shadow: 0 6px 24px rgba(31, 55, 76, .045);
+    }
+
+    .activity-dashboard .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1.25rem 1.4rem;
+        border-bottom: 1px solid var(--activity-border);
+    }
+
+    .activity-dashboard .panel-head h2 {
+        margin: 0 0 .35rem;
+        color: #243b53;
+        font-size: 1.05rem;
+        font-weight: 750;
+    }
+
+    .activity-dashboard .panel-head p {
+        margin: 0;
+        color: var(--activity-muted);
+        font-size: .82rem;
+        line-height: 1.55;
+    }
+
+    .activity-panel-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    /* Register shortcuts */
+    .activity-quick-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .8rem;
+        padding: 1.2rem 1.4rem 1.4rem;
+    }
+
+    .activity-quick-link {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        min-width: 0;
+        padding: 1rem;
+        color: inherit;
+        background: #fff;
+        border: 1px solid var(--activity-border);
+        border-radius: 11px;
+        text-decoration: none;
+        transition: background .18s ease, border-color .18s ease,
+                    transform .18s ease, box-shadow .18s ease;
+    }
+
+    .activity-quick-link:hover {
+        color: inherit;
+        background: #f7fafc;
+        border-color: #b7cbdc;
+        box-shadow: 0 5px 14px rgba(31, 55, 76, .05);
+        transform: translateY(-1px);
+    }
+
+    .activity-quick-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        color: var(--activity-primary);
+        background: #eaf1f7;
+        border-radius: 10px;
+        font-size: 1.15rem;
+    }
+
+    .activity-quick-copy {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .activity-quick-copy b {
+        display: block;
+        margin-bottom: .3rem;
+        color: #2b4054;
+        font-size: .86rem;
+        font-weight: 700;
+    }
+
+    .activity-quick-copy small {
+        display: block;
+        color: var(--activity-muted);
+        font-size: .76rem;
+        line-height: 1.5;
+    }
+
+    .activity-quick-arrow {
+        flex: 0 0 auto;
+        color: #8295a7;
+        font-size: .95rem;
+    }
+
+    /* Activity register */
+    .activity-register-wrap {
+        padding: 0 1.2rem 1.2rem;
+    }
+
+    .activity-register-table {
+        min-width: 690px;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .activity-register-table thead th {
+        padding: .9rem .85rem;
+        color: #607487;
+        background: #f6f9fb;
+        border-bottom: 1px solid var(--activity-border);
+        font-size: .72rem;
+        font-weight: 750;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .activity-register-table tbody td {
+        padding: 1rem .85rem;
+        color: #34495e;
+        border-bottom: 1px solid #edf1f5;
+        font-size: .84rem;
+        vertical-align: middle;
+    }
+
+    .activity-register-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .activity-register-table tbody tr.activity-row {
+        cursor: pointer;
+        transition: background .15s ease;
+    }
+
+    .activity-register-table tbody tr.activity-row:hover {
+        background: #f7fafc;
+    }
+
+    .activity-register-table tbody tr.activity-row:focus-visible {
+        outline: 2px solid var(--activity-primary);
+        outline-offset: -3px;
+    }
+
+    .activity-name {
+        display: block;
+        max-width: 270px;
+        color: #263e53;
+        font-weight: 700;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .activity-subtext {
+        display: block;
+        margin-top: .2rem;
+        color: var(--activity-muted);
+        font-size: .76rem;
+        line-height: 1.5;
+    }
+
+    .activity-progress {
+        min-width: 90px;
+    }
+
+    .activity-progress-value {
+        display: block;
+        margin-bottom: .35rem;
+        color: #34495e;
+        font-size: .8rem;
+        font-weight: 700;
+    }
+
+    .activity-progress-track {
+        width: 100%;
+        height: 5px;
+        overflow: hidden;
+        background: #e9eef3;
+        border-radius: 999px;
+    }
+
+    .activity-progress-fill {
+        height: 100%;
+        background: var(--activity-primary);
+        border-radius: inherit;
+    }
+
+    .activity-empty {
+        padding: 3rem 1rem !important;
+        text-align: center;
+    }
+
+    .activity-empty i {
+        display: block;
+        margin-bottom: .75rem;
+        color: #9aabba;
+        font-size: 2rem;
+    }
+
+    .activity-empty strong {
+        display: block;
+        margin-bottom: .35rem;
+        color: #34495e;
+        font-size: .9rem;
+    }
+
+    .activity-empty span {
+        color: var(--activity-muted);
+        font-size: .81rem;
+    }
+
+    /* Submission modal */
+    .activity-data-modal .modal-content {
+        overflow: hidden;
+        border: 1px solid rgba(223, 231, 237, .9);
+        border-radius: 16px;
+        box-shadow: 0 24px 70px rgba(22, 39, 56, .2);
+    }
+
+    .activity-modal-header {
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.5rem 1.6rem;
+        color: #fff;
+        background: linear-gradient(125deg, #244b6d, #2c5d83);
+        border-bottom: 0;
+    }
+
+    .activity-modal-heading {
+        min-width: 0;
+    }
+
+    .activity-modal-kicker {
+        display: block;
+        margin-bottom: .5rem;
+        color: #d5e6f3;
+        font-size: .7rem;
+        font-weight: 750;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+
+    .activity-data-modal .modal-title {
+        margin-bottom: .5rem;
+        color: #fff;
+        font-size: 1.25rem;
+        font-weight: 750;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .activity-modal-header p {
+        margin: 0;
+        color: #e2edf5;
+        font-size: .81rem;
+        line-height: 1.65;
+    }
+
+    .activity-data-modal .btn-close {
+        flex: 0 0 auto;
+        filter: brightness(0) invert(1);
+        opacity: .85;
+    }
+
+    .activity-data-modal .btn-close:hover {
+        opacity: 1;
+    }
+
+    .activity-modal-body {
+        padding: 1.5rem 1.6rem;
+        background: #fff;
+    }
+
+    .activity-form-intro {
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+        margin-bottom: 1.4rem;
+        padding: .9rem 1rem;
+        color: #34495e;
+        background: #f3f7fa;
+        border: 1px solid var(--activity-border);
+        border-radius: 10px;
+    }
+
+    .activity-form-intro > i {
+        margin-top: .1rem;
+        color: var(--activity-primary);
+        font-size: 1.1rem;
+    }
+
+    .activity-form-intro b,
+    .activity-form-intro span {
+        display: block;
+    }
+
+    .activity-form-intro b {
+        margin-bottom: .25rem;
+        font-size: .84rem;
+    }
+
+    .activity-form-intro span {
+        color: var(--activity-muted);
+        font-size: .78rem;
+        line-height: 1.5;
+    }
+
+    .activity-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.2rem 1.4rem;
+    }
+
+    .activity-field {
+        min-width: 0;
+    }
+
+    .activity-field.activity-field-wide {
+        grid-column: 1 / -1;
+    }
+
+    .activity-field .form-label {
+        display: block;
+        margin-bottom: .45rem;
+        color: #34495e;
+        font-size: .84rem;
+        font-weight: 650;
+    }
+
+    .activity-field .required {
+        margin-left: .2rem;
+        color: #c0392b;
+    }
+
+    .activity-field input:not([type="checkbox"]):not([type="radio"]),
+    .activity-field select,
+    .activity-field textarea {
+        display: block;
+        width: 100%;
+        min-height: 43px;
+        padding: .6rem .8rem;
+        color: #263746;
+        background: #fff;
+        border: 1px solid #cfd9e2;
+        border-radius: 8px;
+        font-size: .86rem;
+    }
+
+    .activity-field textarea {
+        min-height: 105px;
+        resize: vertical;
+    }
+
+    .activity-field input[type="file"] {
+        height: auto;
+        padding: .5rem;
+        background: #f8fafc;
+    }
+
+    .activity-field input:focus,
+    .activity-field select:focus,
+    .activity-field textarea:focus {
+        border-color: var(--activity-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 93, 131, .12);
+    }
+
+    .activity-field input[type="checkbox"],
+    .activity-field input[type="radio"] {
+        accent-color: var(--activity-primary);
+    }
+
+    .activity-field .form-check {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        min-height: 42px;
+        margin: 0;
+        padding: .65rem .8rem;
+        background: #f8fafc;
+        border: 1px solid var(--activity-border);
+        border-radius: 8px;
+    }
+
+    .activity-field .form-check-input {
+        float: none;
+        flex: 0 0 auto;
+        margin: 0;
+    }
+
+    .activity-field .form-check-label {
+        color: #34495e;
+        font-size: .84rem;
+    }
+
+    .activity-field .form-hint {
+        display: block;
+        margin-top: .4rem;
+        color: var(--activity-muted);
+        font-size: .77rem;
+        line-height: 1.5;
+    }
+
+    .activity-field .text-danger {
+        display: block;
+        margin-top: .4rem;
+        font-size: .78rem;
+    }
+
+    .activity-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: .6rem;
+        padding: 1rem 1.6rem;
+        background: #f8fafc;
+        border-top: 1px solid var(--activity-border);
+    }
+
+    .activity-modal-footer .btn {
+        min-height: 40px;
+        padding: .6rem 1rem;
+        border-radius: 8px;
+        font-size: .84rem;
+        font-weight: 650;
+    }
+
+    @media (max-width: 900px) {
+        .activity-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 650px) {
+        .activity-dashboard .page-intro {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 1.15rem;
+        }
+
+        .activity-metrics {
+            gap: .7rem;
+        }
+
+        .activity-metric {
+            gap: .65rem;
+            padding: .9rem;
+        }
+
+        .activity-metric-icon {
+            flex-basis: 36px;
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+
+        .activity-metric-label {
+            font-size: .72rem;
+        }
+
+        .activity-metric-value {
+            font-size: 1.4rem;
+        }
+
+        .activity-quick-links {
+            grid-template-columns: minmax(0, 1fr);
+            padding: 1rem;
+        }
+
+        .activity-dashboard .panel-head {
+            align-items: flex-start;
+            padding: 1.1rem;
+        }
+
+        .activity-panel-actions {
+            width: 100%;
+        }
+
+        .activity-register-wrap {
+            padding: 0 .65rem .8rem;
+        }
+
+        .activity-modal-header,
+        .activity-modal-body {
+            padding: 1.1rem;
+        }
+
+        .activity-form-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1rem;
+        }
+
+        .activity-field.activity-field-wide {
+            grid-column: auto;
+        }
+
+        .activity-modal-footer {
+            padding: .9rem 1.1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="activity-dashboard">
+
+    <!-- Page heading -->
+    <div class="page-intro">
+        <div>
+            <span class="activity-eyebrow">
+                <i class="bi bi-graph-up-arrow me-1"></i>
+                Programme monitoring
+            </span>
+            <h1>Activity monitoring</h1>
+            <p>
+                Track project activities, field visits, menstrual health
+                and WASH support across KAPDA programmes.
+            </p>
+        </div>
+
+        <a class="btn btn-kapda"
+           href="{% url 'projects:indicator_create' %}">
+            <i class="bi bi-plus-lg"></i>
+            Add activity
+        </a>
+    </div>
+
+    <!-- Monitoring metrics -->
+    <div class="activity-metrics">
+
+        <div class="activity-metric">
+            <div class="activity-metric-icon">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <div>
+                <span class="activity-metric-label">Total activities</span>
+                <strong class="activity-metric-value">{{ activity_total|default:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="activity-metric">
+            <div class="activity-metric-icon">
+                <i class="bi bi-bullseye"></i>
+            </div>
+            <div>
+                <span class="activity-metric-label">Targets reached</span>
+                <strong class="activity-metric-value">{{ targets_reached|default:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="activity-metric">
+            <div class="activity-metric-icon">
+                <i class="bi bi-flag"></i>
+            </div>
+            <div>
+                <span class="activity-metric-label">Total targets</span>
+                <strong class="activity-metric-value">{{ total_targets|default:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="activity-metric">
+            <div class="activity-metric-icon">
+                <i class="bi bi-geo-alt"></i>
+            </div>
+            <div>
+                <span class="activity-metric-label">Field visits</span>
+                <strong class="activity-metric-value">{{ visits|default:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="activity-metric">
+            <div class="activity-metric-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+            <div>
+                <span class="activity-metric-label">Open actions</span>
+                <strong class="activity-metric-value">{{ open_actions|default:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="activity-metric">
+            <div class="activity-metric-icon">
+                <i class="bi bi-heart-pulse"></i>
+            </div>
+            <div>
+                <span class="activity-metric-label">MHM sessions</span>
+                <strong class="activity-metric-value">{{ mhm_sessions|default:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="activity-metric">
+            <div class="activity-metric-icon">
+                <i class="bi bi-droplet"></i>
+            </div>
+            <div>
+                <span class="activity-metric-label">WASH facilities</span>
+                <strong class="activity-metric-value">{{ wash_facilities|default:0 }}</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Monitoring registers -->
+    <section class="panel mt-4">
+        <div class="panel-head">
+            <div>
+                <h2>Monitoring registers</h2>
+                <p>
+                    Create and review field monitoring, MHM and WASH records.
+                </p>
+            </div>
+        </div>
+
+        <div class="activity-quick-links">
+            <a class="activity-quick-link"
+               href="{% url 'monitoring:field_visit_list' %}">
+                <span class="activity-quick-icon">
+                    <i class="bi bi-list-check"></i>
+                </span>
+                <span class="activity-quick-copy">
+                    <b>Field visits</b>
+                    <small>View and manage field visit records.</small>
+                </span>
+                <i class="bi bi-arrow-up-right activity-quick-arrow"></i>
+            </a>
+            <a class="activity-quick-link"
+               href="{% url 'monitoring:follow_up_action_list' %}">
+                <span class="activity-quick-icon">
+                    <i class="bi bi-list-task"></i>
+                </span>
+                <span class="activity-quick-copy">
+                    <b>Follow-up actions</b>
+                    <small>Track open, in-progress and completed actions.</small>
+                </span>
+                <i class="bi bi-arrow-up-right activity-quick-arrow"></i>
+            </a>
+            <a class="activity-quick-link"
+               href="{% url 'monitoring:mhm_session_list' %}">
+                <span class="activity-quick-icon">
+                    <i class="bi bi-journal-text"></i>
+                </span>
+                <span class="activity-quick-copy">
+                    <b>MHM sessions</b>
+                    <small>Review menstrual health training records.</small>
+                </span>
+                <i class="bi bi-arrow-up-right activity-quick-arrow"></i>
+            </a>
+            <a class="activity-quick-link"
+               href="{% url 'monitoring:wash_facility_list' %}">
+                <span class="activity-quick-icon">
+                    <i class="bi bi-building-check"></i>
+                </span>
+                <span class="activity-quick-copy">
+                    <b>WASH facilities</b>
+                    <small>Review facility status and follow-up actions.</small>
+                </span>
+                <i class="bi bi-arrow-up-right activity-quick-arrow"></i>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- Activity register -->
+    <section class="panel mt-4">
+        <div class="panel-head">
+            <div>
+                <h2>Activity register</h2>
+                <p>
+                    Select an activity to enter monitoring data or review existing submissions.
+                </p>
+            </div>
+
+            <div class="activity-panel-actions">
+                <a href="{% url 'projects:indicator_list' %}"
+                   class="btn btn-outline-kapda">
+                    <i class="bi bi-sliders"></i>
+                    Manage activities
+                </a>
+                <a href="{% url 'projects:activity_data_list' %}"
+                   class="btn btn-outline-kapda">
+                    <i class="bi bi-journal-check"></i>
+                    View submissions
+                </a>
+            </div>
+        </div>
+
+        <div class="activity-register-wrap">
+            <div class="table-responsive">
+                <table class="table align-middle activity-register-table">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Project</th>
+                            <th>Target</th>
+                            <th>Reached</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in activity_cards %}
+                            <tr class="activity-row"
+                                data-modal-target="activityData{{ card.activity.pk }}"
+                                tabindex="0"
+                                role="button"
+                                aria-label="Open data form for {{ card.activity.name }}">
+
+                                <td>
+                                    <span class="activity-name">
+                                        {{ card.activity.name }}
+                                    </span>
+                                    <span class="activity-subtext">
+                                        {{ card.activity.get_activity_type_display|default:card.activity.activity_type|default:"Activity / indicator" }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <strong>{{ card.activity.project.code|default:"—" }}</strong>
+                                    <span class="activity-subtext">
+                                        {{ card.activity.project.name|default:"Project not specified" }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ card.activity.target|default:0 }}
+                                    {{ card.activity.unit }}
+                                </td>
+
+                                <td>
+                                    <div class="activity-progress">
+                                        <span class="activity-progress-value">
+                                            {{ card.activity.reached|default:0 }}
+                                            <span class="text-muted fw-normal">
+                                                ({{ card.activity.attainment_percentage|default:0 }}%)
+                                            </span>
+                                        </span>
+                                        <div class="activity-progress-track"
+                                             role="progressbar"
+                                             aria-label="Activity target attainment"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100"
+                                             aria-valuenow="{{ card.activity.attainment_percentage|default:0 }}">
+                                            <div class="activity-progress-fill"
+                                                 style="width: {% if card.activity.attainment_percentage > 100 %}100{% elif card.activity.attainment_percentage > 0 %}{{ card.activity.attainment_percentage }}{% else %}0{% endif %}%;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-end">
+                                    <button type="button"
+                                            class="btn btn-sm btn-kapda"
+                                            data-open-activity-modal="activityData{{ card.activity.pk }}"
+                                            aria-label="Enter data for {{ card.activity.name }}">
+                                        <i class="bi bi-pencil-square"></i>
+                                        Enter data
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="activity-empty">
+                                    <i class="bi bi-clipboard2-x"></i>
+                                    <strong>No project activities configured</strong>
+                                    <span>
+                                        Add an activity to begin tracking targets and submissions.
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Activity submission modals -->
+{% for card in activity_cards %}
+    <div class="modal fade activity-data-modal"
+         id="activityData{{ card.activity.pk }}"
+         tabindex="-1"
+         aria-labelledby="activityDataTitle{{ card.activity.pk }}"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <div class="modal-header activity-modal-header">
+                    <div class="activity-modal-heading">
+                        <span class="activity-modal-kicker">
+                            <i class="bi bi-clipboard2-data me-1"></i>
+                            Activity data submission
+                        </span>
+
+                        <h5 class="modal-title"
+                            id="activityDataTitle{{ card.activity.pk }}">
+                            {{ card.activity.name }}
+                        </h5>
+
+                        <p>
+                            {{ card.activity.project.name }}
+                            <span class="mx-1">·</span>
+                            Target {{ card.activity.target }} {{ card.activity.unit }}
+                            <span class="mx-1">·</span>
+                            {{ card.activity.get_frequency_display|default:card.activity.frequency|default:"Frequency not specified" }}
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+
+                <form method="post"
+                      enctype="multipart/form-data"
+                      action="{% url 'projects:activity_data_submit' card.activity.pk %}">
+
+                    {% csrf_token %}
+
+                    <div class="modal-body activity-modal-body">
+
+                        {% if card.form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ card.form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="activity-form-intro">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <div>
+                                <b>Record an activity submission</b>
+                                <span>
+                                    Complete the relevant fields below.
+                                    Required fields are marked with an asterisk.
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="activity-form-grid">
+                            {% for field in card.form %}
+                                <div class="activity-field
+                                    {% if field.field.widget.attrs.rows or field.field.widget.input_type == 'file' %}
+                                        activity-field-wide
+                                    {% endif %}">
+
+                                    {% if field.field.widget.input_type == "checkbox" %}
+                                        <div class="form-check">
+                                            {{ field }}
+                                            <label class="form-check-label"
+                                                   for="{{ field.id_for_label }}">
+                                                {{ field.label }}
+                                                {% if field.field.required %}
+                                                    <span class="required">*</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% else %}
+                                        <label class="form-label"
+                                               for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                            {% if field.field.required %}
+                                                <span class="required">*</span>
+                                            {% endif %}
+                                        </label>
+                                        {{ field }}
+                                    {% endif %}
+
+                                    {% if field.help_text %}
+                                        <div class="form-hint">
+                                            {{ field.help_text }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% for error in field.errors %}
+                                        <div class="text-danger" role="alert">
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="modal-footer activity-modal-footer">
+                        <button type="button"
+                                class="btn btn-light border"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button class="btn btn-kapda" type="submit">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            Submit activity data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function openActivityModal(modalId) {
+        const modalElement = document.getElementById(modalId);
+
+        if (!modalElement || !window.bootstrap || !window.bootstrap.Modal) {
+            return;
+        }
+
+        window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    }
+
+    document.querySelectorAll("[data-open-activity-modal]").forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            event.stopPropagation();
+            openActivityModal(this.dataset.openActivityModal);
+        });
+    });
+
+    document.querySelectorAll(".activity-row").forEach(function (row) {
+        row.addEventListener("click", function (event) {
+            if (event.target.closest("a, button, input, select, textarea, label, form")) {
+                return;
+            }
+
+            openActivityModal(this.dataset.modalTarget);
+        });
+
+        row.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openActivityModal(this.dataset.modalTarget);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

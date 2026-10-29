@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Learner Status History | KAPDA
+{% endblock %}
+
+{% block page_heading %}
+    Learner Status History
+{% endblock %}
+
+{% block content %}
+
+<div class="learner-status-page">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <span class="page-eyebrow">
+                <i class="bi bi-person-lines-fill me-1"></i>
+                LEARNER MANAGEMENT
+            </span>
+
+            <h1>Learner Status History</h1>
+
+            <p>
+                Record a change in the learner's status, including the reason
+                and any required follow-up action.
+            </p>
+        </div>
+
+        <a href="{% url 'learners:list' %}" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Learners
+        </a>
+    </div>
+
+
+    <!-- Form Card -->
+    <div class="form-card">
+
+        <div class="form-card-header">
+            <div class="form-icon">
+                <i class="bi bi-arrow-left-right"></i>
+            </div>
+
+            <div>
+                <h2>Update Learner Status</h2>
+                <p>
+                    Complete the information below to document the status change.
+                </p>
+            </div>
+        </div>
+
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    <i class="bi bi-person-check"></i>
+                    <div>
+                        <h3>Status Information</h3>
+                        <p>Specify the learner's previous and new status.</p>
+                    </div>
+                </div>
+
+
+                <div class="row g-3">
+
+                    <!-- Previous Status -->
+                    <div class="col-md-6">
+                        <label for="{{ form.previous_status.id_for_label }}"
+                               class="form-label">
+                            Previous Status
+                            {% if form.previous_status.field.required %}
+                                <span class="required">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ form.previous_status }}
+
+                        {% if form.previous_status.errors %}
+                            <div class="field-error">
+                                {% for error in form.previous_status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+
+                    <!-- New Status -->
+                    <div class="col-md-6">
+                        <label for="{{ form.new_status.id_for_label }}"
+                               class="form-label">
+                            New Status
+                            {% if form.new_status.field.required %}
+                                <span class="required">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ form.new_status }}
+
+                        {% if form.new_status.errors %}
+                            <div class="field-error">
+                                {% for error in form.new_status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+
+                    <!-- Effective Date -->
+                    <div class="col-md-6">
+                        <label for="{{ form.effective_date.id_for_label }}"
+                               class="form-label">
+                            Effective Date
+                            {% if form.effective_date.field.required %}
+                                <span class="required">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ form.effective_date }}
+
+                        <div class="form-help">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            Date when the new status became effective.
+                        </div>
+
+                        {% if form.effective_date.errors %}
+                            <div class="field-error">
+                                {% for error in form.effective_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Reason -->
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    <i class="bi bi-chat-left-text"></i>
+
+                    <div>
+                        <h3>Reason for Status Change</h3>
+                        <p>
+                            Explain why the learner's status was changed.
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.reason.id_for_label }}"
+                           class="form-label">
+                        Reason
+                        {% if form.reason.field.required %}
+                            <span class="required">*</span>
+                        {% endif %}
+                    </label>
+
+                    {{ form.reason }}
+
+                    {% if form.reason.errors %}
+                        <div class="field-error">
+                            {% for error in form.reason.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+
+            <!-- Follow-up -->
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    <i class="bi bi-list-check"></i>
+
+                    <div>
+                        <h3>Follow-up Action</h3>
+                        <p>
+                            Record any action that should be taken after the
+                            status change.
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.follow_up_action.id_for_label }}"
+                           class="form-label">
+                        Follow-up Action
+                        {% if form.follow_up_action.field.required %}
+                            <span class="required">*</span>
+                        {% endif %}
+                    </label>
+
+                    {{ form.follow_up_action }}
+
+                    {% if form.follow_up_action.errors %}
+                        <div class="field-error">
+                            {% for error in form.follow_up_action.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+
+                <a href="{% url 'learners:list' %}"
+                   class="btn btn-light border">
+                    <i class="bi bi-x-lg me-1"></i>
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-kapda">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    Save Status History
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .learner-status-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        color: #293b50;
+    }
+
+    /* Header */
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-eyebrow {
+        display: block;
+        margin-bottom: .4rem;
+        color: var(--kapda-primary, #2c5d83);
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        color: #243b53;
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -.035em;
+    }
+
+    .page-header p {
+        margin: .4rem 0 0;
+        color: #758499;
+        font-size: .86rem;
+    }
+
+
+    /* Card */
+
+    .form-card {
+        overflow: hidden;
+        border: 1px solid #e3eaf1;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 5px 22px rgba(30, 55, 80, .05);
+    }
+
+    .form-card-header {
+        display: flex;
+        align-items: center;
+        gap: .9rem;
+        padding: 1.25rem 1.4rem;
+        border-bottom: 1px solid #e3eaf1;
+        background: #f8fafc;
+    }
+
+    .form-icon {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        place-items: center;
+        border-radius: 11px;
+        background: #edf3f9;
+        color: var(--kapda-primary, #2c5d83);
+        font-size: 1.15rem;
+    }
+
+    .form-card-header h2 {
+        margin: 0;
+        color: #293e54;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .form-card-header p {
+        margin: .25rem 0 0;
+        color: #758499;
+        font-size: .76rem;
+    }
+
+
+    /* Sections */
+
+    .form-section {
+        padding: 1.4rem;
+        border-bottom: 1px solid #edf1f5;
+    }
+
+    .form-section-title {
+        display: flex;
+        align-items: flex-start;
+        gap: .7rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .form-section-title > i {
+        margin-top: .1rem;
+        color: var(--kapda-primary, #2c5d83);
+        font-size: 1rem;
+    }
+
+    .form-section-title h3 {
+        margin: 0;
+        color: #293e54;
+        font-size: .9rem;
+        font-weight: 800;
+    }
+
+    .form-section-title p {
+        margin: .2rem 0 0;
+        color: #758499;
+        font-size: .75rem;
+    }
+
+
+    /* Fields */
+
+    .form-label {
+        display: block;
+        margin-bottom: .4rem;
+        color: #46596d;
+        font-size: .76rem;
+        font-weight: 750;
+    }
+
+    .required {
+        color: #9d3b3b;
+    }
+
+    .learner-status-page .form-control,
+    .learner-status-page .form-select {
+        min-height: 42px;
+        border: 1px solid #dce4ed;
+        border-radius: 8px;
+        background: #fafbfd;
+        color: #293e54;
+        font-size: .84rem;
+        box-shadow: none;
+    }
+
+    .learner-status-page textarea.form-control {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .learner-status-page .form-control:focus,
+    .learner-status-page .form-select:focus {
+        border-color: var(--kapda-primary, #2c5d83);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(44, 93, 131, .1);
+    }
+
+    .form-help {
+        margin-top: .35rem;
+        color: #8291a2;
+        font-size: .7rem;
+    }
+
+    .field-error {
+        margin-top: .35rem;
+        color: #9d3b3b;
+        font-size: .72rem;
+        font-weight: 600;
+    }
+
+    .alert {
+        margin: 1.2rem 1.4rem 0;
+        font-size: .8rem;
+    }
+
+
+    /* Actions */
+
+    .form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .6rem;
+        padding: 1rem 1.4rem;
+        background: #fafbfd;
+    }
+
+    .form-actions .btn {
+        min-height: 40px;
+        padding: .55rem .9rem;
+        border-radius: 8px;
+        font-size: .8rem;
+        font-weight: 700;
+    }
+
+    .btn-kapda {
+        border: 1px solid var(--kapda-primary, #2c5d83);
+        background: var(--kapda-primary, #2c5d83);
+        color: #fff;
+    }
+
+    .btn-kapda:hover {
+        border-color: var(--kapda-primary-dark, #1d4566);
+        background: var(--kapda-primary-dark, #1d4566);
+        color: #fff;
+    }
+
+
+    /* Mobile */
+
+    @media (max-width: 767.98px) {
+
+        .page-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .page-header > .btn {
+            width: 100%;
+        }
+
+        .form-section {
+            padding: 1.1rem;
+        }
+
+        .form-card-header {
+            padding: 1.1rem;
+        }
+
+        .form-actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+            padding: 1rem 1.1rem;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+        }
+    }
+
+</style>
+
+{% endblock %}
