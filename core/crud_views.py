@@ -33,9 +33,15 @@ def location_delete(request, pk): return delete_record(request, Location, pk, "d
 def household_list(request): return list_records(request, Household, "core/household_list.html", "households")
 @login_required
 def household_detail(request, pk): return detail_record(request, Household, pk, "core/household_detail.html")
+
+
 @login_required
 @record_editor_required
-def household_create(request): return create_record(request, Household, "core/household_form.html", "data:household_list")
+def household_create(request):
+    return create_record(request, Household, "core/household_form.html",
+                         "data:household_list")
+
+
 @login_required
 @record_editor_required
 def household_update(request, pk): return update_record(request, Household, pk, "core/household_form.html", "data:household_list")
