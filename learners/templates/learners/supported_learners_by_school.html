@@ -1,66 +1,25 @@
 {% extends "base.html" %}
-
-{% block title %}Supported learners by school | KAPDA{% endblock %}
-{% block page_heading %}Supported learners by school{% endblock %}
-
+{% block title %}Distribution list | KAPDA{% endblock %}
+{% block page_heading %}Distribution list{% endblock %}
 {% block content %}
-<div class="page-intro">
-    <div>
-        <h1>{{ school.name }}</h1>
-        <p>Supported learners broken down by project.</p>
-    </div>
-    <a class="btn btn-light border" href="{% url 'learners:list' %}">
-        <i class="bi bi-arrow-left me-1"></i>
-        Back to learner register
-    </a>
-</div>
-
+<div class="page-intro"><div><h1>{{ school.name }}</h1><p>Filter supported learners and prepare the EPICK distribution list.</p></div><a class="btn btn-light border" href="{% url 'learners:list' %}"><i class="bi bi-arrow-left me-1"></i>Back</a></div>
+<section class="panel mb-4">
+    <div class="panel-head"><div><h2>Distribution filters</h2><p>Use the same filters for the on-screen list and Word download.</p></div><i class="bi bi-funnel"></i></div>
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label" for="q">Learner</label><input class="form-control" id="q" name="q" value="{{ filters.q }}" placeholder="Name or KAPDA ID"></div>
+        <div class="col-md-2"><label class="form-label" for="project">Project</label><select class="form-select" id="project" name="project"><option value="">All projects</option>{% for item in projects %}<option value="{{ item.pk }}" {% if filters.project == item.pk|stringformat:'s' %}selected{% endif %}>{{ item.code }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><label class="form-label" for="support_type">Support type</label><select class="form-select" id="support_type" name="support_type"><option value="">All support</option>{% for value,label in support_types %}<option value="{{ value }}" {% if filters.support_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><label class="form-label" for="scholastic_material">Material</label><select class="form-select" id="scholastic_material" name="scholastic_material"><option value="">All materials</option>{% for value,label in materials %}<option value="{{ value }}" {% if filters.scholastic_material == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-1"><label class="form-label" for="class_level">Class</label><select class="form-select" id="class_level" name="class_level"><option value="">All</option>{% for n in "1234567" %}<option value="P{{ n }}" {% if filters.class_level == 'P'|add:n %}selected{% endif %}>P{{ n }}</option>{% endfor %}{% for n in "123456" %}<option value="S{{ n }}" {% if filters.class_level == 'S'|add:n %}selected{% endif %}>S{{ n }}</option>{% endfor %}</select></div>
+        <div class="col-md-1"><label class="form-label" for="date_from">From</label><input class="form-control" type="date" id="date_from" name="date_from" value="{{ filters.date_from }}"></div>
+        <div class="col-md-1"><label class="form-label" for="date_to">To</label><input class="form-control" type="date" id="date_to" name="date_to" value="{{ filters.date_to }}"></div>
+        <div class="col-12 d-flex gap-2"><button class="btn btn-kapda" type="submit"><i class="bi bi-filter me-1"></i>Apply filters</button><a class="btn btn-light border" href="{% url 'learners:supported_learners_by_school' school.pk %}">Clear</a><a class="btn btn-outline-kapda ms-auto" href="{% url 'learners:supported_learners_distribution_docx' school.pk %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"><i class="bi bi-file-earmark-word me-1"></i>Download EPICK Word list</a></div>
+    </form>
+</section>
 <section class="panel">
-    <div class="panel-head">
-        <div>
-            <h2>Project breakdown</h2>
-            <p>Distinct supported learners with current enrolments at {{ school.name }}.</p>
-        </div>
-        <i class="bi bi-diagram-3"></i>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Project</th>
-                    <th class="text-end">Supported learners</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in project_breakdown %}
-                    <tr>
-                        <td>
-                            <strong>{{ row.project__code|default:"Project not recorded" }}</strong>
-                            <span class="muted-line">{{ row.project__name|default:"Project not recorded" }}</span>
-                        </td>
-                        <td class="text-end">
-                            <span class="status-pill status-active">{{ row.total|default:0 }}</span>
-                        </td>
-                        <td class="text-end">
-                            {% if row.project_id %}
-                                <a class="btn btn-sm btn-outline-kapda" href="{% url 'learners:supported_learners_by_school_project' school.pk row.project_id %}">
-                                    View learners
-                                </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="3" class="empty-state">
-                            <i class="bi bi-inbox fs-4 d-block mb-2" aria-hidden="true"></i>
-                            No supported learners found for this school.
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <div class="panel-head"><div><h2>Supported learners</h2><p>{{ rows|length }} learner{{ rows|length|pluralize }} match the selected filters.</p></div></div>
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>#</th><th>Learner</th><th>Class</th><th>Soap</th><th>Pads</th><th>Pens</th><th>Pencils</th><th>Books</th></tr></thead><tbody>
+    {% for row in rows %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ row.learner.full_name }}</strong><span class="muted-line">{{ row.learner.reg_no }}</span></td><td>{{ row.class_level|default:'—' }}</td><td>{{ row.materials.soap|default:'—' }}</td><td>{{ row.materials.sanitary_pads|default:'—' }}</td><td>{{ row.materials.pens|default:'—' }}</td><td>{{ row.materials.pencils|default:'—' }}</td><td>{{ row.materials.books|default:'—' }}</td></tr>{% empty %}<tr><td colspan="8" class="empty-state">No supported learners match these filters.</td></tr>{% endfor %}
+    </tbody></table></div>
 </section>
 {% endblock %}

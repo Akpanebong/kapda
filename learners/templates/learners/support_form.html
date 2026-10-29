@@ -8,7 +8,7 @@
     {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
     <div class="form-grid">
         {% for field in form %}
-        <div id="field-wrap-{{ field.name }}"{% if field.name == "support_type_other" %} class="support-other-field"{% endif %}>
+            <div id="field-wrap-{{ field.name }}"{% if field.name == "support_type_other" or field.name == "scholastic_material" %} class="conditional-support-field"{% endif %}>
             <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
             {{ field }}
             {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
@@ -24,10 +24,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const type = document.getElementById('id_support_type');
     const otherWrap = document.getElementById('field-wrap-support_type_other');
     const otherInput = document.getElementById('id_support_type_other');
+    const materialWrap = document.getElementById('field-wrap-scholastic_material');
+    const materialInput = document.getElementById('id_scholastic_material');
     function toggleOther() {
         const visible = type && type.value === 'other';
         if (otherWrap) otherWrap.hidden = !visible;
         if (otherInput) otherInput.required = visible;
+        const materialVisible = type && type.value === 'scholastic_materials';
+        if (materialWrap) materialWrap.hidden = !materialVisible;
+        if (materialInput) materialInput.required = materialVisible;
     }
     if (type) { type.addEventListener('change', toggleOther); toggleOther(); }
 });

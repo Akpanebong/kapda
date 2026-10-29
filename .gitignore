@@ -33,3 +33,6 @@ media/
 *.iml
 .DS_Store
 Thumbs.db
+
+
+build.sh

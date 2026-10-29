@@ -281,10 +281,23 @@ class LearnerStatusHistory(TimeStampedModel):
 
 
 class LearnerSupport(TimeStampedModel):
+    SCHOLASTIC_MATERIAL_CHOICES = [
+        ("pens", "Pens"),
+        ("pencils", "Pencils"),
+        ("books", "Books"),
+        ("rulers", "Rulers"),
+        ("erasers", "Erasers"),
+        ("mathematical_set", "Mathematical set"),
+        ("school_bag", "School bag"),
+        ("soap", "Soap"),
+        ("sanitary_pads", "Sanitary pads"),
+        ("other", "Other material"),
+    ]
     learner = models.ForeignKey(Learner, on_delete=models.PROTECT, related_name="supports")
     project = models.ForeignKey(Project, on_delete=models.PROTECT)
     support_type = models.CharField(max_length=80, choices=[("scholastic_materials", "Scholastic materials"), ("sanitary_pads_mhm", "Sanitary pads / MHM support"), ("mentorship", "Mentorship"), ("back_to_school", "Back-to-school"), ("other", "Other support")])
     support_type_other = models.CharField(max_length=160, blank=True, verbose_name="Specify other support")
+    scholastic_material = models.CharField(max_length=40, choices=SCHOLASTIC_MATERIAL_CHOICES, blank=True, verbose_name="Scholastic material")
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     unit = models.CharField(max_length=40, default="package")
     distribution_date = models.DateField()

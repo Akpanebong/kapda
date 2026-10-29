@@ -91,7 +91,7 @@ class LearnerStatusHistoryForm(forms.ModelForm):
 class LearnerSupportForm(forms.ModelForm):
     class Meta:
         model = LearnerSupport
-        fields = ["learner", "project", "support_type", "support_type_other", "quantity", "unit", "distribution_date", "term", "notes"]
+        fields = ["learner", "project", "support_type", "scholastic_material", "support_type_other", "quantity", "unit", "distribution_date", "term", "notes"]
         widgets = {
             "distribution_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 2}),
@@ -112,6 +112,10 @@ class LearnerSupportForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        if cleaned.get("support_type") == "scholastic_materials" and not cleaned.get("scholastic_material"):
+            self.add_error("scholastic_material", "Select the scholastic material distributed.")
+        if cleaned.get("support_type") != "scholastic_materials":
+            cleaned["scholastic_material"] = ""
         if cleaned.get("support_type") == "other" and not cleaned.get("support_type_other", "").strip():
             raise ValidationError({"support_type_other": "Specify the other type of support."})
         if cleaned.get("support_type") != "other":

@@ -5,6 +5,7 @@ app_name="learners"
 urlpatterns=[
  path("",views.learner_list,name="list"), path("add/",views.learner_create,name="create"),
  path("supported/<int:school_id>/", views.supported_learners_by_school, name="supported_learners_by_school"),
+ path("supported/<int:school_id>/download/", views.supported_learners_distribution_docx, name="supported_learners_distribution_docx"),
  path("supported/<int:school_id>/<int:project_id>/", views.supported_learners_by_school_project, name="supported_learners_by_school_project"),
  path("<slug:learner_slug>/status-history/", views.status_history_list, name="status_history_list"),
  path("<slug:learner_slug>/status-history/add/", views.status_history_create, name="status_history_create"),

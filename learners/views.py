@@ -1,9 +1,14 @@
 from datetime import date
+from decimal import Decimal
+from io import BytesIO
+from pathlib import Path
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Max, Q
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.dateparse import parse_date
@@ -81,19 +86,181 @@ def supported_learners_by_school_project(request, school_id, project_id):
 @login_required
 def supported_learners_by_school(request, school_id):
     school = get_object_or_404(School, pk=school_id)
-    project_breakdown = list(
-        LearnerSupport.objects.filter(
-            learner__enrolments__school=school,
-            learner__enrolments__is_current=True,
-        )
-        .values("project_id", "project__code", "project__name")
-        .annotate(total=Count("learner_id", distinct=True))
-        .order_by("project__name")
-    )
+    supports, filters = _school_support_records(request, school)
+    rows = _distribution_rows(supports, school)
+    project_breakdown = list(LearnerSupport.objects.filter(learner__enrolments__school=school, learner__enrolments__is_current=True).values("project_id", "project__code", "project__name").annotate(total=Count("learner_id", distinct=True)).order_by("project__name"))
     return render(request, "learners/supported_learners_by_school.html", {
         "school": school,
         "project_breakdown": project_breakdown,
+        "rows": rows,
+        "projects": Project.objects.filter(active=True).order_by("name"),
+        "support_types": LearnerSupport._meta.get_field("support_type").choices,
+        "materials": LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES,
+        "filters": filters,
     })
+
+
+def _school_support_records(request, school):
+    filters = {key: request.GET.get(key, "").strip() for key in ("q", "project", "support_type", "scholastic_material", "class_level", "date_from", "date_to")}
+    qs = LearnerSupport.objects.filter(learner__enrolments__school=school, learner__enrolments__is_current=True).select_related("learner", "project").distinct()
+    if filters["q"]:
+        qs = qs.filter(Q(learner__reg_no__icontains=filters["q"]) | Q(learner__first_name__icontains=filters["q"]) | Q(learner__last_name__icontains=filters["q"]))
+    if filters["project"].isdigit(): qs = qs.filter(project_id=filters["project"])
+    if filters["support_type"] in dict(LearnerSupport._meta.get_field("support_type").choices): qs = qs.filter(support_type=filters["support_type"])
+    if filters["scholastic_material"] in dict(LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES): qs = qs.filter(scholastic_material=filters["scholastic_material"])
+    if filters["class_level"]: qs = qs.filter(learner__enrolments__class_level=filters["class_level"], learner__enrolments__is_current=True)
+    if parse_date(filters["date_from"]): qs = qs.filter(distribution_date__gte=parse_date(filters["date_from"]))
+    if parse_date(filters["date_to"]): qs = qs.filter(distribution_date__lte=parse_date(filters["date_to"]))
+    return qs.order_by("learner__last_name", "learner__first_name", "-distribution_date"), filters
+
+
+def _distribution_rows(supports, school):
+    grouped = {}
+    for support in supports:
+        current_enrolment = support.learner.enrolments.filter(school=school, is_current=True).first()
+        if support.learner_id not in grouped:
+            grouped[support.learner_id] = {"learner": support.learner, "class_level": current_enrolment.class_level if current_enrolment else support.learner.current_class, "materials": {}}
+        material = support.scholastic_material if support.support_type == "scholastic_materials" else ("sanitary_pads" if support.support_type == "sanitary_pads_mhm" else "")
+        if material:
+            grouped[support.learner_id]["materials"][material] = grouped[support.learner_id]["materials"].get(material, Decimal("0")) + (support.quantity or Decimal("0"))
+    return list(grouped.values())
+
+
+def _styled_distribution_document(Document, school, project, distribution_date, rows):
+    """Build the EPICK paper distribution form without relying on an uploaded template."""
+    from docx.enum.section import WD_ORIENT
+    from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.shared import Inches, Pt, RGBColor
+
+    document = Document()
+    section = document.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    section.page_width, section.page_height = section.page_height, section.page_width
+    section.top_margin = Inches(0.42)
+    section.bottom_margin = Inches(0.42)
+    section.left_margin = Inches(0.45)
+    section.right_margin = Inches(0.45)
+
+    normal = document.styles["Normal"]
+    normal.font.name = "Arial"
+    normal.font.size = Pt(9)
+
+    logo_path = Path(settings.BASE_DIR) / "static" / "images" / "logo.png"
+    if logo_path.exists():
+        logo = document.add_paragraph()
+        logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        logo.add_run().add_picture(str(logo_path), width=Inches(0.62))
+    title = document.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = title.add_run("EPICK DISTRIBUTION FORM")
+    run.bold = True
+    run.font.name = "Arial"
+    run.font.size = Pt(16)
+    run.font.color.rgb = RGBColor(31, 78, 121)
+    subtitle = document.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subrun = subtitle.add_run("Scholastic materials distribution and beneficiary acknowledgement")
+    subrun.italic = True
+    subrun.font.size = Pt(9)
+    subrun.font.color.rgb = RGBColor(89, 89, 89)
+
+    meta = document.add_table(rows=3, cols=2)
+    meta.autofit = False
+    meta_widths = [Inches(5.05), Inches(5.05)]
+    metadata = [
+        ("Activity", "Scholastic materials distribution", "Programme", project.code if project else "EPICK II"),
+        ("School", school.name, "District", school.location.district if school.location else "________________"),
+        ("Date", distribution_date or "________________", "Prepared by", "____________________________"),
+    ]
+    for row, values in zip(meta.rows, metadata):
+        for cell, value, width in zip(row.cells, values, [meta_widths[0], meta_widths[0], meta_widths[1], meta_widths[1]]):
+            cell.width = width
+        row.cells[0].text = f"{values[0]}: {values[1]}"
+        row.cells[1].text = f"{values[2]}: {values[3]}"
+        for cell in row.cells:
+            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_after = Pt(2)
+                paragraph.paragraph_format.space_before = Pt(2)
+                for run in paragraph.runs:
+                    run.font.size = Pt(9)
+            tc_pr = cell._tc.get_or_add_tcPr()
+            shd = OxmlElement("w:shd")
+            shd.set(qn("w:fill"), "F2F6FA")
+            tc_pr.append(shd)
+
+    document.add_paragraph().paragraph_format.space_after = Pt(2)
+    table = document.add_table(rows=1, cols=9)
+    table.autofit = False
+    table.style = "Table Grid"
+    widths = [0.42, 3.05, 0.62, 0.68, 0.68, 0.68, 0.78, 0.68, 1.35]
+    headers = ["S/N", "Name", "Class", "Soap", "Pads", "Pens", "Pencils", "Books", "Signature"]
+
+    def shade(cell, fill, color="FFFFFF", bold=True):
+        tc_pr = cell._tc.get_or_add_tcPr()
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:fill"), fill)
+        tc_pr.append(shd)
+        for paragraph in cell.paragraphs:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            for run in paragraph.runs:
+                run.font.name = "Arial"
+                run.font.size = Pt(8)
+                run.font.color.rgb = RGBColor.from_string(color)
+                run.bold = bold
+
+    def set_cell(cell, text, centered=True):
+        cell.text = str(text)
+        cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        for paragraph in cell.paragraphs:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER if centered else WD_ALIGN_PARAGRAPH.LEFT
+            paragraph.paragraph_format.space_after = Pt(0)
+            for run in paragraph.runs:
+                run.font.name = "Arial"
+                run.font.size = Pt(8)
+
+    header = table.rows[0]
+    for cell, header_text, width in zip(header.cells, headers, widths):
+        cell.width = Inches(width)
+        set_cell(cell, header_text)
+        shade(cell, "1F4E79")
+    header._tr.get_or_add_trPr().append(OxmlElement("w:tblHeader"))
+
+    for index, row_data in enumerate(rows, start=1):
+        cells = table.add_row().cells
+        materials = row_data["materials"]
+        values = [index, row_data["learner"].full_name, row_data["class_level"] or "", materials.get("soap", ""), materials.get("sanitary_pads", ""), materials.get("pens", ""), materials.get("pencils", ""), materials.get("books", ""), ""]
+        for cell, value, width in zip(cells, values, widths):
+            cell.width = Inches(width)
+            set_cell(cell, value, centered=(cell is not cells[1]))
+        if index % 2 == 0:
+            for cell in cells: shade(cell, "F2F6FA", color="183247", bold=False)
+
+    note = document.add_paragraph()
+    note.paragraph_format.space_before = Pt(8)
+    note.add_run("Distribution officer: ").bold = True
+    note.add_run("Please confirm quantities before collection and obtain each learner's signature.")
+    return document
+
+
+@login_required
+def supported_learners_distribution_docx(request, school_id):
+    school = get_object_or_404(School, pk=school_id)
+    supports, filters = _school_support_records(request, school)
+    rows = _distribution_rows(supports, school)
+    try:
+        from docx import Document
+    except ImportError:
+        return HttpResponse("The Word export dependency is not installed.", status=503)
+    project = Project.objects.filter(pk=filters["project"]).first() if filters["project"].isdigit() else None
+    document = _styled_distribution_document(Document, school, project, filters["date_from"], rows)
+    output = BytesIO(); document.save(output); output.seek(0)
+    response = HttpResponse(output.getvalue(), content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    response["Content-Disposition"] = f'attachment; filename="EPICK_distribution_{school.name.replace(" ", "_")}.docx"'
+    return response
 
 
 @login_required
