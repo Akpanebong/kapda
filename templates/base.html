@@ -110,9 +110,13 @@
                     <a class="nav-link" href="{% url 'schools:list' %}">
                         <i class="bi bi-list-ul" aria-hidden="true"></i>
                         <span>School directory</span></a>
-                    <a class="nav-link" href="{% url 'data:school_create' %}">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i><span>Add school</span>
-                    </a></div>
+                    <a class="nav-link" href="{% url 'data:academic_year_list' %}">
+                        <i class="bi bi-calendar-range" aria-hidden="true"></i><span>Academic Sessions</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'data:term_list' %}">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i><span>Academic Terms</span>
+                    </a>
+                </div>
 
 <!--                <button class="nav-link nav-group-toggle" type="button" data-bs-toggle="collapse" -->
 <!--                        data-bs-target="#householdNav" aria-expanded="false"><i class="bi bi-house" -->
