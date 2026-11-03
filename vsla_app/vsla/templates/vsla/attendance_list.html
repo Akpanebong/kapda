@@ -1,0 +1,5 @@
+{% extends 'vsla/base.html' %}
+{% block vsla_content %}
+<div class="page-intro d-flex justify-content-between align-items-center flex-wrap gap-3"><div><h2 class="h3 fw-bold mb-1">Meeting Attendance</h2><p>Review member attendance recorded for VSLA meetings.</p></div><a class="btn btn-light" href="{% url 'vsla:attendance_create' %}"><i class="bi bi-plus-lg me-1"></i>Record attendance</a></div>
+<div class="panel"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Date</th><th>Group</th><th>Meeting</th><th>Member</th><th>Status</th><th>Remarks</th></tr></thead><tbody>{% for item in attendance %}<tr><td>{{ item.meeting.meeting_date|date:"d M Y" }}</td><td>{{ item.meeting.group.name }}</td><td>{{ item.meeting.meeting_number|default:"—" }}</td><td>{{ item.member.full_name }}</td><td>{% if item.present %}<span class="status-pill status-posted">Present</span>{% else %}<span class="status-pill status-rejected">Absent</span>{% endif %}</td><td>{{ item.remarks|default:"—" }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-5">No attendance recorded.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

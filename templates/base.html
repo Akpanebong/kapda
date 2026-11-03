@@ -186,7 +186,7 @@
             <div class="sidebar-quick-actions" aria-label="Quick actions">
                 {% if request.user.is_superuser or request.user.role == 'admin' %}
                 <a class="btn btn-sm btn-kapda w-100 mb-2" href="{% url 'accounts:staff_list' %}">
-                    <i class="bi bi-person-gear" aria-hidden="true"></i> KAPDA Staff
+                    <i class="bi bi-person-gear" aria-hidden="true"></i> Profiles
                 </a>
                 {% endif %}
                 <a class="btn btn-sm btn-outline-kapda w-100" href="{% url 'vsla:vsla_dashboard' %}">

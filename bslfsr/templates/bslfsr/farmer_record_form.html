@@ -1,1 +1,302 @@
-{% extends "bslfsr/beneficiary_form.html" %}
+{% extends "base.html" %}
+
+{% block title %}
+    {% if creating %}Add Farmer Record{% else %}Edit Farmer Record{% endif %} | KAPDA
+{% endblock %}
+
+{% block page_heading %}Farmer Records{% endblock %}
+
+{% block content %}
+
+<div class="page-intro">
+    <div>
+        <span class="text-muted small fw-semibold text-uppercase">
+            BSLFSR Programme
+        </span>
+
+        <h1 class="mb-1">
+            {% if creating %}Add Farmer Record{% else %}Edit Farmer Record{% endif %}
+        </h1>
+
+        <p class="text-muted mb-0">
+            Record agricultural activities, input distribution, production
+            and food security information.
+        </p>
+    </div>
+
+    <a href="{% url 'bslfsr:beneficiary_list' %}"
+       class="btn btn-light border">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+        Back
+    </a>
+</div>
+
+<form method="post" class="panel form-panel" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger m-3" role="alert">
+            <strong>Please correct the following errors:</strong>
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <!-- SECTION 1: BENEFICIARY AND SEASON -->
+    <div class="section-heading p-3">
+        <span>01</span>
+        <div>
+            <h2>Farmer &amp; Season Information</h2>
+            <p>Identify the beneficiary and agricultural season.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+        <div class="col-md-6">
+            <label for="{{ form.beneficiary.id_for_label }}" class="form-label">
+                Beneficiary <span class="text-danger">*</span>
+            </label>
+
+            {{ form.beneficiary }}
+
+            {% if form.beneficiary.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.beneficiary.errors }}
+                </div>
+            {% endif %}
+
+            {% if form.beneficiary.help_text %}
+                <small class="form-text text-muted">
+                    {{ form.beneficiary.help_text }}
+                </small>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.season.id_for_label }}" class="form-label">
+                Agricultural Season <span class="text-danger">*</span>
+            </label>
+
+            {{ form.season }}
+
+            {% if form.season.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.season.errors }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 2: CROP AND INPUT DISTRIBUTION -->
+    <div class="section-heading p-3">
+        <span>02</span>
+        <div>
+            <h2>Crop &amp; Agricultural Inputs</h2>
+            <p>Capture crops cultivated and inputs distributed to the farmer.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+        <div class="col-md-6">
+            <label for="{{ form.crop.id_for_label }}" class="form-label">
+                Crop
+            </label>
+
+            {{ form.crop }}
+
+            {% if form.crop.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.crop.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.quantity_distributed.id_for_label }}"
+                   class="form-label">
+                Quantity Distributed
+            </label>
+
+            {{ form.quantity_distributed }}
+
+            {% if form.quantity_distributed.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.quantity_distributed.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-12">
+            <label for="{{ form.inputs_received.id_for_label }}"
+                   class="form-label">
+                Inputs Received
+            </label>
+
+            {{ form.inputs_received }}
+
+            {% if form.inputs_received.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.inputs_received.errors }}
+                </div>
+            {% endif %}
+
+            <small class="form-text text-muted">
+                Describe seeds, fertilisers, tools or other agricultural inputs received.
+            </small>
+        </div>
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 3: FARMING AND PRODUCTION -->
+    <div class="section-heading p-3">
+        <span>03</span>
+        <div>
+            <h2>Farming &amp; Production</h2>
+            <p>Capture cultivated land, farming practices and harvest information.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+        <div class="col-md-6">
+            <label for="{{ form.acreage_planted.id_for_label }}"
+                   class="form-label">
+                Acreage Planted
+            </label>
+
+            {{ form.acreage_planted }}
+
+            {% if form.acreage_planted.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.acreage_planted.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.yield_harvested.id_for_label }}"
+                   class="form-label">
+                Yield Harvested
+            </label>
+
+            {{ form.yield_harvested }}
+
+            {% if form.yield_harvested.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.yield_harvested.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-12">
+            <label for="{{ form.improved_practices.id_for_label }}"
+                   class="form-label">
+                Improved Agricultural Practices
+            </label>
+
+            {{ form.improved_practices }}
+
+            {% if form.improved_practices.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.improved_practices.errors }}
+                </div>
+            {% endif %}
+
+            <small class="form-text text-muted">
+                Describe improved techniques adopted by the farmer.
+            </small>
+        </div>
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 4: FOOD SECURITY AND EXTENSION -->
+    <div class="section-heading p-3">
+        <span>04</span>
+        <div>
+            <h2>Food Security &amp; Extension Support</h2>
+            <p>Document the farmer's food security situation and extension visits.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+        <div class="col-md-6">
+            <label for="{{ form.food_security_status.id_for_label }}"
+                   class="form-label">
+                Food Security Status
+            </label>
+
+            {{ form.food_security_status }}
+
+            {% if form.food_security_status.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.food_security_status.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.extension_visit_date.id_for_label }}"
+                   class="form-label">
+                Extension Visit Date
+            </label>
+
+            {{ form.extension_visit_date }}
+
+            {% if form.extension_visit_date.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.extension_visit_date.errors }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 5: ADDITIONAL NOTES -->
+    <div class="section-heading p-3">
+        <span>05</span>
+        <div>
+            <h2>Additional Notes</h2>
+            <p>Capture any other relevant observations or remarks.</p>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <label for="{{ form.notes.id_for_label }}" class="form-label">
+            Notes
+        </label>
+
+        {{ form.notes }}
+
+        {% if form.notes.errors %}
+            <div class="text-danger small mt-1">
+                {{ form.notes.errors }}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- FORM ACTIONS -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center
+                gap-3 p-3 border-top">
+        <span class="text-muted small">
+            <span class="text-danger">*</span>
+            Required fields must be completed.
+        </span>
+
+        <div class="d-flex gap-2">
+            <a href="{% url 'bslfsr:farmer_record_list' %}"
+               class="btn btn-outline-secondary">
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-kapda">
+                <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
+                {% if creating %}Save Farmer Record{% else %}Update Farmer Record{% endif %}
+            </button>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

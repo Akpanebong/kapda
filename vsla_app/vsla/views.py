@@ -12,8 +12,8 @@ from django.views.decorators.http import require_POST
 
 from .access import vsla_access_required
 from accounts.access import record_editor_required
-from .forms import VSLAGroupForm, VSLAMemberForm, SavingsTransactionForm, LoanForm, LoanRepaymentForm, VSLA_MeetingForm, SocialFundTransactionForm
-from .models import VSLAGroup, VSLAMember, SavingsTransaction, Loan, LoanRepayment, VSLA_Meeting, SocialFundTransaction, LedgerEntry
+from .forms import VSLAGroupForm, VSLAMemberForm, SavingsTransactionForm, LoanForm, LoanRepaymentForm, VSLA_MeetingForm, MeetingAttendanceForm, SocialFundTransactionForm
+from .models import VSLAGroup, VSLAMember, SavingsTransaction, Loan, LoanRepayment, VSLA_Meeting, MeetingAttendance, SocialFundTransaction, LedgerEntry
 
 from decimal import Decimal
 
@@ -313,9 +313,13 @@ def group_detail(request, slug):
     members = group.members.all()
     transactions = group.savings_transactions.select_related("member", "recorded_by").order_by("-transaction_date")[:12]
     loans = group.loans.select_related("member").order_by("-created_at")[:10]
+    meetings = group.meetings.select_related("recorded_by").annotate(
+        attendance_total=Count("attendance", distinct=True),
+        attendance_present=Count("attendance", filter=Q(attendance__present=True), distinct=True),
+    )[:8]
     deposits = group.savings_transactions.filter(status=LedgerEntry.Status.POSTED, transaction_type=SavingsTransaction.Type.DEPOSIT).aggregate(v=Sum("amount"))["v"] or Decimal("0")
     withdrawals = group.savings_transactions.filter(status=LedgerEntry.Status.POSTED, transaction_type__in=[SavingsTransaction.Type.WITHDRAWAL, SavingsTransaction.Type.SHARE_OUT]).aggregate(v=Sum("amount"))["v"] or Decimal("0")
-    return render(request, "vsla/group_detail.html", {"group": group, "members": members, "transactions": transactions, "loans": loans, "group_savings": deposits-withdrawals, "title": group.name})
+    return render(request, "vsla/group_detail.html", {"group": group, "members": members, "transactions": transactions, "loans": loans, "meetings": meetings, "group_savings": deposits-withdrawals, "title": group.name})
 
 
 @vsla_access_required
@@ -523,15 +527,97 @@ def meeting_list(request):
 
 @vsla_access_required
 @record_editor_required
-def meeting_create(request):
-    form = VSLA_MeetingForm(request.POST or None)
+def meeting_create(request, slug=None):
+    group_id = request.GET.get("group") or request.POST.get("group")
+    if slug and not group_id:
+        group_id = get_object_or_404(VSLAGroup, slug=slug).pk
+    selected_group = VSLAGroup.objects.filter(pk=group_id).first() if group_id else None
+    initial = {"group": selected_group.pk} if selected_group else None
+    form = VSLA_MeetingForm(request.POST or None, initial=initial)
+    if selected_group and request.method == "GET":
+        form.fields["group"].disabled = True
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
+        if selected_group:
+            obj.group = selected_group
         obj.recorded_by = request.user
-        obj.save()
-        messages.success(request, "Meeting recorded.")
-        return redirect("vsla:meetings")
-    return render(request, "vsla/meeting_form.html", {"form": form, "title": "Record Group Meeting", "eyebrow": "MEETING MANAGEMENT", "cancel_url": "vsla:meetings"})
+        try:
+            obj.full_clean()
+            obj.save()
+        except ValidationError as exc:
+            form.add_error(None, exc)
+        else:
+            messages.success(request, "Meeting recorded.")
+            return redirect("vsla:group_detail", slug=obj.group.slug)
+    return render(request, "vsla/meeting_form.html", {"form": form, "group": selected_group, "title": "Record Group Meeting", "eyebrow": "MEETING MANAGEMENT", "cancel_url": "vsla:meetings"})
+
+
+@vsla_access_required
+def attendance_list(request):
+    attendance = MeetingAttendance.objects.select_related("meeting__group", "meeting", "member").order_by("-meeting__meeting_date", "member__last_name")
+    group_id = request.GET.get("group")
+    meeting_id = request.GET.get("meeting")
+    if group_id:
+        attendance = attendance.filter(meeting__group_id=group_id)
+    if meeting_id:
+        attendance = attendance.filter(meeting_id=meeting_id)
+    return render(request, "vsla/attendance_list.html", {"attendance": attendance[:300], "title": "Meeting Attendance"})
+
+
+@vsla_access_required
+def attendance_group_list(request, slug):
+    group = get_object_or_404(VSLAGroup, slug=slug)
+    meetings = group.meetings.select_related("recorded_by").annotate(
+        attendance_total=Count("attendance", distinct=True),
+        attendance_present=Count("attendance", filter=Q(attendance__present=True), distinct=True),
+    )
+    return render(request, "vsla/group_attendance.html", {"group": group, "meetings": meetings, "title": f"Attendance - {group.name}"})
+
+
+@vsla_access_required
+def attendance_detail(request, slug, meeting_id):
+    group = get_object_or_404(VSLAGroup, slug=slug)
+    meeting = get_object_or_404(
+        VSLA_Meeting.objects.filter(group=group).annotate(
+            attendance_present=Count("attendance", filter=Q(attendance__present=True), distinct=True),
+        ),
+        pk=meeting_id,
+    )
+    attendance = meeting.attendance.select_related("member").order_by("member__last_name", "member__first_name")
+    return render(request, "vsla/attendance_detail.html", {"group": group, "meeting": meeting, "attendance": attendance, "title": f"Attendance - {group.name}"})
+
+
+@vsla_access_required
+@record_editor_required
+def attendance_create(request, slug=None):
+    group_id = request.GET.get("group") or request.POST.get("group_id")
+    meeting_id = request.GET.get("meeting") or request.POST.get("meeting")
+    if slug and not group_id:
+        group_id = get_object_or_404(VSLAGroup, slug=slug).pk
+    selected_group = VSLAGroup.objects.filter(pk=group_id).first() if group_id else None
+    if meeting_id and not selected_group:
+        selected_meeting = VSLA_Meeting.objects.select_related("group").filter(pk=meeting_id).first()
+        selected_group = selected_meeting.group if selected_meeting else None
+        group_id = selected_group.pk if selected_group else None
+    form = MeetingAttendanceForm(request.POST or None, group_id=group_id)
+    if meeting_id and request.method == "GET" and form.fields["meeting"].queryset.filter(pk=meeting_id).exists():
+        form.initial["meeting"] = meeting_id
+    if request.method == "POST" and form.is_valid():
+        meeting = form.cleaned_data["meeting"]
+        present_ids = set(form.cleaned_data["members"].values_list("pk", flat=True))
+        members = VSLAMember.objects.filter(group=meeting.group, status=VSLAMember.Status.ACTIVE)
+        remarks = form.cleaned_data["remarks"]
+        with transaction.atomic():
+            for member in members:
+                record, _ = MeetingAttendance.objects.update_or_create(
+                    meeting=meeting,
+                    member=member,
+                    defaults={"present": member.pk in present_ids, "remarks": remarks},
+                )
+                record.full_clean()
+        messages.success(request, f"Attendance saved for {members.count()} members.")
+        return redirect("vsla:group_detail", slug=meeting.group.slug)
+    return render(request, "vsla/attendance_form.html", {"form": form, "group": selected_group, "group_id": group_id, "title": "Record Meeting Attendance", "eyebrow": "MEETING ATTENDANCE", "cancel_url": "vsla:attendance"})
 
 
 @vsla_access_required

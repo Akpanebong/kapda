@@ -16,15 +16,30 @@ def beneficiary_create(request): return create_record(request, Beneficiary, "bsl
 def beneficiary_update(request, pk): return update_record(request, Beneficiary, pk, "bslfsr/beneficiary_form.html", "bslfsr:beneficiary_list")
 @login_required
 @record_editor_required
-def beneficiary_delete(request, pk): return delete_record(request, Beneficiary, pk, "bslfsr:beneficiary_list")
+def beneficiary_delete(request, pk):
+    return delete_record(request, Beneficiary, pk,
+                         "bslfsr:beneficiary_list")
+
 
 @login_required
-def farmer_record_list(request): return list_records(request, FarmerRecord, "bslfsr/farmer_record_list.html", "farmers")
+def farmer_record_list(request):
+    return list_records(request, FarmerRecord, "bslfsr/farmer_record_list.html",
+                        "farmers")
+
+
 @login_required
-def farmer_record_detail(request, pk): return detail_record(request, FarmerRecord, pk, "bslfsr/farmer_record_detail.html")
+def farmer_record_detail(request, pk):
+    return detail_record(request, FarmerRecord, pk,
+                         "bslfsr/farmer_record_detail.html")
+
+
 @login_required
 @record_editor_required
-def farmer_record_create(request): return create_record(request, FarmerRecord, "bslfsr/farmer_record_form.html", "bslfsr:farmer_record_list")
+def farmer_record_create(request):
+    return create_record(request, FarmerRecord, "bslfsr/farmer_record_form.html",
+                         "bslfsr:farmer_record_list")
+
+
 @login_required
 @record_editor_required
 def farmer_record_update(request, pk): return update_record(request, FarmerRecord, pk, "bslfsr/farmer_record_form.html", "bslfsr:farmer_record_list")
@@ -47,7 +62,11 @@ def peace_activity_update(request, pk): return update_record(request, PeaceActiv
 def peace_activity_delete(request, pk): return delete_record(request, PeaceActivity, pk, "bslfsr:peace_activity_list")
 
 @login_required
-def peace_committee_list(request): return list_records(request, PeaceCommittee, "bslfsr/peace_committee_list.html", "peace_committees")
+def peace_committee_list(request):
+    return list_records(request, PeaceCommittee, "bslfsr/peace_committee_list.html",
+                        "peace_committees")
+
+
 @login_required
 def peace_committee_detail(request, pk): return detail_record(request, PeaceCommittee, pk, "bslfsr/peace_committee_detail.html")
 @login_required
@@ -77,10 +96,19 @@ def peace_committee_member_delete(request, pk): return delete_record(request, Pe
 @login_required
 def peace_committee_meeting_list(request): return list_records(request, PeaceCommitteeMeeting, "bslfsr/peace_committee_meeting_list.html", "peace_committee_meetings")
 @login_required
-def peace_committee_meeting_detail(request, pk): return detail_record(request, PeaceCommitteeMeeting, pk, "bslfsr/peace_committee_meeting_detail.html")
+def peace_committee_meeting_detail(request, pk):
+    return detail_record(request, PeaceCommitteeMeeting, pk,
+                         "bslfsr/peace_committee_meeting_detail.html")
+
+
 @login_required
 @record_editor_required
-def peace_committee_meeting_create(request): return create_record(request, PeaceCommitteeMeeting, "bslfsr/peace_committee_meeting_form.html", "bslfsr:peace_committee_meeting_list")
+def peace_committee_meeting_create(request):
+    return create_record(request, PeaceCommitteeMeeting,
+                         "bslfsr/peace_committee_meeting_form.html",
+                         "bslfsr:peace_committee_meeting_list")
+
+
 @login_required
 @record_editor_required
 def peace_committee_meeting_update(request, pk): return update_record(request, PeaceCommitteeMeeting, pk, "bslfsr/peace_committee_meeting_form.html", "bslfsr:peace_committee_meeting_list")

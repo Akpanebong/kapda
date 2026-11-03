@@ -1,1 +1,252 @@
-{% extends "governance/_form.html" %}
+{% extends "base.html" %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Governance Action{% else %}Add Governance Action{% endif %} | KAPDA
+{% endblock %}
+
+{% block page_heading %}Governance Actions{% endblock %}
+
+{% block content %}
+
+<div class="page-intro">
+    <div>
+        <span class="text-muted small fw-semibold text-uppercase">
+            Governance Programme
+        </span>
+
+        <h1 class="mb-1">
+            {% if form.instance.pk %}
+                Edit Governance Action
+            {% else %}
+                Record Governance Action
+            {% endif %}
+        </h1>
+
+        <p class="text-muted mb-0">
+            Assign responsibilities, establish deadlines and monitor
+            the implementation of governance resolutions.
+        </p>
+    </div>
+
+    <a href="{{ cancel_url }}" class="btn btn-light border">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+        Back to Records
+    </a>
+</div>
+
+<form method="post"
+      class="panel form-panel"
+      novalidate>
+
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger m-3" role="alert">
+            <strong>Please correct the following errors:</strong>
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    {% if form.errors %}
+        <div class="alert alert-warning mx-3 mt-3" role="alert">
+            Some fields require your attention. Review the highlighted
+            errors before submitting the form again.
+        </div>
+    {% endif %}
+
+    <!-- SECTION 1: GOVERNANCE MEETING -->
+    <div class="section-heading p-3">
+        <span>01</span>
+        <div>
+            <h2>Governance Meeting</h2>
+            <p>Identify the meeting from which this action originated.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+
+        <div class="col-12">
+            <label for="{{ form.meeting.id_for_label }}"
+                   class="form-label">
+                Related Meeting
+                {% if form.meeting.field.required %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            </label>
+
+            {{ form.meeting }}
+
+            {% if form.meeting.help_text %}
+                <small class="form-text text-muted">
+                    {{ form.meeting.help_text }}
+                </small>
+            {% endif %}
+
+            {% if form.meeting.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.meeting.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 2: ACTION ASSIGNMENT -->
+    <div class="section-heading p-3">
+        <span>02</span>
+        <div>
+            <h2>Action Assignment</h2>
+            <p>Describe the agreed action and identify the responsible person.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+
+        <div class="col-12">
+            <label for="{{ form.action.id_for_label }}"
+                   class="form-label">
+                Agreed Action
+                {% if form.action.field.required %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            </label>
+
+            {{ form.action }}
+
+            {% if form.action.help_text %}
+                <small class="form-text text-muted">
+                    {{ form.action.help_text }}
+                </small>
+            {% endif %}
+
+            {% if form.action.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.action.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.responsible_person.id_for_label }}"
+                   class="form-label">
+                Responsible Person
+                {% if form.responsible_person.field.required %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            </label>
+
+            {{ form.responsible_person }}
+
+            {% if form.responsible_person.help_text %}
+                <small class="form-text text-muted">
+                    {{ form.responsible_person.help_text }}
+                </small>
+            {% endif %}
+
+            {% if form.responsible_person.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.responsible_person.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.due_date.id_for_label }}"
+                   class="form-label">
+                Target Completion Date
+                {% if form.due_date.field.required %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            </label>
+
+            {{ form.due_date }}
+
+            {% if form.due_date.help_text %}
+                <small class="form-text text-muted">
+                    {{ form.due_date.help_text }}
+                </small>
+            {% endif %}
+
+            {% if form.due_date.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.due_date.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 3: IMPLEMENTATION STATUS -->
+    <div class="section-heading p-3">
+        <span>03</span>
+        <div>
+            <h2>Implementation Status</h2>
+            <p>Track the progress of the agreed governance action.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+
+        <div class="col-md-6">
+            <label for="{{ form.status.id_for_label }}"
+                   class="form-label">
+                Action Status
+                {% if form.status.field.required %}
+                    <span class="text-danger">*</span>
+                {% endif %}
+            </label>
+
+            {{ form.status }}
+
+            {% if form.status.help_text %}
+                <small class="form-text text-muted">
+                    {{ form.status.help_text }}
+                </small>
+            {% endif %}
+
+            {% if form.status.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.status.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- FORM ACTIONS -->
+    <div class="d-flex flex-wrap justify-content-between
+                align-items-center gap-3 p-3 border-top">
+
+        <span class="text-muted small">
+            <span class="text-danger">*</span>
+            Required fields must be completed.
+        </span>
+
+        <div class="d-flex gap-2">
+
+            <a href="{{ cancel_url }}"
+               class="btn btn-outline-secondary">
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-kapda">
+                <i class="bi bi-check2-circle me-1"
+                   aria-hidden="true"></i>
+
+                {% if form.instance.pk %}
+                    Save Changes
+                {% else %}
+                    Save Action
+                {% endif %}
+            </button>
+
+        </div>
+    </div>
+
+</form>
+
+{% endblock %}

@@ -1,1 +1,24 @@
-{% include "vsla/shared_record_form.html" %}
+{% extends 'vsla/base.html' %}
+{% block vsla_content %}
+<div class="page-intro">
+    <div class="small fw-bold text-uppercase opacity-75">{{ eyebrow|default:"MEETING MANAGEMENT" }}</div>
+    <h2 class="h3 fw-bold mt-2 mb-0">{{ title }}</h2>
+    {% if group %}<p class="mb-0 mt-2">Adding a meeting for <strong>{{ group.name }}</strong>.</p>{% endif %}
+</div>
+<div class="panel">
+ <form method="post" novalidate>{% csrf_token %}
+ {% if group %}<input type="hidden" name="group" value="{{ group.pk }}">{% endif %}
+ {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+ <div class="row g-3">
+ {% for field in form %}
+ <div class="{% if field.name in 'agenda minutes' %}col-12{% else %}col-md-6{% endif %}">
+   <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="text-danger"> *</span>{% endif %}</label>
+   {{ field }}
+   {% for error in field.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+ </div>
+ {% endfor %}
+ </div>
+ <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top"><a class="btn btn-light" href="{% if group %}{% url 'vsla:group_detail' group.slug %}{% else %}{% url 'vsla:meetings' %}{% endif %}">Cancel</a><button class="btn btn-vsla px-4" type="submit"><i class="bi bi-check2-circle me-1"></i>Save meeting</button></div>
+ </form>
+</div>
+{% endblock %}

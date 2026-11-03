@@ -1,1 +1,272 @@
-{% extends "bslfsr/beneficiary_form.html" %}
+{% extends "base.html" %}
+
+{% block title %}
+    {% if creating %}Add Peace Committee Meeting{% else %}Edit Peace Committee Meeting{% endif %} | KAPDA
+{% endblock %}
+
+{% block page_heading %}Peace Committee Meetings{% endblock %}
+
+{% block content %}
+
+<div class="page-intro">
+    <div>
+        <span class="text-muted small fw-semibold text-uppercase">
+            Peacebuilding Programme
+        </span>
+
+        <h1 class="mb-1">
+            {% if creating %}Record Peace Committee Meeting{% else %}Update Meeting Record{% endif %}
+        </h1>
+
+        <p class="text-muted mb-0">
+            Record meeting details, geographical coverage and participant attendance.
+        </p>
+    </div>
+
+    {% if cancel_url %}
+        <a href="{{ cancel_url }}" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+            Back
+        </a>
+    {% endif %}
+</div>
+
+<form method="post"
+      class="panel form-panel"
+      novalidate>
+
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger m-3" role="alert">
+            <strong>Please correct the following errors:</strong>
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    {% if form.errors %}
+        <div class="alert alert-warning mx-3 mt-3" role="alert">
+            Some fields require your attention. Review the highlighted errors.
+        </div>
+    {% endif %}
+
+    <!-- SECTION 1: COMMITTEE AND MEETING DETAILS -->
+    <div class="section-heading p-3">
+        <span>01</span>
+        <div>
+            <h2>Committee &amp; Meeting Information</h2>
+            <p>Identify the peace committee and the location and date of the meeting.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+
+        <div class="col-md-6">
+            <label for="{{ form.committee.id_for_label }}"
+                   class="form-label">
+                Peace Committee <span class="text-danger">*</span>
+            </label>
+
+            {{ form.committee }}
+
+            {% if form.committee.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.committee.errors }}
+                </div>
+            {% endif %}
+
+            {% if form.committee.help_text %}
+                <small class="form-text text-muted">
+                    {{ form.committee.help_text }}
+                </small>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.meeting_date.id_for_label }}"
+                   class="form-label">
+                Meeting Date <span class="text-danger">*</span>
+            </label>
+
+            {{ form.meeting_date }}
+
+            {% if form.meeting_date.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.meeting_date.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.sub_county.id_for_label }}"
+                   class="form-label">
+                Sub-county <span class="text-danger">*</span>
+            </label>
+
+            {{ form.sub_county }}
+
+            {% if form.sub_county.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.sub_county.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.parish.id_for_label }}"
+                   class="form-label">
+                Parish <span class="text-danger">*</span>
+            </label>
+
+            {{ form.parish }}
+
+            {% if form.parish.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.parish.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 2: PARTICIPANT ATTENDANCE -->
+    <div class="section-heading p-3">
+        <span>02</span>
+        <div>
+            <h2>Participant Attendance</h2>
+            <p>Enter the number of female, male and youth participants present.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 p-3">
+
+        <div class="col-md-4">
+            <label for="{{ form.female_participants.id_for_label }}"
+                   class="form-label">
+                Female Participants
+            </label>
+
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-gender-female" aria-hidden="true"></i>
+                </span>
+                {{ form.female_participants }}
+            </div>
+
+            {% if form.female_participants.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.female_participants.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <label for="{{ form.male_participants.id_for_label }}"
+                   class="form-label">
+                Male Participants
+            </label>
+
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-gender-male" aria-hidden="true"></i>
+                </span>
+                {{ form.male_participants }}
+            </div>
+
+            {% if form.male_participants.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.male_participants.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <label for="{{ form.youth_participants.id_for_label }}"
+                   class="form-label">
+                Youth Participants
+            </label>
+
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-people" aria-hidden="true"></i>
+                </span>
+                {{ form.youth_participants }}
+            </div>
+
+            {% if form.youth_participants.errors %}
+                <div class="text-danger small mt-1" role="alert">
+                    {{ form.youth_participants.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="border-top"></div>
+
+    <!-- SECTION 3: MEETING NOTES -->
+    <div class="section-heading p-3">
+        <span>03</span>
+        <div>
+            <h2>Meeting Notes &amp; Observations</h2>
+            <p>Capture key discussions, resolutions and follow-up actions.</p>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <label for="{{ form.notes.id_for_label }}"
+               class="form-label">
+            Meeting Notes
+        </label>
+
+        {{ form.notes }}
+
+        {% if form.notes.help_text %}
+            <small class="form-text text-muted">
+                {{ form.notes.help_text }}
+            </small>
+        {% endif %}
+
+        {% if form.notes.errors %}
+            <div class="text-danger small mt-1" role="alert">
+                {{ form.notes.errors }}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- FORM ACTIONS -->
+    <div class="d-flex flex-wrap justify-content-between
+                align-items-center gap-3 p-3 border-top">
+
+        <span class="text-muted small">
+            <span class="text-danger">*</span>
+            Required fields must be completed.
+        </span>
+
+        <div class="d-flex gap-2">
+
+            {% if cancel_url %}
+                <a href="{{ cancel_url }}"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            {% endif %}
+
+            <button type="submit" class="btn btn-kapda">
+                <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
+
+                {% if creating %}
+                    Save Meeting
+                {% else %}
+                    Update Meeting
+                {% endif %}
+            </button>
+
+        </div>
+    </div>
+
+</form>
+
+{% endblock %}

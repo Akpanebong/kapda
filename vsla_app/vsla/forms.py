@@ -140,6 +140,42 @@ class VSLA_MeetingForm(StyledModelForm):
         widgets = {"meeting_date": forms.DateInput(attrs={"type": "date"}), "agenda": forms.Textarea(attrs={"rows": 2}), "minutes": forms.Textarea(attrs={"rows": 2})}
 
 
+class MeetingAttendanceForm(forms.Form):
+    """Capture one attendance submission for multiple members of one group.
+
+    MeetingAttendance.member remains a ForeignKey.  The form presents the
+    group's members as checkboxes and the view writes one FK row per member,
+    allowing the complete attendance register to be saved in one submission.
+    """
+
+    meeting = forms.ModelChoiceField(queryset=VSLA_Meeting.objects.none(), label="Meeting")
+    members = forms.ModelMultipleChoiceField(
+        queryset=VSLAMember.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label="Members present",
+        help_text="Tick every member who attended. Members not ticked are saved as absent.",
+    )
+    remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 2}), help_text="Optional note applied to this attendance submission.")
+
+    widgets = {
+        'remarks': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+        'meeting': forms.Select(attrs={'class': 'form-control'})
+    }
+
+    def __init__(self, *args, group_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        meetings = VSLA_Meeting.objects.select_related("group").order_by("-meeting_date")
+        members = VSLAMember.objects.order_by("last_name", "first_name")
+        if group_id:
+            meetings = meetings.filter(group_id=group_id)
+            members = members.filter(group_id=group_id, status=VSLAMember.Status.ACTIVE)
+        self.fields["meeting"].queryset = meetings
+        self.fields["members"].queryset = members
+        self.fields["meeting"].widget.attrs["class"] = "form-control"
+        self.fields["remarks"].widget.attrs["class"] = "form-control"
+
+
 class SocialFundTransactionForm(StyledModelForm):
     member = forms.ModelChoiceField(queryset=VSLAMember.objects.all(), required=False, widget=MemberSelect)
 
