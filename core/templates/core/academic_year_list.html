@@ -1,1 +1,367 @@
-{% extends "base.html" %}{% block title %}Academic years | KAPDA{% endblock %}{% block content %}<div class="page-intro"><h1>Academic years</h1><a class="btn btn-kapda" href="{% url 'data:academic_year_create' %}">Add academic year</a></div><div class="panel"><table class="table"><tbody>{% for item in academic_years %}<tr><td>{{ item }}</td><td><a href="{% url 'data:academic_year_update' item.pk %}">Edit</a></td></tr>{% empty %}<tr><td>No academic years.</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
+
+{% extends "base.html" %}
+
+{% block title %}Academic Years | KAPDA{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-intro">
+    <div>
+        <h1>Academic Years</h1>
+        <p>Manage academic years and maintain the institution's academic calendar.</p>
+    </div>
+
+    <a href="{% url 'data:academic_year_create' %}" class="btn btn-kapda">
+        <i class="bi bi-plus-lg me-1"></i>
+        Add Academic Year
+    </a>
+</div>
+
+<!-- Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-sm-6">
+        <div class="panel academic-stat">
+            <div class="d-flex align-items-center gap-3">
+                <div class="academic-stat-icon">
+                    <i class="bi bi-calendar3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Total Academic Years</div>
+                    <h3 class="mb-0">{{ academic_years|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Academic Years Table -->
+<div class="panel academic-panel">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h5 class="mb-1 fw-bold">Academic Year Records</h5>
+            <p class="text-muted small mb-0">
+                View, search and manage registered academic years.
+            </p>
+        </div>
+
+        <div class="academic-search">
+            <i class="bi bi-search"></i>
+            <input
+                type="search"
+                id="academicYearSearch"
+                class="form-control"
+                placeholder="Search academic years..."
+                aria-label="Search academic years"
+            >
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle table-hover academic-table mb-0">
+
+            <thead>
+                <tr>
+                    <th style="width: 75px;">#</th>
+                    <th>Academic Year</th>
+                    <th class="text-end" style="width: 130px;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="academicYearTable">
+
+                {% for item in academic_years %}
+                    <tr class="academic-year-row">
+
+                        <td class="text-muted">
+                            {{ forloop.counter }}
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="academic-year-icon">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <span class="fw-semibold">{{ item }}</span>
+                            </div>
+                        </td>
+
+                        <td class="text-end">
+                            <a
+                                href="{% url 'data:academic_year_update' item.pk %}"
+                                class="btn btn-sm btn-light border academic-edit-btn"
+                                title="Edit academic year"
+                                aria-label="Edit {{ item }}"
+                            >
+                                <i class="bi bi-pencil-square me-1"></i>
+                                Edit
+                            </a>
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="academic-empty">
+                                <div class="academic-empty-icon">
+                                    <i class="bi bi-calendar-x"></i>
+                                </div>
+
+                                <h6>No Academic Years Found</h6>
+
+                                <p>
+                                    No academic years have been registered yet.
+                                    Start by adding an academic year.
+                                </p>
+
+                                <a
+                                    href="{% url 'data:academic_year_create' %}"
+                                    class="btn btn-kapda btn-sm"
+                                >
+                                    <i class="bi bi-plus-lg me-1"></i>
+                                    Add Academic Year
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                <!-- Search Empty State -->
+                <tr id="academicYearNoResults" style="display: none;">
+                    <td colspan="3">
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-search fs-3 d-block mb-2"></i>
+                            <div class="fw-semibold">No matching records</div>
+                            <small>Try a different search term.</small>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    {% if academic_years %}
+        <div class="academic-footer">
+            <small class="text-muted">
+                Showing
+                <strong id="academicYearVisible">{{ academic_years|length }}</strong>
+                of
+                <strong>{{ academic_years|length }}</strong>
+                academic years
+            </small>
+        </div>
+    {% endif %}
+
+</div>
+
+<style>
+    /* Statistics */
+    .academic-stat {
+        padding: 1.1rem;
+        border-radius: 10px;
+    }
+
+    .academic-stat-icon,
+    .academic-year-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: #eaf5ef;
+        color: #198a52;
+        border-radius: 9px;
+    }
+
+    .academic-stat-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 1.25rem;
+    }
+
+    .academic-year-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    /* Main Panel */
+    .academic-panel {
+        padding: 1.25rem;
+        border-radius: 12px;
+    }
+
+    /* Search */
+    .academic-search {
+        position: relative;
+        width: min(100%, 280px);
+    }
+
+    .academic-search > i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8a969f;
+        font-size: .9rem;
+        pointer-events: none;
+    }
+
+    .academic-search input {
+        padding-left: 36px;
+        min-height: 40px;
+        border-radius: 7px;
+        font-size: .85rem;
+        border-color: #dce3e8;
+    }
+
+    .academic-search input:focus {
+        border-color: #198a52;
+        box-shadow: 0 0 0 3px rgba(25, 138, 82, .12);
+    }
+
+    /* Table */
+    .academic-table {
+        font-size: .875rem;
+    }
+
+    .academic-table thead th {
+        background: #f7f9f8;
+        color: #52616b;
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: .9rem;
+        white-space: nowrap;
+        border-bottom: 1px solid #e8eeea;
+    }
+
+    .academic-table tbody td {
+        padding: .85rem .9rem;
+        vertical-align: middle;
+    }
+
+    .academic-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .academic-table tbody tr:hover {
+        background: #f8fbf9;
+    }
+
+    /* Edit Button */
+    .academic-edit-btn {
+        border-radius: 6px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .academic-edit-btn:hover {
+        color: #198a52;
+        border-color: #198a52 !important;
+        background: #eaf5ef;
+    }
+
+    /* Empty State */
+    .academic-empty {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .academic-empty-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        background: #f1f5f2;
+        color: #82958a;
+        border-radius: 50%;
+        font-size: 1.7rem;
+    }
+
+    .academic-empty h6 {
+        font-weight: 700;
+        color: #263746;
+    }
+
+    .academic-empty p {
+        color: #718096;
+        font-size: .875rem;
+        max-width: 380px;
+        margin: 0 auto 1.25rem;
+    }
+
+    /* Footer */
+    .academic-footer {
+        border-top: 1px solid #edf0f2;
+        padding-top: 1rem;
+        margin-top: .5rem;
+    }
+
+    /* Mobile */
+    @media (max-width: 576px) {
+        .academic-panel {
+            padding: 1rem;
+        }
+
+        .academic-search {
+            width: 100%;
+        }
+
+        .academic-table thead th,
+        .academic-table tbody td {
+            padding: .7rem;
+        }
+
+        .academic-empty {
+            padding: 2rem .5rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("academicYearSearch");
+    const tableBody = document.getElementById("academicYearTable");
+    const visibleCount = document.getElementById("academicYearVisible");
+    const noResults = document.getElementById("academicYearNoResults");
+
+    if (!searchInput || !tableBody) return;
+
+    const rows = tableBody.querySelectorAll(".academic-year-row");
+
+    searchInput.addEventListener("input", function () {
+
+        const query = this.value.toLowerCase().trim();
+        let visible = 0;
+
+        rows.forEach(function (row) {
+
+            const matches = row.textContent.toLowerCase().includes(query);
+
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visible++;
+        });
+
+        if (noResults) {
+            noResults.style.display =
+                visible === 0 && rows.length > 0 ? "" : "none";
+        }
+
+        if (visibleCount) {
+            visibleCount.textContent = visible;
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

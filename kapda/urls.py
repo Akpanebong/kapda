@@ -15,6 +15,7 @@ urlpatterns = [
     path("bslfsr/", include("bslfsr.urls")),
     path("vsla/", include("vsla_app.vsla.urls")),
     path("errors/", include("kapda.error_urls")),
+    path("backups/", include("backups.urls")),
 ]
 
 handler400 = "kapda.error_views.custom_400_view"

@@ -1,1 +1,366 @@
-{% extends "base.html" %}{% block title %}Terms | KAPDA{% endblock %}{% block content %}<div class="page-intro"><h1>Terms</h1><a class="btn btn-kapda" href="{% url 'data:term_create' %}">Add term</a></div><div class="panel"><table class="table"><tbody>{% for item in terms %}<tr><td>{{ item }}</td><td><a href="{% url 'data:term_update' item.pk %}">Edit</a></td></tr>{% empty %}<tr><td>No terms.</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
+
+{% extends "base.html" %}
+
+{% block title %}Terms | KAPDA{% endblock %}
+{% block page_heading %}Terms{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-intro">
+    <div>
+        <h1>Terms</h1>
+        <p>Manage academic terms and maintain the institution's academic calendar.</p>
+    </div>
+
+    <a href="{% url 'data:term_create' %}" class="btn btn-kapda">
+        <i class="bi bi-plus-lg me-1"></i>
+        Add Term
+    </a>
+</div>
+
+<!-- Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-sm-6">
+        <div class="panel term-stat">
+            <div class="d-flex align-items-center gap-3">
+                <div class="term-stat-icon">
+                    <i class="bi bi-calendar3-week"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Total Terms</div>
+                    <h3 class="mb-0">{{ terms|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms Records -->
+<div class="panel term-panel">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h5 class="mb-1 fw-bold">Term Records</h5>
+            <p class="text-muted small mb-0">
+                View, search and manage registered academic terms.
+            </p>
+        </div>
+
+        <div class="term-search">
+            <i class="bi bi-search"></i>
+            <input
+                type="search"
+                id="termSearch"
+                class="form-control"
+                placeholder="Search terms..."
+                aria-label="Search terms"
+            >
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle table-hover term-table mb-0">
+
+            <thead>
+                <tr>
+                    <th style="width: 75px;">#</th>
+                    <th>Term</th>
+                    <th class="text-end" style="width: 130px;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="termTable">
+
+                {% for item in terms %}
+                    <tr class="term-row">
+
+                        <td class="text-muted">
+                            {{ forloop.counter }}
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="term-icon">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <span class="fw-semibold">{{ item }}</span>
+                            </div>
+                        </td>
+
+                        <td class="text-end">
+                            <a
+                                href="{% url 'data:term_update' item.pk %}"
+                                class="btn btn-sm btn-light border term-edit-btn"
+                                title="Edit term"
+                                aria-label="Edit {{ item }}"
+                            >
+                                <i class="bi bi-pencil-square me-1"></i>
+                                Edit
+                            </a>
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="term-empty">
+                                <div class="term-empty-icon">
+                                    <i class="bi bi-calendar-x"></i>
+                                </div>
+
+                                <h6>No Terms Found</h6>
+
+                                <p>
+                                    No academic terms have been registered yet.
+                                    Start by adding an academic term.
+                                </p>
+
+                                <a href="{% url 'data:term_create' %}"
+                                   class="btn btn-kapda btn-sm">
+                                    <i class="bi bi-plus-lg me-1"></i>
+                                    Add Term
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                <!-- Search Empty State -->
+                <tr id="termNoResults" style="display:none;">
+                    <td colspan="3">
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-search fs-3 d-block mb-2"></i>
+                            <div class="fw-semibold">No matching records</div>
+                            <small>Try a different search term.</small>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    {% if terms %}
+        <div class="term-footer">
+            <small class="text-muted">
+                Showing
+                <strong id="termVisible">{{ terms|length }}</strong>
+                of
+                <strong>{{ terms|length }}</strong>
+                terms
+            </small>
+        </div>
+    {% endif %}
+
+</div>
+
+<style>
+    /* Statistics */
+    .term-stat {
+        padding: 1.1rem;
+        border-radius: 10px;
+    }
+
+    .term-stat-icon,
+    .term-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: #eaf5ef;
+        color: #198a52;
+        border-radius: 9px;
+    }
+
+    .term-stat-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 1.25rem;
+    }
+
+    .term-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    /* Main Panel */
+    .term-panel {
+        padding: 1.25rem;
+        border-radius: 12px;
+    }
+
+    /* Search */
+    .term-search {
+        position: relative;
+        width: min(100%, 280px);
+    }
+
+    .term-search > i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8a969f;
+        font-size: .9rem;
+        pointer-events: none;
+    }
+
+    .term-search input {
+        padding-left: 36px;
+        min-height: 40px;
+        border-radius: 7px;
+        font-size: .85rem;
+        border-color: #dce3e8;
+    }
+
+    .term-search input:focus {
+        border-color: #198a52;
+        box-shadow: 0 0 0 3px rgba(25, 138, 82, .12);
+    }
+
+    /* Table */
+    .term-table {
+        font-size: .875rem;
+    }
+
+    .term-table thead th {
+        background: #f7f9f8;
+        color: #52616b;
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: .9rem;
+        white-space: nowrap;
+        border-bottom: 1px solid #e8eeea;
+    }
+
+    .term-table tbody td {
+        padding: .85rem .9rem;
+        vertical-align: middle;
+    }
+
+    .term-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .term-table tbody tr:hover {
+        background: #f8fbf9;
+    }
+
+    /* Edit Button */
+    .term-edit-btn {
+        border-radius: 6px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .term-edit-btn:hover {
+        color: #198a52;
+        border-color: #198a52 !important;
+        background: #eaf5ef;
+    }
+
+    /* Empty State */
+    .term-empty {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .term-empty-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        background: #f1f5f2;
+        color: #82958a;
+        border-radius: 50%;
+        font-size: 1.7rem;
+    }
+
+    .term-empty h6 {
+        font-weight: 700;
+        color: #263746;
+    }
+
+    .term-empty p {
+        color: #718096;
+        font-size: .875rem;
+        max-width: 380px;
+        margin: 0 auto 1.25rem;
+    }
+
+    /* Footer */
+    .term-footer {
+        border-top: 1px solid #edf0f2;
+        padding-top: 1rem;
+        margin-top: .5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+        .term-panel {
+            padding: 1rem;
+        }
+
+        .term-search {
+            width: 100%;
+        }
+
+        .term-table thead th,
+        .term-table tbody td {
+            padding: .7rem;
+        }
+
+        .term-empty {
+            padding: 2rem .5rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("termSearch");
+    const tableBody = document.getElementById("termTable");
+    const visibleCount = document.getElementById("termVisible");
+    const noResults = document.getElementById("termNoResults");
+
+    if (!searchInput || !tableBody) return;
+
+    const rows = tableBody.querySelectorAll(".term-row");
+
+    searchInput.addEventListener("input", function () {
+
+        const query = this.value.toLowerCase().trim();
+        let visible = 0;
+
+        rows.forEach(function (row) {
+
+            const matches = row.textContent.toLowerCase().includes(query);
+
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visible++;
+        });
+
+        if (noResults) {
+            noResults.style.display =
+                visible === 0 && rows.length > 0 ? "" : "none";
+        }
+
+        if (visibleCount) {
+            visibleCount.textContent = visible;
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

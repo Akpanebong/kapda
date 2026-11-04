@@ -1,23 +1,698 @@
+
 {% extends "base.html" %}
-{% block title %}Field attendance details | KAPDA{% endblock %}
-{% block page_heading %}Field attendance details{% endblock %}
+
+{% block title %}Field Attendance Details | KAPDA{% endblock %}
+{% block page_heading %}Field Attendance Details{% endblock %}
+
 {% block content %}
+
+<!-- Page Header -->
 <div class="page-intro">
-    <div><h1>Field attendance details</h1><p>Review the submitted activity attendance before approval.</p></div>
-    <div class="d-flex gap-2"><a class="btn btn-light border" href="{% url 'data:field_attendance_list' %}">Back to attendance</a>{% if sheet.status != 'approved' or can_review %}<a class="btn btn-outline-kapda" href="{% url 'data:field_attendance_update' sheet.pk %}"><i class="bi bi-pencil-square me-1"></i>Edit</a>{% endif %}</div>
+    <div>
+        <h1>Field Attendance Details</h1>
+        <p>Review activity information, verify participant attendance and manage approval.</p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'data:field_attendance_list' %}"
+           class="btn btn-light border">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Attendance
+        </a>
+
+        {% if sheet.status != 'approved' or can_review %}
+            <a href="{% url 'data:field_attendance_update' sheet.pk %}"
+               class="btn btn-outline-kapda">
+                <i class="bi bi-pencil-square me-1"></i>
+                Edit
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Attendance Summary -->
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel attendance-stat">
+            <div class="d-flex align-items-center gap-3">
+                <div class="attendance-stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Total Participants</div>
+                    <h3 class="mb-0">{{ sheet.participants.count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel attendance-stat">
+            <div class="d-flex align-items-center gap-3">
+                <div class="attendance-stat-icon">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Activity Date</div>
+                    <strong>{{ sheet.activity_date|date:"d M Y" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel attendance-stat">
+            <div class="d-flex align-items-center gap-3">
+                <div class="attendance-stat-icon">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">District</div>
+                    <strong>{{ sheet.district|default:"—" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="panel attendance-stat">
+            <div class="d-flex align-items-center gap-3">
+                <div class="attendance-stat-icon">
+                    <i class="bi bi-clipboard-check"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Approval Status</div>
+                    <span class="status-pill
+                        {% if sheet.status == 'approved' %}
+                            status-active
+                        {% elif sheet.status == 'rejected' %}
+                            status-dropout
+                        {% else %}
+                            status-pending
+                        {% endif %}">
+                        {{ sheet.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div class="row g-4">
+
+    <!-- Main Content -->
     <div class="col-lg-8">
+
+        <!-- Activity Information -->
         <section class="panel mb-4">
-            <div class="panel-head"><div><h2>Activity information</h2><p class="text-muted mb-0">{{ sheet.activity_date }} · {{ sheet.get_status_display }}</p></div><span class="status-pill {% if sheet.status == 'approved' %}status-active{% elif sheet.status == 'rejected' %}status-dropout{% endif %}">{{ sheet.get_status_display }}</span></div>
-            <div class="row g-3"><div class="col-md-6"><small class="text-muted d-block">Activity</small><strong>{{ sheet.activity }}</strong></div><div class="col-md-6"><small class="text-muted d-block">Location</small><strong>{{ sheet.village|default:sheet.parish|default:sheet.sub_county|default:sheet.district }}</strong><span class="d-block small text-muted">{{ sheet.district }}{% if sheet.county %}, {{ sheet.county }}{% endif %}</span></div></div>
+
+            <div class="panel-head">
+                <div>
+                    <h2>
+                        <i class="bi bi-info-circle me-2"></i>
+                        Activity Information
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Details of the submitted field activity.
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-md-6">
+                    <div class="attendance-detail">
+                        <small>Activity</small>
+                        <strong>{{ sheet.activity|default:"—" }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="attendance-detail">
+                        <small>Activity Date</small>
+                        <strong>{{ sheet.activity_date|date:"d F Y" }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="attendance-detail">
+                        <small>Village</small>
+                        <strong>{{ sheet.village|default:"—" }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="attendance-detail">
+                        <small>Parish</small>
+                        <strong>{{ sheet.parish|default:"—" }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="attendance-detail">
+                        <small>Sub-county</small>
+                        <strong>{{ sheet.sub_county|default:"—" }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="attendance-detail">
+                        <small>District</small>
+                        <strong>{{ sheet.district|default:"—" }}</strong>
+                    </div>
+                </div>
+
+                {% if sheet.county %}
+                    <div class="col-md-6">
+                        <div class="attendance-detail">
+                            <small>County</small>
+                            <strong>{{ sheet.county }}</strong>
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+
         </section>
-        <section class="panel"><div class="panel-head"><div><h2>Participants</h2><p class="text-muted mb-0">{{ sheet.participants.count }} participant{{ sheet.participants.count|pluralize }}</p></div></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>#</th><th>Name</th><th>Sex</th><th>Title / role</th><th>Contact</th><th>Initials</th></tr></thead><tbody>{% for participant in sheet.participants.all %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ participant.name }}</strong></td><td>{{ participant.get_sex_display }}</td><td>{{ participant.title_role|default:"—" }}</td><td>{{ participant.contact|default:"—" }}</td><td>{{ participant.signature|default:"—" }}</td></tr>{% empty %}<tr><td colspan="6" class="empty-state">No participants recorded.</td></tr>{% endfor %}</tbody></table></div></section>
+
+        <!-- Participants -->
+        <section class="panel">
+
+            <div class="panel-head">
+                <div>
+                    <h2>
+                        <i class="bi bi-people me-2"></i>
+                        Participants
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {{ sheet.participants.count }}
+                        participant{{ sheet.participants.count|pluralize }}
+                        recorded for this activity.
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table align-middle table-hover attendance-table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th style="width: 55px;">#</th>
+                            <th>Participant Name</th>
+                            <th>Sex</th>
+                            <th>Title / Role</th>
+                            <th>Contact</th>
+                            <th>Initials</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for participant in sheet.participants.all %}
+
+                            <tr>
+                                <td class="text-muted">
+                                    {{ forloop.counter }}
+                                </td>
+
+                                <td>
+                                    <strong>{{ participant.name }}</strong>
+                                </td>
+
+                                <td>
+                                    {{ participant.get_sex_display|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ participant.title_role|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ participant.contact|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {% if participant.signature %}
+                                        <span class="signature-value">
+                                            {{ participant.signature }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+                                <td colspan="6">
+                                    <div class="attendance-empty">
+                                        <i class="bi bi-people"></i>
+                                        <p>No participants recorded for this activity.</p>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
     </div>
+
+    <!-- Sidebar -->
     <div class="col-lg-4">
-        <section class="panel mb-4"><div class="panel-head"><div><h2>Review</h2><p class="text-muted mb-0">Approval controls</p></div></div>{% if sheet.status == 'rejected' and sheet.rejection_reason %}<div class="alert alert-danger"><strong>Rejection reason</strong><br>{{ sheet.rejection_reason }}</div>{% endif %}{% if can_review %}<form method="post" action="{% url 'data:field_attendance_approve' sheet.pk %}" class="mb-3">{% csrf_token %}<button class="btn btn-success w-100" type="submit"><i class="bi bi-check-circle me-1"></i>Approve attendance</button></form><form method="post" action="{% url 'data:field_attendance_reject' sheet.pk %}">{% csrf_token %}<label class="form-label" for="rejection_reason">Reason for rejection</label><textarea class="form-control mb-2" id="rejection_reason" name="rejection_reason" rows="3" placeholder="Explain what should be corrected"></textarea><button class="btn btn-outline-danger w-100" type="submit"><i class="bi bi-x-circle me-1"></i>Reject attendance</button></form>{% else %}<p class="text-muted mb-0">Only the ED or a superuser can approve or reject this attendance sheet.</p>{% endif %}</section>
-        <section class="panel"><div class="panel-head"><div><h2>Sign-off</h2></div></div><dl class="row mb-0"><dt class="col-6">Submitted by</dt><dd class="col-6">{{ sheet.submitted_by|default:"—" }}</dd><dt class="col-6">Submitted initials</dt><dd class="col-6">{{ sheet.submitted_signature|default:"—" }}</dd><dt class="col-6">Approved by</dt><dd class="col-6">{{ sheet.approved_by|default:"—" }}</dd><dt class="col-6">Approved initials</dt><dd class="col-6">{{ sheet.approved_signature|default:"—" }}</dd></dl></section>
+
+        <!-- Approval and Review -->
+        <section class="panel mb-4">
+
+            <div class="panel-head">
+                <div>
+                    <h2>
+                        <i class="bi bi-shield-check me-2"></i>
+                        Review & Approval
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Attendance verification and approval controls.
+                    </p>
+                </div>
+            </div>
+
+            {% if sheet.status == 'approved' %}
+
+                <div class="review-status review-approved">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <div>
+                        <strong>Attendance Approved</strong>
+                        <small>This attendance sheet has been approved.</small>
+                    </div>
+                </div>
+
+            {% elif sheet.status == 'rejected' %}
+
+                <div class="review-status review-rejected">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <div>
+                        <strong>Attendance Rejected</strong>
+                        <small>Corrections are required before approval.</small>
+                    </div>
+                </div>
+
+            {% else %}
+
+                <div class="review-status review-pending">
+                    <i class="bi bi-hourglass-split"></i>
+                    <div>
+                        <strong>Awaiting Approval</strong>
+                        <small>This attendance sheet is awaiting review.</small>
+                    </div>
+                </div>
+
+            {% endif %}
+
+            {% if sheet.status == 'rejected' and sheet.rejection_reason %}
+                <div class="alert alert-danger mt-3 mb-3">
+                    <strong>
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Rejection Reason
+                    </strong>
+                    <p class="mb-0 mt-1 small">
+                        {{ sheet.rejection_reason }}
+                    </p>
+                </div>
+            {% endif %}
+
+            {% if can_review and sheet.status != 'approved' %}
+
+                <div class="review-actions mt-3">
+
+                    <form method="post"
+                          action="{% url 'data:field_attendance_approve' sheet.pk %}"
+                          onsubmit="return confirm('Are you sure you want to approve this attendance sheet?');">
+
+                        {% csrf_token %}
+
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Approve Attendance
+                        </button>
+
+                    </form>
+
+                    <form method="post"
+                          action="{% url 'data:field_attendance_reject' sheet.pk %}"
+                          onsubmit="return validateAttendanceRejection();">
+
+                        {% csrf_token %}
+
+                        <div class="mt-3">
+                            <label class="form-label fw-semibold"
+                                   for="rejection_reason">
+                                Reason for Rejection
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <textarea
+                                class="form-control"
+                                id="rejection_reason"
+                                name="rejection_reason"
+                                rows="3"
+                                required
+                                placeholder="Explain what needs to be corrected..."
+                            >{% if sheet.status == 'rejected' %}{{ sheet.rejection_reason }}{% endif %}</textarea>
+
+                            <small class="form-text text-muted">
+                                Provide clear feedback to the person who submitted the attendance.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-outline-danger w-100 mt-3">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Reject Attendance
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% elif not can_review %}
+
+                <div class="review-notice mt-3">
+                    <i class="bi bi-lock me-2"></i>
+                    Only the ED or an authorized superuser can approve or reject this attendance sheet.
+                </div>
+
+            {% endif %}
+
+        </section>
+
+        <!-- Sign-off -->
+        <section class="panel">
+
+            <div class="panel-head">
+                <div>
+                    <h2>
+                        <i class="bi bi-pen me-2"></i>
+                        Sign-off Information
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Submission and approval records.
+                    </p>
+                </div>
+            </div>
+
+            <div class="signoff-section">
+
+                <div class="signoff-heading">
+                    <i class="bi bi-send"></i>
+                    Submission Details
+                </div>
+
+                <dl class="signoff-list">
+                    <dt>Submitted By</dt>
+                    <dd>{{ sheet.submitted_by|default:"—" }}</dd>
+
+                    <dt>Submitted Initials</dt>
+                    <dd>{{ sheet.submitted_signature|default:"—" }}</dd>
+                </dl>
+
+            </div>
+
+            <div class="signoff-divider"></div>
+
+            <div class="signoff-section">
+
+                <div class="signoff-heading">
+                    <i class="bi bi-patch-check"></i>
+                    Approval Details
+                </div>
+
+                <dl class="signoff-list">
+                    <dt>Approved By</dt>
+                    <dd>{{ sheet.approved_by|default:"—" }}</dd>
+
+                    <dt>Approved Initials</dt>
+                    <dd>{{ sheet.approved_signature|default:"—" }}</dd>
+                </dl>
+
+            </div>
+
+        </section>
+
     </div>
+
 </div>
+
+<style>
+
+/* Summary Cards */
+.attendance-stat {
+    padding: 1.1rem;
+    border-radius: 10px;
+}
+
+.attendance-stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    background: #eaf5ef;
+    color: #198a52;
+    border-radius: 9px;
+    font-size: 1.2rem;
+}
+
+/* Detail Information */
+.attendance-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.attendance-detail small {
+    color: #718096;
+    font-size: .78rem;
+}
+
+.attendance-detail strong {
+    color: #263746;
+    font-size: .9rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* Participants Table */
+.attendance-table {
+    font-size: .85rem;
+}
+
+.attendance-table thead th {
+    background: #f7f9f8;
+    color: #52616b;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+    padding: .9rem;
+    white-space: nowrap;
+}
+
+.attendance-table tbody td {
+    padding: .85rem .9rem;
+    vertical-align: middle;
+}
+
+.attendance-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.signature-value {
+    font-weight: 600;
+    color: #52616b;
+}
+
+/* Empty State */
+.attendance-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #718096;
+}
+
+.attendance-empty i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: .75rem;
+    color: #aab7b0;
+}
+
+.attendance-empty p {
+    margin-bottom: 0;
+    font-size: .875rem;
+}
+
+/* Review Status */
+.review-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 9px;
+}
+
+.review-status > i {
+    font-size: 1.35rem;
+    margin-top: 1px;
+}
+
+.review-status div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.review-status strong {
+    font-size: .875rem;
+}
+
+.review-status small {
+    font-size: .78rem;
+}
+
+.review-approved {
+    background: #eaf5ef;
+    color: #167344;
+}
+
+.review-rejected {
+    background: #fff0f0;
+    color: #b42318;
+}
+
+.review-pending {
+    background: #fff8e8;
+    color: #946200;
+}
+
+/* Review Actions */
+.review-actions .btn {
+    min-height: 42px;
+    border-radius: 7px;
+    font-size: .875rem;
+    font-weight: 600;
+}
+
+.review-actions textarea {
+    font-size: .85rem;
+    border-radius: 7px;
+    border-color: #dce3e8;
+}
+
+.review-actions textarea:focus {
+    border-color: #198a52;
+    box-shadow: 0 0 0 3px rgba(25, 138, 82, .12);
+}
+
+.review-notice {
+    padding: 12px;
+    border-radius: 8px;
+    background: #f5f7f8;
+    color: #657581;
+    font-size: .8rem;
+    line-height: 1.6;
+}
+
+/* Sign-off */
+.signoff-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #198a52;
+    font-size: .85rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.signoff-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 0;
+}
+
+.signoff-list dt {
+    color: #718096;
+    font-size: .8rem;
+    font-weight: 500;
+}
+
+.signoff-list dd {
+    color: #263746;
+    font-size: .82rem;
+    font-weight: 600;
+    text-align: right;
+    overflow-wrap: anywhere;
+    margin-bottom: 0;
+}
+
+.signoff-divider {
+    border-top: 1px solid #edf0f2;
+    margin: 1.25rem 0;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .attendance-stat {
+        height: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .attendance-stat {
+        padding: .9rem;
+    }
+
+    .attendance-stat-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .signoff-list {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .signoff-list dd {
+        text-align: left;
+        margin-bottom: 10px;
+    }
+}
+
+</style>
+
+<script>
+function validateAttendanceRejection() {
+    const reason = document.getElementById("rejection_reason");
+
+    if (!reason || !reason.value.trim()) {
+        alert("Please provide a reason for rejecting this attendance sheet.");
+        if (reason) reason.focus();
+        return false;
+    }
+
+    return confirm(
+        "Are you sure you want to reject this attendance sheet?"
+    );
+}
+</script>
+
 {% endblock %}

@@ -167,6 +167,13 @@
                     <span>BSLFSR</span>
                 </a>
 
+                {% if request.user.is_superuser or request.user.role == 'admin' %}
+                <a class="nav-link" href="{% url 'backups:dashboard' %}">
+                    <i class="bi bi-database-lock" aria-hidden="true"></i>
+                    <span>Backup administration</span>
+                </a>
+                {% endif %}
+
 <!--                <a class="nav-link" href="{% url 'vsla:vsla_dashboard' %}">-->
 <!--                    <i class="bi bi-wallet2" aria-hidden="true"></i>-->
 <!--                    <span>VSLA management</span>-->

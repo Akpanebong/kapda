@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "bslfsr",
     "reports",
     "vsla_app.vsla",
+    "backups",
 ]
 
 MIDDLEWARE = [
@@ -124,6 +125,9 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = os.getenv("DJANGO_MEDIA_URL", "/media/")
 MEDIA_ROOT = BASE_DIR / "media"
+BACKUP_ROOT = Path(os.getenv("BACKUP_ROOT", str(BASE_DIR / "backup_storage")))
+if not BACKUP_ROOT.is_absolute():
+    BACKUP_ROOT = BASE_DIR / BACKUP_ROOT
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
