@@ -16,7 +16,7 @@
     <div class="form-grid row g-3">
     {% for field in form %}
     {% if field.name != "projectm" %}
-    <div class="{% if field.name == 'notes' %}span-2{% endif %}">
+    <div id="field-{{ field.name }}" class="{% if field.name == 'notes' %}span-2{% endif %}"{% if field.name == "disability_type" %} data-disability-type-wrapper{% endif %}>
         <label class="form-label" for="{{ field.id_for_label }}">
             {{ field.label }}{% if field.field.required %}<span class="required">*</span>
             {% endif %}</label>
@@ -30,8 +30,6 @@
         {% endfor %}</div>
     {% endif %}
     {% endfor %}
-    <div>
-
 <!--    <label class="form-label" for="{{ form.project.id_for_label }}">-->
 <!--        Initial project<span class="required">*</span>-->
 <!--    </label>{{ form.project }}-->
@@ -52,7 +50,6 @@
 (function () {
     const dob = document.getElementById("id_date_of_birth");
     const age = document.getElementById("id_estimated_age");
-    if (!dob || !age) return;
     function updateAge() {
         if (!dob.value) { age.value = ""; return; }
         const birth = new Date(dob.value + "T00:00:00");
@@ -63,9 +60,28 @@
         if (beforeBirthday) years--;
         age.value = years >= 0 ? years : "";
     }
-    dob.addEventListener("input", updateAge);
-    dob.addEventListener("change", updateAge);
-    updateAge();
+    if (dob && age) {
+        dob.addEventListener("input", updateAge);
+        dob.addEventListener("change", updateAge);
+        updateAge();
+    }
+
+    const disabilityStatus = document.getElementById("id_disability_status");
+    const disabilityType = document.getElementById("id_disability_type");
+    const disabilityTypeWrapper = document.querySelector("[data-disability-type-wrapper]");
+
+    function updateDisabilityType() {
+        if (!disabilityStatus || !disabilityType || !disabilityTypeWrapper) return;
+        const enabled = disabilityStatus.checked;
+        disabilityTypeWrapper.hidden = !enabled;
+        disabilityType.disabled = !enabled;
+        if (!enabled) disabilityType.value = "";
+    }
+
+    if (disabilityStatus) {
+        disabilityStatus.addEventListener("change", updateDisabilityType);
+        updateDisabilityType();
+    }
 })();
 </script>
 {% endblock %}

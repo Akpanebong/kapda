@@ -24,6 +24,23 @@ class AttendanceRecordForm(forms.ModelForm):
 
 class LearnerForm(forms.ModelForm):
     project = forms.ModelChoiceField(queryset=Project.objects.filter(active=True), required=True, label="Project")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["disability_status"].widget.attrs.update({
+            "id": "id_disability_status",
+            "data-disability-toggle": "true",
+        })
+        self.fields["disability_type"].widget.attrs.update({
+            "id": "id_disability_type",
+        })
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("disability_status"):
+            cleaned["disability_type"] = ""
+        return cleaned
+
     class Meta:
         model = Learner
         fields = ["first_name","middle_name","last_name","sex","date_of_birth","estimated_age",
