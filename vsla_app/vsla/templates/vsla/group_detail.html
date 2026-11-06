@@ -57,7 +57,7 @@
             </div>
 
             <div class="vsla-actions d-flex flex-wrap gap-2">
-                <a href="{% url 'vsla:member_create' %}"
+                <a href="{% url 'vsla:member_create' %}?group={{ group.pk }}"
                    class="btn btn-light">
                     <i class="bi bi-person-plus me-1"></i>
                     Add member
@@ -92,14 +92,59 @@
                     <i class="bi bi-clipboard-check me-1"></i>
                     View attendance
                 </a>
+
+                <a href="{% url 'vsla:group_attendance_create' group.slug %}"
+                   class="btn btn-outline-light">
+                    <i class="bi bi-person-check me-1"></i>
+                    Record attendance
+                </a>
             </div>
         </div>
     </section>
 
-    <!-- Key metrics -->
+    <!-- Group registers and scoped detail links -->
     <div class="row g-3 mb-4">
-
-        <div class="col-12 col-sm-6 col-xl-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vsla-metric h-100 d-flex justify-content-between gap-3">
+                <div><div class="vsla-metric-label">Members</div><div class="vsla-metric-value mt-2">{{ member_count }}</div><div class="small text-muted mt-2">Registered in this group</div></div>
+                <a class="btn btn-sm btn-outline-secondary align-self-end"
+                   href="{% url 'vsla:members' %}?group={{ group.pk }}"><i class="bi bi-eye"></i></a>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vsla-metric h-100 d-flex justify-content-between gap-3">
+                <div><div class="vsla-metric-label">Savings records</div><div class="vsla-metric-value mt-2">{{ savings_count }}</div><div class="small text-muted mt-2">Net: UGX {{ group_savings|floatformat:0|intcomma }}</div></div>
+                <a class="btn btn-sm btn-outline-secondary align-self-end"
+                   href="{% url 'vsla:savings' %}?group={{ group.pk }}"><i class="bi bi-eye"></i></a>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vsla-metric h-100 d-flex justify-content-between gap-3">
+                <div><div class="vsla-metric-label">Loans</div><div class="vsla-metric-value mt-2">{{ loan_count }}</div><div class="small text-muted mt-2">Applications for this group</div></div>
+                <a class="btn btn-sm btn-outline-secondary align-self-end"
+                   href="{% url 'vsla:loans' %}?group={{ group.pk }}"><i class="bi bi-eye"></i></a>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vsla-metric h-100 d-flex justify-content-between gap-3">
+                <div><div class="vsla-metric-label">Meetings</div><div class="vsla-metric-value mt-2">{{ meeting_count }}</div><div class="small text-muted mt-2">Recorded for this group</div></div>
+                <a class="btn btn-sm btn-outline-secondary align-self-end"
+                   href="{% url 'vsla:meetings' %}?group={{ group.pk }}"><i class="bi bi-eye"></i></a>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vsla-metric h-100 d-flex justify-content-between gap-3">
+                <div><div class="vsla-metric-label">Attendance records</div><div class="vsla-metric-value mt-2">{{ attendance_count }}</div><div class="small text-muted mt-2">Member attendance rows</div></div>
+                <a class="btn btn-sm btn-outline-secondary align-self-end" href="{% url 'vsla:group_attendance' group.slug %}"><i class="bi bi-eye"></i></a>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vsla-metric h-100 d-flex justify-content-between gap-3">
+                <div><div class="vsla-metric-label">Social fund records</div><div class="vsla-metric-value mt-2">{{ social_fund_count }}</div><div class="small text-muted mt-2">Balance: UGX {{ social_fund_balance|floatformat:0|intcomma }}</div></div>
+                <a class="btn btn-sm btn-outline-secondary align-self-end" href="{% url 'vsla:social_fund' %}?group={{ group.pk }}"><i class="bi bi-eye"></i></a>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
             <div class="vsla-metric h-100">
                 <div class="d-flex justify-content-between gap-3">
                     <div>
@@ -120,29 +165,7 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="vsla-metric h-100">
-                <div class="d-flex justify-content-between gap-3">
-                    <div>
-                        <div class="vsla-metric-label">
-                            Registered members
-                        </div>
-                        <div class="vsla-metric-value mt-2">
-                            {{ members.count }}
-                        </div>
-                    </div>
-                    <span class="vsla-metric-icon">
-                        <i class="bi bi-people"></i>
-                    </span>
-                </div>
-                <div class="small text-muted mt-3">
-                    Members in this savings group
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-4">
+          <div class="col-12 col-sm-6 col-xl-3">
             <div class="vsla-metric h-100">
                 <div class="d-flex justify-content-between gap-3">
                     <div>
@@ -163,6 +186,35 @@
                 </div>
             </div>
         </div>
+
+    </div>
+
+    <!-- Key metrics -->
+    <div class="row g-3 mb-3">
+
+
+
+<!--        <div class="col-12 col-sm-6 col-xl-4">-->
+<!--            <div class="vsla-metric h-100">-->
+<!--                <div class="d-flex justify-content-between gap-3">-->
+<!--                    <div>-->
+<!--                        <div class="vsla-metric-label">-->
+<!--                            Registered members-->
+<!--                        </div>-->
+<!--                        <div class="vsla-metric-value mt-2">-->
+<!--                            {{ members.count }}-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <span class="vsla-metric-icon">-->
+<!--                        <i class="bi bi-people"></i>-->
+<!--                    </span>-->
+<!--                </div>-->
+<!--                <div class="small text-muted mt-3">-->
+<!--                    Members in this savings group-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+
 
     </div>
 
@@ -257,7 +309,7 @@
                                 <td class="text-nowrap">
                                     {{ tx.transaction_date|date:"d M Y" }}
                                 </td>
-                                <td>{{ tx.member.full_name }}</td>
+                                <td><a href="{% url 'vsla:member_detail' tx.member.member_no %}">{{ tx.member.full_name }}</a></td>
                                 <td>{{ tx.get_transaction_type_display }}</td>
                                 <td class="text-end text-nowrap fw-semibold">
                                     {{ tx.amount|floatformat:0|intcomma }}
@@ -312,7 +364,7 @@
                         <td class="fw-semibold">
                             {{ loan.loan_no }}
                         </td>
-                        <td>{{ loan.member.full_name }}</td>
+                        <td><a href="{% url 'vsla:member_detail' loan.member.member_no %}">{{ loan.member.full_name }}</a></td>
                         <td class="text-nowrap">
                             <span class="small text-muted">UGX</span>
                             {{ loan.requested_amount|floatformat:0|intcomma }}
@@ -345,6 +397,17 @@
         </div>
     </section>
 
+    <!-- Social fund register -->
+    <section class="vsla-panel mt-3">
+        <div class="vsla-section-heading">
+            <div><h3 class="h5 fw-bold mb-1">Social fund</h3><p class="small text-muted mb-0">Recent contributions and emergency support for this group.</p></div>
+            <div class="d-flex gap-2"><span class="vsla-count">{{ social_fund_count }}</span><a class="btn btn-sm btn-outline-secondary" href="{% url 'vsla:social_fund' %}?group={{ group.pk }}">View all</a></div>
+        </div>
+        <div class="table-responsive"><table class="table table-hover align-middle vsla-table mb-0"><thead><tr><th>Date</th><th>Member / beneficiary</th><th>Type</th><th class="text-end">Amount</th><th>Status</th></tr></thead><tbody>
+        {% for tx in social_transactions %}<tr><td>{{ tx.transaction_date|date:"d M Y" }}</td><td>{% if tx.member %}<a href="{% url 'vsla:member_detail' tx.member.member_no %}">{{ tx.member.full_name }}</a>{% else %}{{ tx.beneficiary_name|default:"—" }}{% endif %}</td><td>{{ tx.get_transaction_type_display }}</td><td class="text-end">UGX {{ tx.amount|floatformat:0|intcomma }}</td><td><span class="status-pill status-{{ tx.status }}">{{ tx.get_status_display }}</span></td></tr>{% empty %}<tr><td colspan="5" class="text-center py-4 text-muted">No social fund transactions recorded for this group.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </section>
+
     <!-- Meetings and attendance -->
     <section class="vsla-panel mt-3">
         <div class="vsla-section-heading">
@@ -355,6 +418,9 @@
             <div class="d-flex gap-2">
                 <a href="{% url 'vsla:group_meeting_create' group.slug %}" class="btn btn-sm btn-vsla">
                     <i class="bi bi-calendar2-plus me-1"></i>Meeting
+                </a>
+                <a href="{% url 'vsla:group_attendance_create' group.slug %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-person-check me-1"></i>Attendance
                 </a>
                 <a href="{% url 'vsla:group_attendance' group.slug %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-clipboard-check me-1"></i>Attendance details

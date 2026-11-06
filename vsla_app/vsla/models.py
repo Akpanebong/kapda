@@ -273,7 +273,7 @@ class VSLA_Meeting(TimeStampedModel):
         PLANNED = "planned", "Planned"
         HELD = "held", "Held"
         CANCELLED = "cancelled", "Cancelled"
-
+    title = models.CharField(max_length=200, blank=True, null=True)
     group = models.ForeignKey(VSLAGroup, on_delete=models.PROTECT, related_name="meetings")
     meeting_date = models.DateField(default=timezone.localdate)
     meeting_number = models.PositiveIntegerField(null=True, blank=True)
@@ -288,7 +288,8 @@ class VSLA_Meeting(TimeStampedModel):
         constraints = [models.UniqueConstraint(fields=["group", "meeting_date"], name="unique_vsla_group_meeting_date")]
 
     def __str__(self):
-        return f"{self.group.name} — {self.meeting_date}"
+        return (f"{self.title if self.title else self.group.name} "
+                f"— ({self.meeting_date})")
 
 
 class MeetingAttendance(TimeStampedModel):

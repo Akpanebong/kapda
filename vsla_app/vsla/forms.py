@@ -136,8 +136,15 @@ class LoanRepaymentForm(StyledModelForm):
 class VSLA_MeetingForm(StyledModelForm):
     class Meta:
         model = VSLA_Meeting
-        fields = ["group", "meeting_date", "meeting_number", "venue", "agenda", "minutes", "status", "recorded_by"]
-        widgets = {"meeting_date": forms.DateInput(attrs={"type": "date"}), "agenda": forms.Textarea(attrs={"rows": 2}), "minutes": forms.Textarea(attrs={"rows": 2})}
+        fields = ["title", "group", "meeting_date", "meeting_number", "venue", "agenda", "minutes", "status", "recorded_by"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "meeting_date": forms.DateInput(attrs={"type": "date"}),
+            "agenda": forms.Textarea(attrs={"rows": 2}),
+            "minutes": forms.Textarea(attrs={"rows": 2}),
+            "group": forms.Select(attrs={"class": "form-control"}),
+
+        }
 
 
 class MeetingAttendanceForm(forms.Form):

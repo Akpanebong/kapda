@@ -1,14 +1,18 @@
+import csv
 import json
+from io import BytesIO
 from decimal import Decimal
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum, Count
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from openpyxl import Workbook
 
 from .access import vsla_access_required
 from accounts.access import record_editor_required
@@ -44,10 +48,23 @@ def dashboard(request):
     zero_value = Value(ZERO, output_field=MONEY)
     hundred_value = Value(Decimal("100"), output_field=MONEY)
 
+    selected_group = request.GET.get("group", "")
+    selected_status = request.GET.get("group_status", "")
+    groups_qs = VSLAGroup.objects.all()
+    if selected_group.isdigit():
+        groups_qs = groups_qs.filter(pk=selected_group)
+    else:
+        selected_group = ""
+    if selected_status in dict(VSLAGroup.Status.choices):
+        groups_qs = groups_qs.filter(status=selected_status)
+    else:
+        selected_status = ""
+    group_ids = groups_qs.values("pk")
+
     # ---------------------------------------------------------
     # 1. Groups and members
     # ---------------------------------------------------------
-    group_stats = VSLAGroup.objects.aggregate(
+    group_stats = groups_qs.aggregate(
         total_groups=Count("pk"),
         active_groups=Count(
             "pk",
@@ -55,7 +72,7 @@ def dashboard(request):
         ),
     )
 
-    member_stats = VSLAMember.objects.aggregate(
+    member_stats = VSLAMember.objects.filter(group_id__in=group_ids).aggregate(
         total_members=Count("pk"),
         active_members=Count(
             "pk",
@@ -68,6 +85,7 @@ def dashboard(request):
     # ---------------------------------------------------------
     posted_savings = SavingsTransaction.objects.filter(
         status=LedgerEntry.Status.POSTED,
+        group_id__in=group_ids,
     )
 
     savings_stats = posted_savings.aggregate(
@@ -108,7 +126,7 @@ def dashboard(request):
         .values("total")[:1]
     )
 
-    loan_portfolio = Loan.objects.annotate(
+    loan_portfolio = Loan.objects.filter(group_id__in=group_ids).annotate(
         dashboard_principal=Coalesce(
             "approved_amount",
             "requested_amount",
@@ -174,6 +192,7 @@ def dashboard(request):
                 Loan.Status.DISBURSED,
                 Loan.Status.CLOSED,
             ],
+            loan__group_id__in=group_ids,
         ).aggregate(total=Sum("amount"))["total"]
         or ZERO
     )
@@ -183,6 +202,7 @@ def dashboard(request):
     # ---------------------------------------------------------
     social_stats = SocialFundTransaction.objects.filter(
         status=LedgerEntry.Status.POSTED,
+        group_id__in=group_ids,
     ).aggregate(
         social_in=Sum(
             "amount",
@@ -206,7 +226,7 @@ def dashboard(request):
     # 5. Group status chart
     # ---------------------------------------------------------
     status_counts = list(
-        VSLAGroup.objects.values("status")
+        groups_qs.values("status")
         .annotate(total=Count("pk"))
         .order_by("status")
     )
@@ -220,7 +240,7 @@ def dashboard(request):
     )
 
     recent_loans = (
-        Loan.objects.select_related("group", "member")
+        loan_portfolio.select_related("group", "member")
         .order_by("-created_at")[:6]
     )
 
@@ -260,6 +280,10 @@ def dashboard(request):
     # ---------------------------------------------------------
     context = {
         "title": "VSLA Intelligence Dashboard",
+        "groups": VSLAGroup.objects.order_by("name"),
+        "selected_group": selected_group,
+        "selected_status": selected_status,
+        "filter_query": request.GET.urlencode(),
 
         "total_groups": group_stats["total_groups"],
         "active_groups": group_stats["active_groups"],
@@ -291,7 +315,7 @@ def group_list(request):
     q = request.GET.get("q", "").strip()
     if q:
         qs = qs.filter(name__icontains=q) | qs.filter(code__icontains=q) | qs.filter(project__name__icontains=q) | qs.filter(location__district__icontains=q)
-    return render(request, "vsla/group_list.html", {"groups": qs, "q": q, "title": "VSLA Groups"})
+    return render(request, "vsla/group_list.html", {"groups": qs, "q": q, "filter_query": request.GET.urlencode(), "title": "VSLA Groups"})
 
 
 @vsla_access_required
@@ -310,16 +334,35 @@ def group_create(request):
 @vsla_access_required
 def group_detail(request, slug):
     group = get_object_or_404(VSLAGroup, slug=slug)
-    members = group.members.all()
-    transactions = group.savings_transactions.select_related("member", "recorded_by").order_by("-transaction_date")[:12]
-    loans = group.loans.select_related("member").order_by("-created_at")[:10]
-    meetings = group.meetings.select_related("recorded_by").annotate(
+    member_qs = group.members.all()
+    savings_qs = group.savings_transactions.select_related("member", "recorded_by").order_by("-transaction_date")
+    loan_qs = group.loans.select_related("member").order_by("-created_at")
+    meeting_qs = group.meetings.select_related("recorded_by").annotate(
         attendance_total=Count("attendance", distinct=True),
         attendance_present=Count("attendance", filter=Q(attendance__present=True), distinct=True),
-    )[:8]
+    )
+    social_fund_qs = group.social_fund_transactions.select_related("member", "recorded_by").order_by("-transaction_date")
     deposits = group.savings_transactions.filter(status=LedgerEntry.Status.POSTED, transaction_type=SavingsTransaction.Type.DEPOSIT).aggregate(v=Sum("amount"))["v"] or Decimal("0")
     withdrawals = group.savings_transactions.filter(status=LedgerEntry.Status.POSTED, transaction_type__in=[SavingsTransaction.Type.WITHDRAWAL, SavingsTransaction.Type.SHARE_OUT]).aggregate(v=Sum("amount"))["v"] or Decimal("0")
-    return render(request, "vsla/group_detail.html", {"group": group, "members": members, "transactions": transactions, "loans": loans, "meetings": meetings, "group_savings": deposits-withdrawals, "title": group.name})
+    social_in = social_fund_qs.filter(status=LedgerEntry.Status.POSTED, transaction_type=SocialFundTransaction.Type.CONTRIBUTION).aggregate(v=Sum("amount"))["v"] or Decimal("0")
+    social_out = social_fund_qs.filter(status=LedgerEntry.Status.POSTED, transaction_type=SocialFundTransaction.Type.SUPPORT).aggregate(v=Sum("amount"))["v"] or Decimal("0")
+    return render(request, "vsla/group_detail.html", {
+        "group": group,
+        "members": member_qs,
+        "transactions": savings_qs[:12],
+        "loans": loan_qs[:10],
+        "meetings": meeting_qs[:8],
+        "social_transactions": social_fund_qs[:12],
+        "group_savings": deposits - withdrawals,
+        "social_fund_balance": social_in - social_out,
+        "member_count": member_qs.count(),
+        "savings_count": savings_qs.count(),
+        "loan_count": loan_qs.count(),
+        "meeting_count": meeting_qs.count(),
+        "attendance_count": MeetingAttendance.objects.filter(meeting__group=group).count(),
+        "social_fund_count": social_fund_qs.count(),
+        "title": group.name,
+    })
 
 
 @vsla_access_required
@@ -331,13 +374,20 @@ def member_list(request):
     group_id = request.GET.get("group")
     if group_id:
         qs = qs.filter(group_id=group_id)
-    return render(request, "vsla/member_list.html", {"members": qs, "groups": VSLAGroup.objects.order_by("name"), "q": q, "selected_group": group_id, "title": "VSLA Members"})
+    return render(request, "vsla/member_list.html", {"members": qs, "groups": VSLAGroup.objects.order_by("name"), "q": q, "selected_group": group_id, "filter_query": request.GET.urlencode(), "title": "VSLA Members"})
 
 
 @vsla_access_required
 @record_editor_required
 def member_create(request):
-    form = VSLAMemberForm(request.POST or None)
+    # When registration starts from a group detail page, carry that group
+    # into the form so the member is attached to the originating group by
+    # default.  The group remains editable for the global member-register
+    # workflow, while the normal form validation still protects the saved
+    # relationship.
+    group_id = request.GET.get("group") or request.POST.get("group")
+    initial = {"group": group_id} if group_id else None
+    form = VSLAMemberForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
         obj.registered_by = request.user
@@ -366,7 +416,7 @@ def savings_list(request):
     q = request.GET.get("q", "").strip()
     if q:
         qs = qs.filter(member__first_name__icontains=q) | qs.filter(member__last_name__icontains=q) | qs.filter(transaction_ref__icontains=q) | qs.filter(receipt_no__icontains=q)
-    return render(request, "vsla/savings_list.html", {"transactions": qs[:250], "groups": VSLAGroup.objects.order_by("name"), "q": q, "selected_group": group_id, "title": "Weekly Savings Ledger"})
+    return render(request, "vsla/savings_list.html", {"transactions": qs[:250], "groups": VSLAGroup.objects.order_by("name"), "q": q, "selected_group": group_id, "filter_query": request.GET.urlencode(), "title": "Weekly Savings Ledger"})
 
 
 @vsla_access_required
@@ -399,13 +449,16 @@ def savings_create(request):
 @vsla_access_required
 def loan_list(request):
     qs = Loan.objects.select_related("group", "member", "reviewed_by").all()
+    group_id = request.GET.get("group")
+    if group_id:
+        qs = qs.filter(group_id=group_id)
     status = request.GET.get("status")
     if status:
         qs = qs.filter(status=status)
     q = request.GET.get("q", "").strip()
     if q:
         qs = qs.filter(loan_no__icontains=q) | qs.filter(member__first_name__icontains=q) | qs.filter(member__last_name__icontains=q)
-    return render(request, "vsla/loan_list.html", {"loans": qs[:250], "q": q, "selected_status": status, "statuses": Loan.Status.choices, "title": "Loan Portfolio"})
+    return render(request, "vsla/loan_list.html", {"loans": qs[:250], "q": q, "selected_status": status, "selected_group": group_id, "groups": VSLAGroup.objects.order_by("name"), "statuses": Loan.Status.choices, "filter_query": request.GET.urlencode(), "title": "Loan Portfolio"})
 
 
 @vsla_access_required
@@ -522,7 +575,10 @@ def repayment_create(request, loan_no):
 @vsla_access_required
 def meeting_list(request):
     meetings = VSLA_Meeting.objects.select_related("group", "recorded_by").all()
-    return render(request, "vsla/meeting_list.html", {"meetings": meetings[:200], "title": "Group Meetings"})
+    group_id = request.GET.get("group")
+    if group_id:
+        meetings = meetings.filter(group_id=group_id)
+    return render(request, "vsla/meeting_list.html", {"meetings": meetings[:200], "selected_group": group_id, "groups": VSLAGroup.objects.order_by("name"), "filter_query": request.GET.urlencode(), "title": "Group Meetings"})
 
 
 @vsla_access_required
@@ -561,7 +617,7 @@ def attendance_list(request):
         attendance = attendance.filter(meeting__group_id=group_id)
     if meeting_id:
         attendance = attendance.filter(meeting_id=meeting_id)
-    return render(request, "vsla/attendance_list.html", {"attendance": attendance[:300], "title": "Meeting Attendance"})
+    return render(request, "vsla/attendance_list.html", {"attendance": attendance[:300], "groups": VSLAGroup.objects.order_by("name"), "selected_group": group_id, "filter_query": request.GET.urlencode(), "title": "Meeting Attendance"})
 
 
 @vsla_access_required
@@ -622,8 +678,11 @@ def attendance_create(request, slug=None):
 
 @vsla_access_required
 def social_fund_list(request):
-    txs = SocialFundTransaction.objects.select_related("group", "member", "recorded_by").all()[:250]
-    return render(request, "vsla/social_fund_list.html", {"transactions": txs, "title": "Social Fund Ledger"})
+    txs = SocialFundTransaction.objects.select_related("group", "member", "recorded_by").all()
+    group_id = request.GET.get("group")
+    if group_id:
+        txs = txs.filter(group_id=group_id)
+    return render(request, "vsla/social_fund_list.html", {"transactions": txs[:250], "selected_group": group_id, "groups": VSLAGroup.objects.order_by("name"), "filter_query": request.GET.urlencode(), "title": "Social Fund Ledger"})
 
 
 @vsla_access_required
@@ -651,3 +710,187 @@ def social_fund_create(request):
             messages.success(request, "Social fund transaction recorded.")
             return redirect("vsla:social_fund")
     return render(request, "vsla/social_fund_form.html", {"form": form, "title": "Record Social Fund Transaction", "eyebrow": "SOCIAL PROTECTION", "cancel_url": "vsla:social_fund"})
+
+
+def _vsla_export_rows(request, resource):
+    """Return a filtered, tabular snapshot for a VSLA register export."""
+    group_id = request.GET.get("group")
+    status = request.GET.get("status")
+    group_status = request.GET.get("group_status")
+    q = request.GET.get("q", "").strip()
+
+    scoped_groups = VSLAGroup.objects.all()
+    if group_id and str(group_id).isdigit():
+        scoped_groups = scoped_groups.filter(pk=group_id)
+    if group_status in dict(VSLAGroup.Status.choices):
+        scoped_groups = scoped_groups.filter(status=group_status)
+    scope_group_ids = scoped_groups.values("pk") if group_id or group_status in dict(VSLAGroup.Status.choices) else None
+
+    def apply_group_scope(queryset, field="group_id"):
+        if scope_group_ids is not None:
+            return queryset.filter(**{f"{field}__in": scope_group_ids})
+        return queryset
+
+    if resource == "groups":
+        qs = apply_group_scope(VSLAGroup.objects.select_related("project", "location").all(), "pk")
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(code__icontains=q) | Q(project__name__icontains=q) | Q(location__district__icontains=q))
+        if group_status not in dict(VSLAGroup.Status.choices) and status in dict(VSLAGroup.Status.choices):
+            qs = qs.filter(status=status)
+        headers = ["Code", "Group", "Project", "Location", "Weekly share value", "Max shares/week", "Loan interest rate", "Status"]
+        rows = ([g.code, g.name, str(g.project or ""), str(g.location or ""), g.weekly_share_value, g.max_shares_per_week, g.loan_interest_rate, g.get_status_display()] for g in qs)
+    elif resource == "members":
+        qs = VSLAMember.objects.select_related("group").all()
+        qs = apply_group_scope(qs)
+        if q:
+            qs = qs.filter(Q(first_name__icontains=q) | Q(last_name__icontains=q) | Q(member_no__icontains=q) | Q(phone__icontains=q))
+        if status in dict(VSLAMember.Status.choices):
+            qs = qs.filter(status=status)
+        headers = ["Member no.", "Member", "Group", "Gender", "Phone", "Village", "Status"]
+        rows = ([m.member_no, m.full_name, m.group.name, m.get_gender_display(), m.phone, m.village, m.get_status_display()] for m in qs)
+    elif resource == "savings":
+        qs = SavingsTransaction.objects.select_related("group", "member").all()
+        qs = apply_group_scope(qs)
+        if q:
+            qs = qs.filter(Q(member__first_name__icontains=q) | Q(member__last_name__icontains=q) | Q(transaction_ref__icontains=q) | Q(receipt_no__icontains=q))
+        if status in dict(LedgerEntry.Status.choices):
+            qs = qs.filter(status=status)
+        headers = ["Reference", "Date", "Week ending", "Group", "Member", "Type", "Amount", "Status"]
+        rows = ([t.transaction_ref, t.transaction_date, t.week_ending, t.group.name, t.member.full_name, t.get_transaction_type_display(), t.amount, t.get_status_display()] for t in qs)
+    elif resource == "loans":
+        qs = Loan.objects.select_related("group", "member").all()
+        qs = apply_group_scope(qs)
+        if q:
+            qs = qs.filter(Q(loan_no__icontains=q) | Q(member__first_name__icontains=q) | Q(member__last_name__icontains=q))
+        if status in dict(Loan.Status.choices):
+            qs = qs.filter(status=status)
+        headers = ["Loan no.", "Group", "Member", "Application date", "Principal", "Interest rate", "Total due", "Outstanding", "Status"]
+        rows = ([l.loan_no, l.group.name, l.member.full_name, l.application_date, l.principal, l.interest_rate, l.total_due, l.outstanding_balance, l.get_status_display()] for l in qs)
+    elif resource == "meetings":
+        qs = VSLA_Meeting.objects.select_related("group").all()
+        qs = apply_group_scope(qs)
+        if status in dict(VSLA_Meeting.Status.choices):
+            qs = qs.filter(status=status)
+        headers = ["Date", "Meeting no.", "Group", "Venue", "Status"]
+        rows = ([m.meeting_date, m.meeting_number, m.group.name, m.venue, m.get_status_display()] for m in qs)
+    elif resource == "attendance":
+        qs = MeetingAttendance.objects.select_related("meeting__group", "member").all()
+        qs = apply_group_scope(qs, "meeting__group_id")
+        meeting_id = request.GET.get("meeting")
+        if meeting_id:
+            qs = qs.filter(meeting_id=meeting_id)
+        headers = ["Meeting date", "Group", "Meeting no.", "Member", "Present", "Remarks"]
+        rows = ([a.meeting.meeting_date, a.meeting.group.name, a.meeting.meeting_number, a.member.full_name, "Yes" if a.present else "No", a.remarks] for a in qs)
+    elif resource == "social-fund":
+        qs = SocialFundTransaction.objects.select_related("group", "member").all()
+        qs = apply_group_scope(qs)
+        if status in dict(LedgerEntry.Status.choices):
+            qs = qs.filter(status=status)
+        headers = ["Reference", "Date", "Group", "Member", "Beneficiary", "Type", "Amount", "Status"]
+        rows = ([t.transaction_ref, t.transaction_date, t.group.name, t.member.full_name if t.member else "", t.beneficiary_name, t.get_transaction_type_display(), t.amount, t.get_status_display()] for t in qs)
+    else:
+        return [], []
+    return headers, rows
+
+
+def _format_export_sheet(sheet):
+    """Format exported worksheets so dates render instead of showing ####."""
+    for row in sheet.iter_rows():
+        for cell in row:
+            if isinstance(cell.value, (date, datetime)):
+                cell.number_format = "yyyy-mm-dd"
+
+    for column_cells in sheet.columns:
+        column_letter = column_cells[0].column_letter
+        longest = 0
+        for cell in column_cells:
+            value = cell.value
+            if value is None:
+                continue
+            if isinstance(value, (date, datetime)):
+                display_value = value.strftime("%Y-%m-%d")
+            else:
+                display_value = str(value)
+            longest = max(longest, len(display_value))
+        sheet.column_dimensions[column_letter].width = min(max(longest + 2, 12), 40)
+
+
+@vsla_access_required
+def export_csv(request, resource):
+    headers, rows = _vsla_export_rows(request, resource)
+    if not headers:
+        return HttpResponse("Unknown VSLA export.", status=404)
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="vsla_{resource}.csv"'
+    writer = csv.writer(response)
+    writer.writerow(headers)
+    writer.writerows(rows)
+    return response
+
+
+@vsla_access_required
+def export_xlsx(request, resource):
+    headers, rows = _vsla_export_rows(request, resource)
+    if not headers:
+        return HttpResponse("Unknown VSLA export.", status=404)
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = resource[:31].replace("-", " ").title()
+    sheet.append(headers)
+    for cell in sheet[1]:
+        cell.font = cell.font.copy(bold=True)
+    for row in rows:
+        sheet.append(list(row))
+    _format_export_sheet(sheet)
+    output = BytesIO()
+    workbook.save(output)
+    response = HttpResponse(output.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="vsla_{resource}.xlsx"'
+    return response
+
+
+@vsla_access_required
+def export_workbook(request):
+    """Export the complete filtered VSLA workspace as one multi-sheet workbook."""
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+
+    resources = [
+        ("Groups", "groups"),
+        ("Members", "members"),
+        ("Savings Transactions", "savings"),
+        ("Loans", "loans"),
+        ("Loan Repayments", None),
+        ("Meetings", "meetings"),
+        ("Attendance", "attendance"),
+        ("Social Fund", "social-fund"),
+    ]
+    for title, resource in resources:
+        if resource:
+            headers, rows = _vsla_export_rows(request, resource)
+        else:
+            group_id = request.GET.get("group")
+            group_status = request.GET.get("group_status")
+            repayments = LoanRepayment.objects.select_related("loan__group", "loan__member").all()
+            if group_id and str(group_id).isdigit():
+                repayments = repayments.filter(loan__group_id=group_id)
+            if group_status in dict(VSLAGroup.Status.choices):
+                repayments = repayments.filter(loan__group__status=group_status)
+            headers = ["Reference", "Date", "Loan no.", "Group", "Member", "Amount", "Status"]
+            rows = ([r.transaction_ref, r.transaction_date, r.loan.loan_no, r.loan.group.name, r.loan.member.full_name, r.amount, r.get_status_display()] for r in repayments)
+
+        sheet = workbook.create_sheet(title[:31])
+        sheet.append(headers)
+        for cell in sheet[1]:
+            cell.font = cell.font.copy(bold=True)
+        for row in rows:
+            sheet.append(list(row))
+        sheet.freeze_panes = "A2"
+        sheet.auto_filter.ref = sheet.dimensions
+        _format_export_sheet(sheet)
+
+    output = BytesIO()
+    workbook.save(output)
+    response = HttpResponse(output.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = 'attachment; filename="vsla_filtered_workspace.xlsx"'
+    return response

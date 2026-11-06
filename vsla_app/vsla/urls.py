@@ -29,4 +29,7 @@ urlpatterns = [
     path("attendance/new/", views.attendance_create, name="attendance_create"),
     path("social-fund/", views.social_fund_list, name="social_fund"),
     path("social-fund/new/", views.social_fund_create, name="social_fund_create"),
+    path("export/<slug:resource>.csv", views.export_csv, name="export_csv"),
+    path("export/<slug:resource>.xlsx", views.export_xlsx, name="export_xlsx"),
+    path("export-workbook.xlsx", views.export_workbook, name="export_workbook"),
 ]
