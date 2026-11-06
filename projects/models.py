@@ -1,4 +1,5 @@
 from django.conf import settings
+import re
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -50,7 +51,13 @@ class Indicator(TimeStampedModel):
 
     @property
     def configured_attributes(self):
-        return [item.strip() for item in self.attribute_fields.replace("\n", ",").split(",") if item.strip()]
+        raw = (self.attribute_fields or "").strip()
+        # Older/manual records sometimes contain Python model declarations
+        # such as "code = models.CharField(...)".  Those are not capture
+        # attributes and must never become labels in the data-entry form.
+        if re.search(r"\bmodels\.[A-Za-z]+Field\s*\(", raw) or re.search(r"\bmodels\.[A-Za-z]+Field\b", raw):
+            return []
+        return [item.strip() for item in raw.replace("\n", ",").split(",") if item.strip()]
 
     @property
     def reached(self):
@@ -161,6 +168,10 @@ class ActivityData(TimeStampedModel):
 
     class Meta:
         ordering = ["-collection_date", "-created_at"]
+
+    def __str__(self):
+        activity_name = self.activity.name if self.activity_id else "Activity data"
+        return f"{activity_name} — {self.collection_date} ({self.actual_value})"
 
     def save(self, *args, **kwargs):
         if self.activity_id and not self.project_id:

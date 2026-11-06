@@ -4,17 +4,48 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.text import slugify
+from django.forms import modelform_factory
 
 from core.models import School
 from learners.models import Learner
 from bslfsr.models import Beneficiary
 from .models import AGE_RANGE_CHOICES, SUPPORT_TYPE_CHOICES, ActivityData, MonitoringForm
+from core.form_helpers import model_fields
 
 
 # These are the only fields that every custom activity form receives. Every
 # other value must be explicitly added by the form designer and is stored in
 # ActivityData.attributes (or as a selected linked record).
 COMMON_ACTIVITY_FIELDS = {"collection_date", "reporting_period", "phase", "actual_value"}
+
+# The JSON attributes column is an internal storage area for custom activity
+# fields. It is intentionally not exposed on the standalone create/update
+# screens; users capture those values through named form fields instead.
+_ACTIVITY_CAPTURE_EXCLUDED_FIELDS = {"attributes", "verified_by", "verification_status", "comments"}
+
+ActivityDataCaptureForm = modelform_factory(
+    ActivityData,
+    fields=[field for field in model_fields(ActivityData) if field not in _ACTIVITY_CAPTURE_EXCLUDED_FIELDS],
+)
+
+
+class ActivityDataReviewForm(forms.ModelForm):
+    class Meta:
+        model = ActivityData
+        fields = ["verification_status", "comments"]
+        widgets = {
+            "verification_status": forms.Select(attrs={"class": "form-select"}),
+            "comments": forms.Textarea(attrs={
+                "class": "form-control",
+                "rows": 5,
+                "placeholder": "Add review notes, corrections, or verification comments",
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["verification_status"].label = "Verification decision"
+        self.fields["comments"].label = "Review comments"
 
 
 def _linked_record_models():
@@ -36,8 +67,7 @@ class ActivityDataForm(forms.ModelForm):
             "sex", "age", "class_level", "school", "learner", "beneficiary", "parish", "sub_county",
             "support_type", "distribution_date", "term_or_period", "quantity", "material_type",
             "topic", "facilitator", "participant_category", "barrier_category", "facility_type",
-            "action_type", "findings", "follow_up_action", "attributes", "comments",
-            "verification_status",
+            "action_type", "findings", "follow_up_action", "attributes",
         ]
         widgets = {
             "collection_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
@@ -126,8 +156,9 @@ class MonitoringFormDefinitionForm(forms.ModelForm):
             raise ValidationError("Schema must be a JSON array of sections.")
         names = set()
         linked_record_count = 0
-        allowed = {"text", "textarea", "email", "integer", "decimal", "date", "boolean", "choice", "foreign_key"}
+        allowed = {"text", "textarea", "email", "integer", "decimal", "date", "boolean", "choice", "foreign_key", "file"}
         foreign_key_targets = {model._meta.label_lower for model in _linked_record_models()}
+        file_field_count = 0
         for section_index, section in enumerate(schema, 1):
             if not isinstance(section, dict) or not section.get("title") or not isinstance(section.get("fields", []), list):
                 raise ValidationError(f"Section {section_index} must have a title and fields array.")
@@ -147,6 +178,10 @@ class MonitoringFormDefinitionForm(forms.ModelForm):
                     linked_record_count += 1
                     if linked_record_count > 1:
                         raise ValidationError("An activity form can contain only one Linked record field. Choose the applicable model for that field.")
+                if definition.get("type") == "file":
+                    file_field_count += 1
+                    if file_field_count > 1:
+                        raise ValidationError("An activity form can contain only one file upload field; use it for evidence.")
                 names.add(key)
         return schema
 
@@ -161,6 +196,7 @@ class SchemaActivityDataForm(forms.Form):
         self.activity = activity
         self.foreign_key_fields = {}
         self.generic_link_fields = {}
+        self.file_field_name = None
         super().__init__(*args, **kwargs)
         self.fields["collection_date"].initial = self.initial.get("collection_date") or timezone.localdate()
         schema = getattr(getattr(activity, "monitoring_form", None), "schema", []) if activity else []
@@ -191,12 +227,15 @@ class SchemaActivityDataForm(forms.Form):
                         raise ValidationError(f"Unsupported linked record target: {target}")
                     self.generic_link_fields[key] = target_model
                     field = forms.ModelChoiceField(queryset=target_model.objects.all().order_by("pk"), empty_label="Select linked record", **options)
+                elif field_type == "file":
+                    self.file_field_name = key
+                    field = forms.FileField(widget=forms.ClearableFileInput(attrs={"class": "form-control"}), **options)
                 else:
                     field = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}), **options)
                 self.fields[key] = field
 
     def save(self, commit=True):
-        values = {key: self.cleaned_data[key] for key in self.fields if key not in COMMON_ACTIVITY_FIELDS and key not in self.generic_link_fields and self.cleaned_data.get(key) not in (None, "")}
+        values = {key: self.cleaned_data[key] for key in self.fields if key not in COMMON_ACTIVITY_FIELDS and key not in self.generic_link_fields and key != self.file_field_name and self.cleaned_data.get(key) not in (None, "")}
         obj = ActivityData(
             activity=self.activity,
             project=self.activity.project,
@@ -205,6 +244,8 @@ class SchemaActivityDataForm(forms.Form):
             reporting_period=self.cleaned_data.get("reporting_period") or "",
             phase=self.cleaned_data.get("phase") or "",
         )
+        if self.file_field_name and self.cleaned_data.get(self.file_field_name) is not None:
+            obj.evidence = self.cleaned_data[self.file_field_name]
         for field_name, target in self.foreign_key_fields.items():
             if self.cleaned_data.get(field_name) is not None:
                 setattr(obj, target, self.cleaned_data[field_name])

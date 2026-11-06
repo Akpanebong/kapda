@@ -4,6 +4,7 @@ from .views import (activity_data_submit, indicator_create, indicator_delete,
                     monitoring_form_create, monitoring_form_delete,
                     monitoring_form_update, project_dashboard)
 from .crud_views import (activity_data_create, activity_data_delete, activity_data_detail, activity_data_list,
+                         activity_data_review,
                          activity_data_update, project_create, project_delete, project_detail, project_list, project_update)
 app_name="projects"
 urlpatterns=[
@@ -16,6 +17,7 @@ urlpatterns=[
     path("activity-data/", activity_data_list, name="activity_data_list"),
     path("activity-data/add/", activity_data_create, name="activity_data_create"),
     path("activity-data/<int:pk>/", activity_data_detail, name="activity_data_detail"),
+    path("activity-data/<int:pk>/review/", activity_data_review, name="activity_data_review"),
     path("activity-data/<int:pk>/edit/", activity_data_update, name="activity_data_update"),
     path("activity-data/<int:pk>/delete/", activity_data_delete, name="activity_data_delete"),
     path("activities/<int:pk>/data/", activity_data_submit, name="activity_data_submit"),

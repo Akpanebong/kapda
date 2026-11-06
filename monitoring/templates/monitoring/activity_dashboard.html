@@ -1009,9 +1009,9 @@
                         <div class="activity-form-intro">
                             <i class="bi bi-info-circle-fill"></i>
                             <div>
-                                <b>Record an activity submission</b>
+                                <b>{% if card.uses_default_fields %}Standard activity capture form{% else %}Configured activity capture form{% endif %}</b>
                                 <span>
-                                    Complete the relevant fields below.
+                                    {% if card.uses_default_fields %}No activity-specific fields have been configured, so the standard data-capture fields are shown.{% else %}Complete the configured fields below.{% endif %}
                                     Required fields are marked with an asterisk.
                                 </span>
                             </div>

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Review activity data | KAPDA{% endblock %}
+{% block content %}
+<div class="page-intro d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <span class="text-muted small text-uppercase fw-bold">Data review</span>
+        <h1 class="mb-1">Review activity data</h1>
+        <p class="mb-0">{{ object.activity.name|default:"Activity submission" }} - Record #{{ object.pk }}</p>
+    </div>
+    <a class="btn btn-light border" href="{% url 'projects:activity_data_detail' object.pk %}">Cancel</a>
+</div>
+
+<section class="panel p-4" style="max-width: 760px;">
+    <div class="panel-head px-0 pt-0">
+        <div>
+            <h2>Verification and comments</h2>
+            <p>Record the review decision and any feedback for the data entrant.</p>
+        </div>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+        {% endfor %}
+        <div class="d-flex gap-2 pt-2">
+            <button class="btn btn-kapda" type="submit"><i class="bi bi-check2-circle me-1"></i>Save review</button>
+            <a class="btn btn-light border" href="{% url 'projects:activity_data_detail' object.pk %}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
