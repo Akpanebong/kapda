@@ -14,6 +14,7 @@ class PrimaryKeySlugConverter:
         return PrimaryKeySlug(int(parts[0]), parts[1] if len(parts) > 1 else "")
 
     def to_url(self, value):
-        if hasattr(value, "pk") and getattr(value, "slug", None):
-            return f"{value.pk}-{value.slug}"
+        if hasattr(value, "pk"):
+            slug = getattr(value, "slug", None)
+            return f"{value.pk}-{slug}" if slug else str(value.pk)
         return str(value)
