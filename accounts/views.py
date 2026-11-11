@@ -8,7 +8,7 @@ from .models import User
 from .access import system_admin_required
 
 class KAPDALoginView(LoginView):
-    template_name = "accounts/loginkk.html"
+    template_name = "accounts/login.html"
     authentication_form = LoginForm
 
 
