@@ -18,6 +18,7 @@ from .forms import FieldAttendanceForm, FieldAttendanceParticipantForm
 from .models import FieldAttendance, FieldAttendanceParticipant, initials_from_name
 
 from .models import School
+from .crud_support import identifier_lookup
 from projects.models import Indicator
 from monitoring.models import FieldVisit, MHMSession
 from school_governance.models import GovernanceMeeting, GovernanceTraining
@@ -29,7 +30,7 @@ ATTENDANCE_THIN_GRAY = Side(style="thin", color="D9D9D9")
 
 @login_required
 def school_detail(request, pk):
-    school = get_object_or_404(School.objects.select_related("location"), pk=pk)
+    school = get_object_or_404(School.objects.select_related("location"), **identifier_lookup(pk))
     enrolments = school.enrolments.select_related("learner", "project", "academic_year").order_by("-academic_year__start_date", "learner__last_name")
     current_enrolments = enrolments.filter(is_current=True)
     return render(request, "core/school_detail.html", {
@@ -135,7 +136,7 @@ def attendance_create(request):
 @login_required
 @record_editor_required
 def attendance_update(request, pk):
-    instance = get_object_or_404(FieldAttendance, pk=pk)
+    instance = get_object_or_404(FieldAttendance, **identifier_lookup(pk))
     if instance.status == "approved" and not is_system_administrator(request.user):
         return HttpResponseForbidden("Approved attendance records cannot be edited.")
     return _attendance_form(request, instance)
@@ -145,7 +146,7 @@ def attendance_update(request, pk):
 @system_admin_required
 def attendance_approve(request, pk):
     if request.method == "POST":
-        sheet = get_object_or_404(FieldAttendance, pk=pk)
+        sheet = get_object_or_404(FieldAttendance, **identifier_lookup(pk))
         sheet.status = "approved"
         sheet.reviewed_by = request.user
         sheet.reviewed_at = timezone.now()
@@ -162,7 +163,7 @@ def attendance_approve(request, pk):
 @system_admin_required
 def attendance_reject(request, pk):
     if request.method == "POST":
-        sheet = get_object_or_404(FieldAttendance, pk=pk)
+        sheet = get_object_or_404(FieldAttendance, **identifier_lookup(pk))
         sheet.status = "rejected"
         sheet.reviewed_by = request.user
         sheet.reviewed_at = timezone.now()

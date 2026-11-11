@@ -18,6 +18,7 @@ from .access import vsla_access_required
 from accounts.access import record_editor_required
 from .forms import VSLAGroupForm, VSLAMemberForm, SavingsTransactionForm, LoanForm, LoanRepaymentForm, VSLA_MeetingForm, MeetingAttendanceForm, SocialFundTransactionForm
 from .models import VSLAGroup, VSLAMember, SavingsTransaction, Loan, LoanRepayment, VSLA_Meeting, MeetingAttendance, SocialFundTransaction, LedgerEntry
+from core.crud_support import identifier_lookup
 
 from decimal import Decimal
 
@@ -642,7 +643,7 @@ def attendance_detail(request, slug, meeting_id):
         VSLA_Meeting.objects.filter(group=group).annotate(
             attendance_present=Count("attendance", filter=Q(attendance__present=True), distinct=True),
         ),
-        pk=meeting_id,
+        **identifier_lookup(meeting_id),
     )
     attendance = meeting.attendance.select_related("member").order_by("member__last_name", "member__first_name")
     return render(request, "vsla/attendance_detail.html", {"group": group, "meeting": meeting, "attendance": attendance, "title": f"Attendance - {group.name}"})

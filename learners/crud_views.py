@@ -7,6 +7,7 @@ from django.shortcuts import render
 from types import SimpleNamespace
 from accounts.access import record_editor_required
 from core.crud_support import create_record, delete_record, detail_record, list_records, update_record
+from core.crud_support import identifier_lookup
 from .forms import (
     AssessmentDetailsForm,
     AssessmentSubjectFormSet,
@@ -155,7 +156,7 @@ def assessment_list(request):
 
 @login_required
 def assessment_detail(request, pk):
-    assessment = get_object_or_404(Assessment.objects.select_related("learner", "enrolment", "term"), pk=pk)
+    assessment = get_object_or_404(Assessment.objects.select_related("learner", "enrolment", "term"), **identifier_lookup(pk))
     queryset = Assessment.objects.filter(
         learner_id=assessment.learner_id,
         enrolment_id=assessment.enrolment_id,
@@ -201,7 +202,7 @@ def assessment_create(request):
 @login_required
 @record_editor_required
 def assessment_update(request, pk):
-    assessment = get_object_or_404(Assessment.objects.select_related("learner", "enrolment", "term"), pk=pk)
+    assessment = get_object_or_404(Assessment.objects.select_related("learner", "enrolment", "term"), **identifier_lookup(pk))
     group_queryset = Assessment.objects.filter(
         learner_id=assessment.learner_id,
         enrolment_id=assessment.enrolment_id,
@@ -270,7 +271,7 @@ def uneb_result_create(request):
 @login_required
 @record_editor_required
 def uneb_result_update(request, pk):
-    result = get_object_or_404(UNEBResult, pk=pk)
+    result = get_object_or_404(UNEBResult, **identifier_lookup(pk))
     initial_subjects = [{"subject": subject, "performance": performance} for subject, performance in (result.subjects or {}).items()]
     form = UNEBResultForm(request.POST or None, instance=result)
     subject_forms = UNEBSubjectFormSet(request.POST or None, initial=initial_subjects, prefix="subjects")

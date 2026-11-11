@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .forms import CredentialResetForm, LoginForm, StaffForm
 from .models import User
 from .access import system_admin_required
+from core.crud_support import identifier_lookup
 
 class KAPDALoginView(LoginView):
     template_name = "accounts/login.html"
@@ -33,7 +34,7 @@ def staff_create(request):
 
 @system_admin_required
 def staff_update(request, pk):
-    user = get_object_or_404(User, pk=pk, is_staff=True)
+    user = get_object_or_404(User, is_staff=True, **identifier_lookup(pk))
     form = StaffForm(request.POST or None, request.FILES or None, instance=user, creating=False)
     if request.method == "POST" and form.is_valid():
         form.save()

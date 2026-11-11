@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.text import slugify
+from uuid import uuid4
 
 
 class User(AbstractUser):
@@ -25,7 +26,7 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.slug:
             super().save(*args, **kwargs)
-            self.slug = f"{slugify(self.get_full_name() or self.username)[:220]}-{self.pk}"
+            self.slug = f"{slugify(self.get_full_name() or self.username)[:210]}-{uuid4().hex[:10]}"
             type(self).objects.filter(pk=self.pk).update(slug=self.slug)
             return
         super().save(*args, **kwargs)

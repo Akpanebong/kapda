@@ -53,7 +53,7 @@ class VSLAGroup(TimeStampedModel):
             self.code = f"VSLA-{timezone.localdate():%y%m}-{uuid4().hex[:6].upper()}"
         if not self.slug:
             base = slugify(self.name) or "vsla-group"
-            self.slug = f"{base}-{uuid4().hex[:6]}"
+            self.slug = f"{base}-{uuid4().hex[:10]}"
         super().save(*args, **kwargs)
 
     @property
@@ -111,7 +111,7 @@ class VSLAMember(TimeStampedModel):
             self.member_no = f"MEM-{timezone.localdate():%y%m}-{uuid4().hex[:7].upper()}"
         super().save(*args, **kwargs)
         if not self.slug:
-            self.slug = f"{slugify(self.full_name)[:220]}-{self.pk}"
+            self.slug = f"{slugify(self.full_name)[:210]}-{uuid4().hex[:10]}"
             type(self).objects.filter(pk=self.pk).update(slug=self.slug)
 
     @property
@@ -221,7 +221,7 @@ class Loan(TimeStampedModel):
             self.loan_no = f"LN-{timezone.localdate():%y%m}-{uuid4().hex[:7].upper()}"
         super().save(*args, **kwargs)
         if not self.slug:
-            self.slug = f"{slugify(self.loan_no)[:220]}-{self.pk}"
+            self.slug = f"{slugify(self.loan_no)[:210]}-{uuid4().hex[:10]}"
             type(self).objects.filter(pk=self.pk).update(slug=self.slug)
 
     def clean(self):
@@ -303,7 +303,7 @@ class VSLA_Meeting(TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             super().save(*args, **kwargs)
-            self.slug = f"{slugify(str(self))[:220]}-{self.pk}"
+            self.slug = f"{slugify(str(self))[:210]}-{uuid4().hex[:10]}"
             type(self).objects.filter(pk=self.pk).update(slug=self.slug)
             return
         super().save(*args, **kwargs)

@@ -7,6 +7,7 @@ from .forms import (GovernanceActionForm, GovernanceMemberForm, GovernanceMeetin
 from .models import (GovernanceAction, GovernanceMember, GovernanceMeeting,
                      GovernanceTraining, SchoolImprovementPlan)
 from accounts.access import record_editor_required
+from core.crud_support import identifier_lookup
 
 
 def _list(request, title, description, headings, records, values, create_url, edit_name, delete_name, template):
@@ -51,12 +52,12 @@ def governance_member_create(request):
 @login_required
 @record_editor_required
 def governance_member_update(request, pk):
-    return _form(request, GovernanceMemberForm, "Edit governance member", reverse("governance:governance_member_list"), "governance/governance_member_form.html", get_object_or_404(GovernanceMember, pk=pk))
+    return _form(request, GovernanceMemberForm, "Edit governance member", reverse("governance:governance_member_list"), "governance/governance_member_form.html", get_object_or_404(GovernanceMember, **identifier_lookup(pk)))
 
 @login_required
 @record_editor_required
 def governance_member_delete(request, pk):
-    if request.method == "POST": get_object_or_404(GovernanceMember, pk=pk).delete()
+    if request.method == "POST": get_object_or_404(GovernanceMember, **identifier_lookup(pk)).delete()
     return redirect("governance:governance_member_list")
 
 
@@ -74,12 +75,12 @@ def governance_meeting_create(request):
 @login_required
 @record_editor_required
 def governance_meeting_update(request, pk):
-    return _form(request, GovernanceMeetingForm, "Edit governance meeting", reverse("governance:governance_meeting_list"), "governance/governance_meeting_form.html", get_object_or_404(GovernanceMeeting, pk=pk))
+    return _form(request, GovernanceMeetingForm, "Edit governance meeting", reverse("governance:governance_meeting_list"), "governance/governance_meeting_form.html", get_object_or_404(GovernanceMeeting, **identifier_lookup(pk)))
 
 @login_required
 @record_editor_required
 def governance_meeting_delete(request, pk):
-    if request.method == "POST": get_object_or_404(GovernanceMeeting, pk=pk).delete()
+    if request.method == "POST": get_object_or_404(GovernanceMeeting, **identifier_lookup(pk)).delete()
     return redirect("governance:governance_meeting_list")
 
 
@@ -97,12 +98,12 @@ def governance_training_create(request):
 @login_required
 @record_editor_required
 def governance_training_update(request, pk):
-    return _form(request, GovernanceTrainingForm, "Edit governance training", reverse("governance:governance_training_list"), "governance/governance_training_form.html", get_object_or_404(GovernanceTraining, pk=pk))
+    return _form(request, GovernanceTrainingForm, "Edit governance training", reverse("governance:governance_training_list"), "governance/governance_training_form.html", get_object_or_404(GovernanceTraining, **identifier_lookup(pk)))
 
 @login_required
 @record_editor_required
 def governance_training_delete(request, pk):
-    if request.method == "POST": get_object_or_404(GovernanceTraining, pk=pk).delete()
+    if request.method == "POST": get_object_or_404(GovernanceTraining, **identifier_lookup(pk)).delete()
     return redirect("governance:governance_training_list")
 
 
@@ -120,12 +121,12 @@ def school_improvement_plan_create(request):
 @login_required
 @record_editor_required
 def school_improvement_plan_update(request, pk):
-    return _form(request, SchoolImprovementPlanForm, "Edit school improvement plan", reverse("governance:school_improvement_plan_list"), "governance/school_improvement_plan_form.html", get_object_or_404(SchoolImprovementPlan, pk=pk))
+    return _form(request, SchoolImprovementPlanForm, "Edit school improvement plan", reverse("governance:school_improvement_plan_list"), "governance/school_improvement_plan_form.html", get_object_or_404(SchoolImprovementPlan, **identifier_lookup(pk)))
 
 @login_required
 @record_editor_required
 def school_improvement_plan_delete(request, pk):
-    if request.method == "POST": get_object_or_404(SchoolImprovementPlan, pk=pk).delete()
+    if request.method == "POST": get_object_or_404(SchoolImprovementPlan, **identifier_lookup(pk)).delete()
     return redirect("governance:school_improvement_plan_list")
 
 
@@ -143,10 +144,10 @@ def governance_action_create(request):
 @login_required
 @record_editor_required
 def governance_action_update(request, pk):
-    return _form(request, GovernanceActionForm, "Edit governance action", reverse("governance:governance_action_list"), "governance/governance_action_form.html", get_object_or_404(GovernanceAction, pk=pk))
+    return _form(request, GovernanceActionForm, "Edit governance action", reverse("governance:governance_action_list"), "governance/governance_action_form.html", get_object_or_404(GovernanceAction, **identifier_lookup(pk)))
 
 @login_required
 @record_editor_required
 def governance_action_delete(request, pk):
-    if request.method == "POST": get_object_or_404(GovernanceAction, pk=pk).delete()
+    if request.method == "POST": get_object_or_404(GovernanceAction, **identifier_lookup(pk)).delete()
     return redirect("governance:governance_action_list")

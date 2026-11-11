@@ -13,6 +13,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.dateparse import parse_date
 from core.models import AcademicYear, AuditEvent, School
+from core.crud_support import identifier_lookup
 from .models import Learner, LearnerProject, Enrolment, AttendanceRecord, ClassMovement, LearnerSupport, UNEBResult, LearnerEmployment, LearnerStatusHistory
 from monitoring.models import FollowUpAction, MHMSession, WASHFacility
 from .forms import LearnerForm, EnrolmentForm, LearnerSupportForm, LearnerEmploymentForm, LearnerStatusHistoryForm, SupportMaterialFormSet
@@ -363,7 +364,7 @@ def learner_employment_list(request, learner_slug):
 @login_required
 @record_editor_required
 def employment_create(request, pk):
-    learner = get_object_or_404(Learner, pk=pk)
+    learner = get_object_or_404(Learner, **identifier_lookup(pk))
     form = LearnerEmploymentForm(request.POST or None, learner=learner, instance=getattr(learner, "employment", None))
     if request.method == "POST" and form.is_valid():
         employment = form.save(commit=False)
@@ -376,7 +377,7 @@ def employment_create(request, pk):
 @login_required
 @record_editor_required
 def support_create(request, pk):
-    learner = get_object_or_404(Learner, pk=pk)
+    learner = get_object_or_404(Learner, **identifier_lookup(pk))
     form = LearnerSupportForm(request.POST or None, learner=learner)
     material_forms = SupportMaterialFormSet(request.POST or None, prefix="materials")
     if request.method == "POST" and form.is_valid() and (form.cleaned_data.get("support_type") != "scholastic_materials" or material_forms.is_valid()):
@@ -406,7 +407,7 @@ def support_create(request, pk):
 @login_required
 @record_editor_required
 def enrolment_create(request,pk):
-    learner=get_object_or_404(Learner,pk=pk)
+    learner=get_object_or_404(Learner,**identifier_lookup(pk))
     latest_enrolment = learner.enrolments.select_related("school", "project").filter(is_current=True).first()
     current_year = AcademicYear.objects.filter(is_current=True).first()
     active_project = learner.project_links.filter(active=True).order_by("-start_date").first()

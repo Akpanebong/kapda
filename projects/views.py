@@ -9,6 +9,7 @@ from .forms import MonitoringFormDefinitionForm, activity_data_form
 from .models import ActivityData, Indicator, MonitoringForm, Project
 from accounts.access import record_editor_required
 from core.form_helpers import add_date_time_pickers, model_fields
+from core.crud_support import identifier_lookup
 
 
 def _linked_models_json():
@@ -26,7 +27,7 @@ def _linked_models_json():
 
 @login_required
 def indicator_detail(request, pk):
-    indicator = get_object_or_404(Indicator.objects.select_related("project", "monitoring_form"), pk=pk)
+    indicator = get_object_or_404(Indicator.objects.select_related("project", "monitoring_form"), **identifier_lookup(pk))
     return render(request, "projects/indicator_detail.html", {
         "indicator": indicator,
         "entries": indicator.data_entries.select_related("entered_by").order_by("-collection_date", "-created_at")[:10],
@@ -65,7 +66,7 @@ def indicator_create(request):
 @login_required
 @record_editor_required
 def indicator_update(request, pk):
-    indicator = get_object_or_404(Indicator, pk=pk)
+    indicator = get_object_or_404(Indicator, **identifier_lookup(pk))
     form = _indicator_form(request, instance=indicator)
     if request.method == "POST" and form.is_valid():
         indicator = form.save()
@@ -78,7 +79,7 @@ def indicator_update(request, pk):
 @record_editor_required
 @require_POST
 def indicator_delete(request, pk):
-    indicator = get_object_or_404(Indicator, pk=pk)
+    indicator = get_object_or_404(Indicator, **identifier_lookup(pk))
     indicator.delete()
     messages.success(request, "Indicator deleted successfully.")
     return redirect("projects:indicator_list")
@@ -87,7 +88,7 @@ def indicator_delete(request, pk):
 @login_required
 @record_editor_required
 def monitoring_form_create(request, indicator_id):
-    indicator = get_object_or_404(Indicator, pk=indicator_id)
+    indicator = get_object_or_404(Indicator, **identifier_lookup(indicator_id))
     if hasattr(indicator, "monitoring_form"):
         return redirect("projects:monitoring_form_update", indicator_id=indicator)
     form = MonitoringFormDefinitionForm(request.POST or None, indicator=indicator)
@@ -107,7 +108,7 @@ def monitoring_form_create(request, indicator_id):
 @login_required
 @record_editor_required
 def monitoring_form_update(request, indicator_id):
-    indicator = get_object_or_404(Indicator, pk=indicator_id)
+    indicator = get_object_or_404(Indicator, **identifier_lookup(indicator_id))
     monitoring_form = get_object_or_404(MonitoringForm, indicator=indicator)
     form = MonitoringFormDefinitionForm(request.POST or None, instance=monitoring_form, indicator=indicator)
     if request.method == "POST" and form.is_valid():
@@ -127,7 +128,7 @@ def monitoring_form_update(request, indicator_id):
 @record_editor_required
 @require_POST
 def monitoring_form_delete(request, indicator_id):
-    indicator = get_object_or_404(Indicator, pk=indicator_id)
+    indicator = get_object_or_404(Indicator, **identifier_lookup(indicator_id))
     MonitoringForm.objects.filter(indicator=indicator).delete()
     messages.success(request, "Indicator-specific monitoring fields removed. The standard ActivityData form is now used.")
     return redirect("projects:indicator_detail", pk=indicator)
@@ -150,7 +151,7 @@ def project_dashboard(request):
 @login_required
 @record_editor_required
 def activity_data_submit(request, pk):
-    activity = get_object_or_404(Indicator.objects.select_related("project", "monitoring_form"), pk=pk, active=True)
+    activity = get_object_or_404(Indicator.objects.select_related("project", "monitoring_form"), active=True, **identifier_lookup(pk))
     if not activity.project_id:
         messages.error(request, "This activity must be assigned to a project before data can be collected.")
         return redirect("monitoring:activity_dashboard")

@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from .access import backup_admin_required
 from .models import BackupAuditEvent, BackupJob
+from core.crud_support import identifier_lookup
 from .services import BackupError, create_backup, restore_backup as restore_backup_archive, verify_backup
 
 
@@ -32,7 +33,7 @@ def run_backup(request):
 
 @backup_admin_required
 def download_backup(request, pk):
-    job = get_object_or_404(BackupJob, pk=pk, status__in=[BackupJob.Status.SUCCESS, BackupJob.Status.RESTORED])
+    job = get_object_or_404(BackupJob, status__in=[BackupJob.Status.SUCCESS, BackupJob.Status.RESTORED], **identifier_lookup(pk))
     if not verify_backup(job):
         messages.error(request, "The backup failed integrity verification and cannot be downloaded.")
         return redirect("backups:dashboard")
@@ -42,7 +43,7 @@ def download_backup(request, pk):
 
 @backup_admin_required
 def restore_backup(request, pk):
-    job = get_object_or_404(BackupJob, pk=pk)
+    job = get_object_or_404(BackupJob, **identifier_lookup(pk))
     if request.method != "POST":
         return redirect("backups:dashboard")
     try:

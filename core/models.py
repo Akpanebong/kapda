@@ -29,7 +29,7 @@ class TimeStampedModel(models.Model):
             self.slug = f"{self._meta.model_name}-{uuid4().hex}"
             super().save(*args, **kwargs)
             base = slugify(self._slug_source()) or self._meta.model_name
-            self.slug = f"{base[:220]}-{self.pk}"
+            self.slug = f"{base[:210]}-{uuid4().hex[:10]}"
             type(self).objects.filter(pk=self.pk).update(slug=self.slug)
             return
         super().save(*args, **kwargs)
