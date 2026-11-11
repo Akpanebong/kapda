@@ -228,7 +228,7 @@
                         </td>
 
                         <td>
-                            <a href="{% url 'bslfsr:beneficiary_detail' item.pk %}"
+                            <a href="{% url 'bslfsr:beneficiary_detail' item %}"
                                class="beneficiary-name fw-semibold">
                                 {{ item.full_name }}
                             </a>
@@ -324,13 +324,13 @@
 
                         <td class="text-end">
                             <div class="d-inline-flex gap-1">
-<!--                                <a href="{% url 'bslfsr:beneficiary_detail' item.pk %}"-->
+<!--                                <a href="{% url 'bslfsr:beneficiary_detail' item %}"-->
 <!--                                   class="btn btn-sm btn-outline-secondary"-->
 <!--                                   aria-label="View {{ item.full_name }}">-->
 <!--                                    <i class="bi bi-eye" aria-hidden="true"></i>-->
 <!--                                </a>-->
 
-                                <a href="{% url 'bslfsr:beneficiary_update' item.pk %}"
+                                <a href="{% url 'bslfsr:beneficiary_update' item %}"
                                    class="btn btn-sm btn-outline-kapda"
                                    aria-label="Edit {{ item.full_name }}">
                                     <i class="bi bi-pencil-square"

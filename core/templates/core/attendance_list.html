@@ -245,7 +245,7 @@
                             <div class="d-inline-flex align-items-center gap-1">
                                 <a
                                     class="btn btn-sm btn-outline-kapda"
-                                    href="{% url 'data:field_attendance_detail' sheet.pk %}"
+                                    href="{% url 'data:field_attendance_detail' sheet %}"
                                     aria-label="View attendance sheet for {{ sheet.activity }}"
                                     title="View attendance"
                                 >
@@ -256,7 +256,7 @@
                                 {% if sheet.status != 'approved' or can_review %}
                                     <a
                                         class="btn btn-sm btn-outline-kapda"
-                                        href="{% url 'data:field_attendance_update' sheet.pk %}"
+                                        href="{% url 'data:field_attendance_update' sheet %}"
                                         aria-label="Edit attendance sheet for {{ sheet.activity }}"
                                         title="Edit attendance"
                                     >

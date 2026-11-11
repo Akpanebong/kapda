@@ -122,7 +122,7 @@ def _attendance_form(request, instance=None):
         formset.instance = sheet
         formset.save()
         messages.success(request, "Field attendance sheet saved successfully.")
-        return redirect("data:field_attendance_detail", pk=sheet.pk)
+        return redirect("data:field_attendance_detail", pk=sheet)
     return render(request, "core/attendance_form.html", {"form": form, "formset": formset, "object": instance})
 
 
@@ -155,7 +155,7 @@ def attendance_approve(request, pk):
         sheet.rejection_reason = ""
         sheet.save(update_fields=["status", "reviewed_by", "reviewed_at", "approved_by", "approved_signature", "approved_date", "rejection_reason", "updated_at"])
         messages.success(request, "Field attendance approved.")
-    return redirect("data:field_attendance_detail", pk=pk)
+    return redirect("data:field_attendance_detail", pk=sheet)
 
 
 @login_required
@@ -169,7 +169,7 @@ def attendance_reject(request, pk):
         sheet.rejection_reason = request.POST.get("rejection_reason", "").strip()
         sheet.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason", "updated_at"])
         messages.warning(request, "Field attendance rejected and returned for correction.")
-    return redirect("data:field_attendance_detail", pk=pk)
+    return redirect("data:field_attendance_detail", pk=sheet)
 
 
 def _attendance_filtered_queryset(request, approved_only=False):

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils.text import slugify
 
 
 class BackupJob(models.Model):
@@ -23,6 +24,15 @@ class BackupJob(models.Model):
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
         related_name="backup_jobs",
     )
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, editable=False, db_index=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            super().save(*args, **kwargs)
+            self.slug = f"{slugify(self.archive_name or 'backup')[:220]}-{self.pk}"
+            type(self).objects.filter(pk=self.pk).update(slug=self.slug)
+            return
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ("-created_at",)
@@ -44,4 +54,3 @@ class BackupAuditEvent(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
-

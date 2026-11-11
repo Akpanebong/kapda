@@ -27,6 +27,8 @@ class ErrorReportingTests(SimpleTestCase):
 
         self.assertEqual(report_id, cache.get(f"error-report:{report_id}")["report_id"])
         self.assertIn("RuntimeError: database unavailable", details["traceback"])
+        self.assertEqual(details["error_location"]["function"], "test_report_contains_traceback_and_request_context")
+        self.assertIn("tests.py", details["error_location"]["file"])
         self.assertEqual(details["request"]["path"], "/broken/?from=test")
 
     def test_sends_complete_report_to_email_host_user(self):
@@ -50,6 +52,7 @@ class ErrorReportingTests(SimpleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["errors@example.org"])
         self.assertIn("ValueError: bad value", mail.outbox[0].body)
+        self.assertIn("Error location", mail.outbox[0].body)
 
     def test_report_button_posts_and_consumes_stored_report(self):
         details = {

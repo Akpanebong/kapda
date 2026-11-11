@@ -57,7 +57,7 @@
                         </td>
 
                         <td>
-                            <a href="{% url 'learners:uneb_result_detail' item.pk %}"
+                            <a href="{% url 'learners:uneb_result_detail' item %}"
                                class="fw-semibold text-decoration-none">
                                 {{ item.learner }}
                             </a>
@@ -88,13 +88,13 @@
                         </td>
 
                         <td class="text-end text-nowrap">
-                            <a href="{% url 'learners:uneb_result_detail' item.pk %}"
+                            <a href="{% url 'learners:uneb_result_detail' item %}"
                                class="btn btn-sm btn-outline-secondary"
                                aria-label="View UNEB result for {{ item.learner }}">
                                 <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
 
-                            <a href="{% url 'learners:uneb_result_update' item.pk %}"
+                            <a href="{% url 'learners:uneb_result_update' item %}"
                                class="btn btn-sm btn-outline-kapda"
                                aria-label="Edit UNEB result for {{ item.learner }}">
                                 <i class="bi bi-pencil-square" aria-hidden="true"></i>

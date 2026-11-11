@@ -58,7 +58,7 @@ def indicator_create(request):
     if request.method == "POST" and form.is_valid():
         indicator = form.save()
         messages.success(request, "Indicator created successfully.")
-        return redirect("projects:indicator_detail", pk=indicator.pk)
+        return redirect("projects:indicator_detail", pk=indicator)
     return render(request, "projects/indicator_form.html", {"form": form, "indicator": None, "creating": True, "model_name": "indicator"})
 
 
@@ -70,7 +70,7 @@ def indicator_update(request, pk):
     if request.method == "POST" and form.is_valid():
         indicator = form.save()
         messages.success(request, "Indicator updated successfully.")
-        return redirect("projects:indicator_detail", pk=indicator.pk)
+        return redirect("projects:indicator_detail", pk=indicator)
     return render(request, "projects/indicator_form.html", {"form": form, "indicator": indicator, "creating": False, "model_name": "indicator"})
 
 
@@ -89,12 +89,12 @@ def indicator_delete(request, pk):
 def monitoring_form_create(request, indicator_id):
     indicator = get_object_or_404(Indicator, pk=indicator_id)
     if hasattr(indicator, "monitoring_form"):
-        return redirect("projects:monitoring_form_update", indicator_id=indicator.pk)
+        return redirect("projects:monitoring_form_update", indicator_id=indicator)
     form = MonitoringFormDefinitionForm(request.POST or None, indicator=indicator)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Indicator monitoring fields saved.")
-        return redirect("projects:indicator_detail", pk=indicator.pk)
+        return redirect("projects:indicator_detail", pk=indicator)
     return render(request, "projects/monitoring_form_form.html", {
         "form": form,
         "indicator": indicator,
@@ -113,7 +113,7 @@ def monitoring_form_update(request, indicator_id):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Indicator monitoring fields updated.")
-        return redirect("projects:indicator_detail", pk=indicator.pk)
+        return redirect("projects:indicator_detail", pk=indicator)
     return render(request, "projects/monitoring_form_form.html", {
         "form": form,
         "indicator": indicator,
@@ -130,7 +130,7 @@ def monitoring_form_delete(request, indicator_id):
     indicator = get_object_or_404(Indicator, pk=indicator_id)
     MonitoringForm.objects.filter(indicator=indicator).delete()
     messages.success(request, "Indicator-specific monitoring fields removed. The standard ActivityData form is now used.")
-    return redirect("projects:indicator_detail", pk=indicator.pk)
+    return redirect("projects:indicator_detail", pk=indicator)
 
 
 @login_required

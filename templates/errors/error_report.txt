@@ -2,6 +2,14 @@ KAPDA application error report
 Report ID: {{ details.report_id }}
 Exception: {{ details.exception_type }}
 Message: {{ details.exception_message }}
+Exception object: {{ details.exception_repr }}
+
+Error location
+==============
+File: {{ details.error_location.file }}
+Line: {{ details.error_location.line }}
+Function: {{ details.error_location.function }}
+Source: {{ details.error_location.source }}
 
 Request
 =======

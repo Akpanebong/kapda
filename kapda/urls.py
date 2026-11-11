@@ -2,6 +2,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls.converters import register_converter
+from .url_converters import PrimaryKeySlugConverter
+
+register_converter(PrimaryKeySlugConverter, "pk_slug")
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),

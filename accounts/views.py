@@ -6,8 +6,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .forms import CredentialResetForm, LoginForm, StaffForm
 from .models import User
 from .access import system_admin_required
+
 class KAPDALoginView(LoginView):
-    template_name = "accounts/login.html"
+    template_name = "accounts/loginkk.html"
     authentication_form = LoginForm
 
 

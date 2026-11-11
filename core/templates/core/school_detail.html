@@ -554,7 +554,7 @@
                 Back to schools
             </a>
             <a class="btn btn-kapda"
-               href="{% url 'data:school_update' school.pk %}">
+               href="{% url 'data:school_update' school %}">
                 <i class="bi bi-pencil" aria-hidden="true"></i>
                 Edit school
             </a>
@@ -731,7 +731,7 @@
                     <tr>
                         <td>
                             <a class="learner-link"
-                               href="{% url 'learners:detail' enrolment.learner.pk %}">
+                               href="{% url 'learners:detail' enrolment.learner %}">
                                 {{ enrolment.learner.full_name }}
                             </a>
                             <span class="muted-line">{{ enrolment.learner.reg_no|default:"ID not recorded" }}</span>

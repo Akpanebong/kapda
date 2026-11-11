@@ -127,7 +127,7 @@
                             <div class="household-actions">
                                 <a
                                     class="btn btn-sm btn-outline-kapda"
-                                    href="{% url 'data:household_detail' item.pk %}"
+                                    href="{% url 'data:household_detail' item %}"
                                     aria-label="View household {{ item.household_id }}"
                                     title="View household"
                                 >
@@ -137,7 +137,7 @@
 
                                 <a
                                     class="btn btn-sm btn-light border"
-                                    href="{% url 'data:household_update' item.pk %}"
+                                    href="{% url 'data:household_update' item %}"
                                     aria-label="Edit household {{ item.household_id }}"
                                     title="Edit household"
                                 >
@@ -147,7 +147,7 @@
 
                                 <form
                                     method="post"
-                                    action="{% url 'data:household_delete' item.pk %}"
+                                    action="{% url 'data:household_delete' item %}"
                                     class="d-inline"
                                     onsubmit="return confirm('Delete this household record? This action may not be reversible.');"
                                 >

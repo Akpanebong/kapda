@@ -2,7 +2,7 @@
 {% block title %}{% if creating %}Define{% else %}Edit{% endif %} monitoring fields | KAPDA{% endblock %}
 {% block page_heading %}{% if creating %}Define{% else %}Edit{% endif %} monitoring fields{% endblock %}
 {% block content %}
-<div class="page-intro"><div><h1>{% if creating %}Define{% else %}Edit{% endif %} monitoring fields</h1><p>{{ indicator.code }} · {{ indicator.name }}</p></div><a class="btn btn-light border" href="{% url 'projects:indicator_detail' indicator.pk %}">Back to indicator</a></div>
+<div class="page-intro"><div><h1>{% if creating %}Define{% else %}Edit{% endif %} monitoring fields</h1><p>{{ indicator.code }} · {{ indicator.name }}</p></div><a class="btn btn-light border" href="{% url 'projects:indicator_detail' indicator %}">Back to indicator</a></div>
 <form method="post" class="panel form-panel" id="monitoring-form" novalidate>
   {% csrf_token %}
   {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
@@ -18,7 +18,7 @@
     </div>
     <div class="col-12 form-check ms-2">{{ form.is_active }}<label class="form-check-label" for="{{ form.is_active.id_for_label }}">Use these fields when collecting activity data</label></div>
   </div>
-  <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top"><a class="btn btn-light border" href="{% url 'projects:indicator_detail' indicator.pk %}">Cancel</a><button class="btn btn-kapda" type="submit">Save monitoring fields</button></div>
+  <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top"><a class="btn btn-light border" href="{% url 'projects:indicator_detail' indicator %}">Cancel</a><button class="btn btn-kapda" type="submit">Save monitoring fields</button></div>
 </form>
 <style>.schema-section{background:#f8fafc}.schema-field{background:#fff}.field-key{font-size:.78rem;color:#6c757d}</style>
 <script id="initial-schema" type="application/json">{{ schema_json|safe }}</script>

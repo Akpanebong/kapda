@@ -295,27 +295,42 @@ def learner_create(request):
         if project_id:
             from projects.models import Project
             project=get_object_or_404(Project,pk=project_id)
-            LearnerProject.objects.get_or_create(learner=learner,project=project,defaults={"start_date":learner.admission_date})
+            LearnerProject.objects.get_or_create(learner=learner,project=project,
+                                                 defaults={"start_date":learner.admission_date})
         messages.success(request,f"Learner registered successfully. KAPDA ID: {learner.reg_no}")
-        return redirect("learners:detail",pk=learner.pk)
+        return redirect("learners:detail", pk = learner.pk)
     from projects.models import Project
-    return render(request,"learners/learner_registration_form.html",{"form":form,"projects":Project.objects.filter(active=True)})
+    return render(request,"learners/learner_registration_form.html",
+                  {"form":form,"projects":Project.objects.filter(active=True)})
+
 
 @login_required
-def learner_detail(request,pk):
-    learner=get_object_or_404(Learner.objects.select_related("location"),pk=pk)
-    return render(request,"learners/detail.html",{"learner":learner,"employment":getattr(learner, "employment", None),"enrolments":learner.enrolments.select_related("school","project","academic_year").order_by("-academic_year__start_date"),"attendance":learner.attendance_records.select_related("term").order_by("-term__start_date")[:8],"assessments":learner.assessments.select_related("term").order_by("-term__start_date")[:12],"supports":learner.supports.select_related("project","term").order_by("-distribution_date"),"uneb":learner.uneb_results.select_related("school","academic_year").order_by("-examination_year")})
+def learner_detail(request, pk):
+    from core.crud_support import identifier_lookup
+    learner=get_object_or_404(Learner.objects.select_related("location"), **identifier_lookup(pk))
+    return render(request,"learners/detail.html",
+                  {"learner":learner,"employment":getattr(learner, "employment", None),
+                   "enrolments":learner.enrolments.select_related("school","project","academic_year")
+                  .order_by("-academic_year__start_date"),"attendance":learner.attendance_records
+                  .select_related("term").order_by("-term__start_date")[:8],"assessments":learner
+                  .assessments.select_related("term").order_by("-term__start_date")[:12],
+                   "supports":learner.supports.select_related("project","term")
+                  .order_by("-distribution_date"),"uneb":learner.uneb_results.select_related("school", "academic_year")
+                  .order_by("-examination_year")})
+
 
 @login_required
 def status_history_list(request, learner_slug):
-    learner = get_object_or_404(Learner, reg_no__iexact=learner_slug)
+    from core.crud_support import identifier_lookup
+    learner = get_object_or_404(Learner, **identifier_lookup(learner_slug))
     history = learner.status_history.select_related("recorded_by").all()
     return render(request, "learners/status_history_list.html", {"learner": learner, "history": history})
 
 @login_required
 @record_editor_required
 def status_history_create(request, learner_slug):
-    learner = get_object_or_404(Learner, reg_no__iexact=learner_slug)
+    from core.crud_support import identifier_lookup
+    learner = get_object_or_404(Learner, **identifier_lookup(learner_slug))
     form = LearnerStatusHistoryForm(request.POST or None, learner=learner)
     if request.method == "POST" and form.is_valid():
         history = form.save(commit=False)
@@ -323,7 +338,7 @@ def status_history_create(request, learner_slug):
         history.recorded_by = request.user
         history.save()
         messages.success(request, f"{learner.full_name}'s status was updated to {history.get_new_status_display()}.")
-        return redirect("learners:status_history_list", learner_slug=learner.reg_no.lower())
+        return redirect("learners:status_history_list", learner_slug=learner)
     return render(request, "learners/status_history_form.html", {"form": form, "learner": learner})
 
 @login_required
@@ -336,7 +351,8 @@ def employment_list(request):
 
 @login_required
 def learner_employment_list(request, learner_slug):
-    learner = get_object_or_404(Learner, reg_no__iexact=learner_slug)
+    from core.crud_support import identifier_lookup
+    learner = get_object_or_404(Learner, **identifier_lookup(learner_slug))
     records = LearnerEmployment.objects.filter(learner=learner).select_related("learner")
     return render(request, "learners/employment_list.html", {
         "records": records,
@@ -354,7 +370,7 @@ def employment_create(request, pk):
         employment.learner = learner
         employment.save()
         messages.success(request, "Employment outcome recorded successfully.")
-        return redirect("learners:detail", pk=learner.pk)
+        return redirect("learners:detail", pk=learner)
     return render(request, "learners/employment_form.html", {"form": form, "learner": learner})
 
 @login_required
@@ -384,7 +400,7 @@ def support_create(request, pk):
             support.unit = materials[0]["unit"].strip()
         support.save()
         messages.success(request, "Learner support recorded successfully.")
-        return redirect("learners:detail", pk=learner.pk)
+        return redirect("learners:detail", pk=learner)
     return render(request, "learners/support_form.html", {"form": form, "material_forms": material_forms, "learner": learner})
 
 @login_required
@@ -406,7 +422,7 @@ def enrolment_create(request,pk):
         academic_year = form.cleaned_data["academic_year"]
         if Enrolment.objects.filter(learner=learner, school=school).exists():
             messages.error(request, f"{learner.full_name} already has an enrolment history at {school}. A learner cannot be enrolled or transferred to the same school twice.")
-            return redirect("learners:detail", pk=learner.pk)
+            return redirect("learners:detail", pk=learner)
         e=form.save(commit=False); e.learner=learner
         try:
             with transaction.atomic():
@@ -416,11 +432,11 @@ def enrolment_create(request,pk):
                 e.save()
         except IntegrityError:
             messages.error(request, f"The enrolment could not be saved because this learner already has that school or another current enrolment.")
-            return redirect("learners:detail", pk=learner.pk)
+            return redirect("learners:detail", pk=learner)
         learner.current_class=e.class_level; learner.save(update_fields=["current_class","updated_at"])
         LearnerProject.objects.get_or_create(learner=learner,project=e.project,defaults={"start_date":e.academic_year.start_date})
         messages.success(request, "Transfer completed." if learner.enrolments.filter(outcome="transferred").exists() else "Enrolment saved.")
-        return redirect("learners:detail",pk=learner.pk)
+        return redirect("learners:detail",pk=learner)
     return render(request,"learners/enrolment_create_form.html",{"form":form,"learner":learner})
 
 @login_required

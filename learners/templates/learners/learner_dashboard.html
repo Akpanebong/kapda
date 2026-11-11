@@ -621,7 +621,7 @@
                     {% for l in learners %}
                     <tr>
                         <td>
-                            <a class="id-link" href="{% url 'learners:detail' l.pk %}">
+                            <a class="id-link" href="{% url 'learners:detail' l %}">
                                 {{ l.reg_no|default:"Not assigned" }}
                             </a>
                         </td>
@@ -665,7 +665,7 @@
                         </td>
                         <td class="text-end">
                             <a class="icon-action"
-                               href="{% url 'learners:detail' l.pk %}"
+                               href="{% url 'learners:detail' l %}"
                                aria-label="View {{ l.full_name }}"
                                title="View learner">
                                 <i class="bi bi-chevron-right" aria-hidden="true"></i>

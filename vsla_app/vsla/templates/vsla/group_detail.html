@@ -246,7 +246,7 @@
                             {% for member in members %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'vsla:member_detail' member.member_no %}"
+                                    <a href="{% url 'vsla:member_detail' member %}"
                                        class="vsla-group-name">
                                         {{ member.full_name }}
                                     </a>
@@ -309,7 +309,7 @@
                                 <td class="text-nowrap">
                                     {{ tx.transaction_date|date:"d M Y" }}
                                 </td>
-                                <td><a href="{% url 'vsla:member_detail' tx.member.member_no %}">{{ tx.member.full_name }}</a></td>
+                                <td><a href="{% url 'vsla:member_detail' tx.member %}">{{ tx.member.full_name }}</a></td>
                                 <td>{{ tx.get_transaction_type_display }}</td>
                                 <td class="text-end text-nowrap fw-semibold">
                                     {{ tx.amount|floatformat:0|intcomma }}
@@ -364,7 +364,7 @@
                         <td class="fw-semibold">
                             {{ loan.loan_no }}
                         </td>
-                        <td><a href="{% url 'vsla:member_detail' loan.member.member_no %}">{{ loan.member.full_name }}</a></td>
+                        <td><a href="{% url 'vsla:member_detail' loan.member %}">{{ loan.member.full_name }}</a></td>
                         <td class="text-nowrap">
                             <span class="small text-muted">UGX</span>
                             {{ loan.requested_amount|floatformat:0|intcomma }}
@@ -375,7 +375,7 @@
                             </span>
                         </td>
                         <td class="text-end">
-                            <a href="{% url 'vsla:loan_detail' loan.loan_no %}"
+                            <a href="{% url 'vsla:loan_detail' loan %}"
                                class="btn btn-sm btn-outline-secondary text-nowrap">
                                 View loan
                                 <i class="bi bi-arrow-right ms-1"></i>
@@ -404,7 +404,7 @@
             <div class="d-flex gap-2"><span class="vsla-count">{{ social_fund_count }}</span><a class="btn btn-sm btn-outline-secondary" href="{% url 'vsla:social_fund' %}?group={{ group.pk }}">View all</a></div>
         </div>
         <div class="table-responsive"><table class="table table-hover align-middle vsla-table mb-0"><thead><tr><th>Date</th><th>Member / beneficiary</th><th>Type</th><th class="text-end">Amount</th><th>Status</th></tr></thead><tbody>
-        {% for tx in social_transactions %}<tr><td>{{ tx.transaction_date|date:"d M Y" }}</td><td>{% if tx.member %}<a href="{% url 'vsla:member_detail' tx.member.member_no %}">{{ tx.member.full_name }}</a>{% else %}{{ tx.beneficiary_name|default:"—" }}{% endif %}</td><td>{{ tx.get_transaction_type_display }}</td><td class="text-end">UGX {{ tx.amount|floatformat:0|intcomma }}</td><td><span class="status-pill status-{{ tx.status }}">{{ tx.get_status_display }}</span></td></tr>{% empty %}<tr><td colspan="5" class="text-center py-4 text-muted">No social fund transactions recorded for this group.</td></tr>{% endfor %}
+        {% for tx in social_transactions %}<tr><td>{{ tx.transaction_date|date:"d M Y" }}</td><td>{% if tx.member %}<a href="{% url 'vsla:member_detail' tx.member %}">{{ tx.member.full_name }}</a>{% else %}{{ tx.beneficiary_name|default:"—" }}{% endif %}</td><td>{{ tx.get_transaction_type_display }}</td><td class="text-end">UGX {{ tx.amount|floatformat:0|intcomma }}</td><td><span class="status-pill status-{{ tx.status }}">{{ tx.get_status_display }}</span></td></tr>{% empty %}<tr><td colspan="5" class="text-center py-4 text-muted">No social fund transactions recorded for this group.</td></tr>{% endfor %}
         </tbody></table></div>
     </section>
 
@@ -437,7 +437,7 @@
                         <td>{{ meeting.meeting_number|default:"—" }}{% if meeting.venue %}<div class="small text-muted">{{ meeting.venue }}</div>{% endif %}</td>
                         <td><span class="status-pill status-{{ meeting.status }}">{{ meeting.get_status_display }}</span></td>
                         <td>{{ meeting.attendance_present }} present / {{ meeting.attendance_total }} recorded</td>
-                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'vsla:attendance_detail' group.slug meeting.pk %}">View participants</a></td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'vsla:attendance_detail' group.slug meeting %}">View participants</a></td>
                     </tr>
                 {% empty %}
                     <tr><td colspan="5" class="text-center py-4 text-muted">No meetings recorded for this group.</td></tr>

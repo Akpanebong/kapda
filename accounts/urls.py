@@ -5,7 +5,12 @@ from django.contrib.auth.views import (
 )
 from .views import KAPDALoginView, account_credentials, staff_list, staff_create, staff_update
 app_name = "accounts"
-urlpatterns = [path("login/", KAPDALoginView.as_view(), name="login"), path("logout/", LogoutView.as_view(), name="logout"), path("account/credentials/", account_credentials, name="account_credentials"), path("staff/", staff_list, name="staff_list"), path("staff/add/", staff_create, name="staff_create"), path("staff/<int:pk>/edit/", staff_update, name="staff_update")]
+urlpatterns = [path("login/", KAPDALoginView.as_view(), name="login"),
+               path("logout/", LogoutView.as_view(), name="logout"),
+               path("account/credentials/", account_credentials, name="account_credentials"),
+               path("staff/", staff_list, name="staff_list"),
+               path("staff/add/", staff_create, name="staff_create"),
+               path("staff/<pk_slug:pk>/edit/", staff_update, name="staff_update")]
 urlpatterns += [
     path("password-reset/", PasswordResetView.as_view(
         template_name="accounts/password_reset_form.html",

@@ -81,6 +81,7 @@ class VSLAMember(TimeStampedModel):
         DECEASED = "deceased", "Deceased"
 
     group = models.ForeignKey(VSLAGroup, on_delete=models.PROTECT, related_name="members")
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, editable=False, db_index=True)
     member_no = models.CharField(max_length=40, unique=True, blank=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -109,6 +110,9 @@ class VSLAMember(TimeStampedModel):
         if not self.member_no:
             self.member_no = f"MEM-{timezone.localdate():%y%m}-{uuid4().hex[:7].upper()}"
         super().save(*args, **kwargs)
+        if not self.slug:
+            self.slug = f"{slugify(self.full_name)[:220]}-{self.pk}"
+            type(self).objects.filter(pk=self.pk).update(slug=self.slug)
 
     @property
     def full_name(self):
@@ -189,6 +193,7 @@ class Loan(TimeStampedModel):
 
     group = models.ForeignKey(VSLAGroup, on_delete=models.PROTECT, related_name="loans")
     member = models.ForeignKey(VSLAMember, on_delete=models.PROTECT, related_name="loans")
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, editable=False, db_index=True)
     loan_no = models.CharField(max_length=40, unique=True, blank=True)
     requested_amount = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("1"))])
     approved_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("1"))])
@@ -215,6 +220,9 @@ class Loan(TimeStampedModel):
         if not self.loan_no:
             self.loan_no = f"LN-{timezone.localdate():%y%m}-{uuid4().hex[:7].upper()}"
         super().save(*args, **kwargs)
+        if not self.slug:
+            self.slug = f"{slugify(self.loan_no)[:220]}-{self.pk}"
+            type(self).objects.filter(pk=self.pk).update(slug=self.slug)
 
     def clean(self):
         if self.member_id and self.group_id and self.member.group_id != self.group_id:
@@ -274,6 +282,7 @@ class VSLA_Meeting(TimeStampedModel):
         HELD = "held", "Held"
         CANCELLED = "cancelled", "Cancelled"
     title = models.CharField(max_length=200, blank=True, null=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, editable=False, db_index=True)
     group = models.ForeignKey(VSLAGroup, on_delete=models.PROTECT, related_name="meetings")
     meeting_date = models.DateField(default=timezone.localdate)
     meeting_number = models.PositiveIntegerField(null=True, blank=True)
@@ -290,6 +299,14 @@ class VSLA_Meeting(TimeStampedModel):
     def __str__(self):
         return (f"{self.title if self.title else self.group.name} "
                 f"— ({self.meeting_date})")
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            super().save(*args, **kwargs)
+            self.slug = f"{slugify(str(self))[:220]}-{self.pk}"
+            type(self).objects.filter(pk=self.pk).update(slug=self.slug)
+            return
+        super().save(*args, **kwargs)
 
 
 class MeetingAttendance(TimeStampedModel):

@@ -393,13 +393,14 @@ def member_create(request):
         obj.registered_by = request.user
         obj.save()
         messages.success(request, f"{obj.full_name} was registered successfully.")
-        return redirect("vsla:member_detail", member_no=obj.member_no)
+        return redirect("vsla:member_detail", member_no=obj)
     return render(request, "vsla/member_form.html", {"form": form, "title": "Register Member", "eyebrow": "MEMBER REGISTRY", "cancel_url": "vsla:members"})
 
 
 @vsla_access_required
 def member_detail(request, member_no):
-    member = get_object_or_404(VSLAMember.objects.select_related("group"), member_no=member_no)
+    from core.crud_support import identifier_lookup
+    member = get_object_or_404(VSLAMember.objects.select_related("group"), **identifier_lookup(member_no))
     savings = member.savings_transactions.order_by("-transaction_date", "-created_at")[:20]
     loans = member.loans.order_by("-created_at")
     total_saved = member.savings_transactions.filter(status=LedgerEntry.Status.POSTED, transaction_type=SavingsTransaction.Type.DEPOSIT).aggregate(v=Sum("amount"))["v"] or Decimal("0")
@@ -479,13 +480,14 @@ def loan_create(request):
         obj.submitted_by = request.user
         obj.save()
         messages.success(request, f"Loan application {obj.loan_no} saved as draft.")
-        return redirect("vsla:loan_detail", loan_no=obj.loan_no)
+        return redirect("vsla:loan_detail", loan_no=obj)
     return render(request, "vsla/loan_form.html", {"form": form, "title": "New Loan Application", "eyebrow": "CREDIT MANAGEMENT", "cancel_url": "vsla:loans"})
 
 
 @vsla_access_required
 def loan_detail(request, loan_no):
-    loan = get_object_or_404(Loan.objects.select_related("group", "member"), loan_no=loan_no)
+    from core.crud_support import identifier_lookup
+    loan = get_object_or_404(Loan.objects.select_related("group", "member"), **identifier_lookup(loan_no))
     repayments = loan.repayments.filter(status=LedgerEntry.Status.POSTED).order_by("-transaction_date")
     return render(request, "vsla/loan_detail.html", {"loan": loan, "repayments": repayments, "repayment_form": LoanRepaymentForm(), "title": loan.loan_no})
 
@@ -494,21 +496,23 @@ def loan_detail(request, loan_no):
 @record_editor_required
 @require_POST
 def loan_submit(request, loan_no):
-    loan = get_object_or_404(Loan, loan_no=loan_no)
+    from core.crud_support import identifier_lookup
+    loan = get_object_or_404(Loan, **identifier_lookup(loan_no))
     if loan.status != Loan.Status.DRAFT:
         messages.error(request, "Only draft loan applications can be submitted.")
     else:
         loan.status = Loan.Status.SUBMITTED
         loan.save(update_fields=["status", "updated_at"])
         messages.success(request, "Loan application submitted for review.")
-    return redirect("vsla:loan_detail", loan_no=loan_no)
+    return redirect("vsla:loan_detail", loan_no=loan)
 
 
 @vsla_access_required
 @record_editor_required
 @require_POST
 def loan_decision(request, loan_no):
-    loan = get_object_or_404(Loan, loan_no=loan_no)
+    from core.crud_support import identifier_lookup
+    loan = get_object_or_404(Loan, **identifier_lookup(loan_no))
     decision = request.POST.get("decision")
     comment = request.POST.get("comment", "").strip()
     if decision in {"approve", "reject"} and loan.status != Loan.Status.SUBMITTED:
@@ -520,7 +524,7 @@ def loan_decision(request, loan_no):
                 raise ValueError
         except (ValueError, ArithmeticError):
             messages.error(request, "Enter a valid approved amount not exceeding the requested amount.")
-            return redirect("vsla:loan_detail", loan_no=loan_no)
+            return redirect("vsla:loan_detail", loan_no=loan)
         loan.approved_amount = amount
         loan.status = Loan.Status.APPROVED
         loan.reviewed_by = request.user
@@ -547,14 +551,15 @@ def loan_decision(request, loan_no):
             messages.success(request, "Loan marked as disbursed.")
     else:
         messages.error(request, "Unknown loan decision.")
-    return redirect("vsla:loan_detail", loan_no=loan_no)
+    return redirect("vsla:loan_detail", loan_no=loan)
 
 
 @vsla_access_required
 @record_editor_required
 @require_POST
 def repayment_create(request, loan_no):
-    loan = get_object_or_404(Loan, loan_no=loan_no)
+    from core.crud_support import identifier_lookup
+    loan = get_object_or_404(Loan, **identifier_lookup(loan_no))
     form = LoanRepaymentForm(request.POST)
     if form.is_valid():
         obj = form.save(commit=False)
@@ -569,7 +574,7 @@ def repayment_create(request, loan_no):
             messages.success(request, "Loan repayment recorded.")
     else:
         messages.error(request, "Please correct the repayment details.")
-    return redirect("vsla:loan_detail", loan_no=loan_no)
+    return redirect("vsla:loan_detail", loan_no=loan)
 
 
 @vsla_access_required

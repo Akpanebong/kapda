@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
 from uuid import uuid4
 
 
@@ -13,6 +14,26 @@ def initials_from_name(value):
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, editable=False, db_index=True)
+
+    def _slug_source(self):
+        for attribute in ("full_name", "name", "title", "code", "reg_no", "beneficiary_id", "committee_id", "household_id", "loan_no", "member_no", "transaction_ref"):
+            value = getattr(self, attribute, None)
+            if value:
+                return str(value)
+        return str(self)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = f"{self._meta.model_name}-{uuid4().hex}"
+            super().save(*args, **kwargs)
+            base = slugify(self._slug_source()) or self._meta.model_name
+            self.slug = f"{base[:220]}-{self.pk}"
+            type(self).objects.filter(pk=self.pk).update(slug=self.slug)
+            return
+        super().save(*args, **kwargs)
+
     class Meta:
         abstract = True
 

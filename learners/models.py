@@ -66,7 +66,7 @@ class Learner(TimeStampedModel):
         if not self.reg_no:
             self.reg_no = "KAPDA-LEARNER-PENDING"
             super().save(*args, **kwargs)
-            self.reg_no = f"KAPDA-LEARNER-{self.pk:06d}"
+            self.reg_no = f"KAPDA-LEARNER-{self.pk:03d}"
             type(self).objects.filter(pk=self.pk).update(reg_no=self.reg_no)
             if self.status == self.Status.COMPLETED:
                 Enrolment.objects.filter(learner_id=self.pk).update(outcome="completed")

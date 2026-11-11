@@ -405,7 +405,7 @@
                         {% for loan in recent_loans %}
                         <div class="vsla-loan-item">
                             <div class="vsla-loan-main">
-                                <a href="{% url 'vsla:loan_detail' loan.loan_no %}" class="vsla-loan-number">
+                                <a href="{% url 'vsla:loan_detail' loan %}" class="vsla-loan-number">
                                     {{ loan.loan_no }}
                                 </a>
 

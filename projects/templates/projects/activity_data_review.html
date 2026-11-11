@@ -7,7 +7,7 @@
         <h1 class="mb-1">Review activity data</h1>
         <p class="mb-0">{{ object.activity.name|default:"Activity submission" }} - Record #{{ object.pk }}</p>
     </div>
-    <a class="btn btn-light border" href="{% url 'projects:activity_data_detail' object.pk %}">Cancel</a>
+    <a class="btn btn-light border" href="{% url 'projects:activity_data_detail' object %}">Cancel</a>
 </div>
 
 <section class="panel p-4" style="max-width: 760px;">
@@ -29,7 +29,7 @@
         {% endfor %}
         <div class="d-flex gap-2 pt-2">
             <button class="btn btn-kapda" type="submit"><i class="bi bi-check2-circle me-1"></i>Save review</button>
-            <a class="btn btn-light border" href="{% url 'projects:activity_data_detail' object.pk %}">Cancel</a>
+            <a class="btn btn-light border" href="{% url 'projects:activity_data_detail' object %}">Cancel</a>
         </div>
     </form>
 </section>

@@ -10,8 +10,8 @@ from accounts.access import record_editor_required
 
 
 def _list(request, title, description, headings, records, values, create_url, edit_name, delete_name, template):
-    rows = [{"values": row_values, "edit_url": reverse(edit_name, kwargs={"pk": record.pk}),
-             "delete_url": reverse(delete_name, kwargs={"pk": record.pk})}
+    rows = [{"values": row_values, "edit_url": reverse(edit_name, kwargs={"pk": record}),
+             "delete_url": reverse(delete_name, kwargs={"pk": record})}
             for record, row_values in zip(records, values)]
     return render(request, template, {"title": title, "description": description,
         "headings": headings, "rows": rows, "create_url": create_url})

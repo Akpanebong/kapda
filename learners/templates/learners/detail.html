@@ -520,17 +520,17 @@
 
         <div class="learner-profile-actions">
             <a class="btn btn-kapda"
-               href="{% url 'learners:support_create' learner.pk %}">
+               href="{% url 'learners:support_create' learner %}">
                 <i class="bi bi-heart-pulse"></i>
                 Record support
             </a>
 
             <a class="btn btn-kapda"
-               href="{% url 'learners:enrolment_create' learner.pk %}">
+               href="{% url 'learners:enrolment_create' learner %}">
                 <i class="bi bi-plus-lg"></i>
                 Add enrolment
             </a>
-            {% if learner.status == 'completed' %}<a class="btn btn-kapda" href="{% url 'learners:employment_create' learner.pk %}"><i class="bi bi-briefcase"></i> Record employment</a>{% endif %}
+            {% if learner.status == 'completed' %}<a class="btn btn-kapda" href="{% url 'learners:employment_create' learner %}"><i class="bi bi-briefcase"></i> Record employment</a>{% endif %}
         </div>
     </section>
 
@@ -613,7 +613,7 @@
             <div class="learner-action-list">
 
                 <a class="learner-action-row"
-                   href="{% url 'learners:enrolment_create' learner.pk %}">
+                   href="{% url 'learners:enrolment_create' learner %}">
                     <span class="learner-action-icon">
                         <i class="bi bi-journal-plus"></i>
                     </span>
@@ -625,7 +625,7 @@
                 </a>
 
                 <a class="learner-action-row"
-                   href="{% url 'learners:support_create' learner.pk %}">
+                   href="{% url 'learners:support_create' learner %}">
                     <span class="learner-action-icon">
                         <i class="bi bi-heart-pulse"></i>
                     </span>
@@ -673,7 +673,7 @@
                 </a>
 
                 <a class="learner-action-row"
-                   href="{% url 'learners:status_history_list' learner.reg_no|lower %}">
+                   href="{% url 'learners:status_history_list' learner %}">
                     <span class="learner-action-icon">
                         <i class="bi bi-clock-history"></i>
                     </span>
@@ -700,7 +700,7 @@
         </section>
     </div>
 
-    {% if learner.status == 'completed' %}<section class="panel mt-4"><div class="panel-head"><div><h2><i class="bi bi-briefcase me-2"></i>Employment outcome</h2><p>Post-completion employment information.</p></div><div class="d-flex gap-2"><a class="btn btn-sm btn-outline-kapda" href="{% url 'learners:learner_employment_list' learner.reg_no|lower %}">View employment list</a><a class="btn btn-sm btn-outline-kapda" href="{% url 'learners:employment_create' learner.pk %}">{% if employment %}Update outcome{% else %}Record employment{% endif %}</a></div></div>{% if employment %}<div class="row g-3 p-3"><div class="col-md-3"><small class="text-muted">Employer</small><strong class="d-block">{{ employment.employer }}</strong></div><div class="col-md-3"><small class="text-muted">Job title</small><strong class="d-block">{{ employment.job_title }}</strong></div><div class="col-md-2"><small class="text-muted">Year employed</small><strong class="d-block">{{ employment.year_employed }}</strong></div><div class="col-md-2"><small class="text-muted">Type</small><strong class="d-block">{{ employment.employment_type|default:"—" }}</strong></div><div class="col-md-2"><small class="text-muted">Location</small><strong class="d-block">{{ employment.work_location|default:"—" }}</strong></div></div>{% else %}<div class="p-3 text-muted">No employment outcome recorded yet.</div>{% endif %}</section>{% endif %}
+    {% if learner.status == 'completed' %}<section class="panel mt-4"><div class="panel-head"><div><h2><i class="bi bi-briefcase me-2"></i>Employment outcome</h2><p>Post-completion employment information.</p></div><div class="d-flex gap-2"><a class="btn btn-sm btn-outline-kapda" href="{% url 'learners:learner_employment_list' learner %}">View employment list</a><a class="btn btn-sm btn-outline-kapda" href="{% url 'learners:employment_create' learner %}">{% if employment %}Update outcome{% else %}Record employment{% endif %}</a></div></div>{% if employment %}<div class="row g-3 p-3"><div class="col-md-3"><small class="text-muted">Employer</small><strong class="d-block">{{ employment.employer }}</strong></div><div class="col-md-3"><small class="text-muted">Job title</small><strong class="d-block">{{ employment.job_title }}</strong></div><div class="col-md-2"><small class="text-muted">Year employed</small><strong class="d-block">{{ employment.year_employed }}</strong></div><div class="col-md-2"><small class="text-muted">Type</small><strong class="d-block">{{ employment.employment_type|default:"—" }}</strong></div><div class="col-md-2"><small class="text-muted">Location</small><strong class="d-block">{{ employment.work_location|default:"—" }}</strong></div></div>{% else %}<div class="p-3 text-muted">No employment outcome recorded yet.</div>{% endif %}</section>{% endif %}
 
     <!-- Education history -->
     <section class="panel mt-4" id="support-history">
@@ -717,7 +717,7 @@
             </div>
 
             <a class="btn btn-sm btn-outline-kapda"
-               href="{% url 'learners:enrolment_create' learner.pk %}">
+               href="{% url 'learners:enrolment_create' learner %}">
                 <i class="bi bi-plus-lg me-1"></i>
                 Add enrolment
             </a>
@@ -777,7 +777,7 @@
             </div>
 
             <a class="btn btn-sm btn-outline-kapda"
-               href="{% url 'learners:support_create' learner.pk %}">
+               href="{% url 'learners:support_create' learner %}">
                 <i class="bi bi-plus-lg me-1"></i>
                 Record support
             </a>

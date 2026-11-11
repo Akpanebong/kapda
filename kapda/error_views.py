@@ -1,4 +1,5 @@
 import logging
+import sys
 import uuid
 
 from django.core.cache import cache
@@ -6,7 +7,7 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 
-from core.error_reporting import send_error_report
+from core.error_reporting import create_error_report, send_error_report
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,13 @@ def _fallback_report(request):
         "report_id": uuid.uuid4().hex,
         "exception_type": "Unhandled server error",
         "exception_message": "The application could not complete this request.",
+        "exception_repr": "No exception object was available to the 500 handler.",
+        "error_location": {
+            "file": "Unavailable",
+            "line": "Unavailable",
+            "function": "Unavailable",
+            "source": "Unavailable",
+        },
         "traceback": "No traceback was available from the server.",
         "request": {
             "method": request.method,
@@ -35,7 +43,12 @@ def _fallback_report(request):
 
 
 def custom_500_view(request):
-    report = getattr(request, "_error_report_context", None) or _fallback_report(request)
+    report = getattr(request, "_error_report_context", None)
+    if not report:
+        exception = sys.exc_info()[1]
+        if exception:
+            _, report = create_error_report(request, exception)
+    report = report or _fallback_report(request)
     report_id = report.get("report_id") or uuid.uuid4().hex
     report["report_id"] = report_id
     cache.set(f"error-report:{report_id}", report, timeout=3600)
@@ -69,4 +82,3 @@ def report_500_error(request):
         return render(request, "errors/report_result.html", {"sent": False, "error": "The report could not be sent right now. Please contact the system administrator."}, status=503)
     cache.delete(f"error-report:{report_id}")
     return render(request, "errors/report_result.html", {"sent": True})
-

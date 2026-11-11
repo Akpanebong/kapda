@@ -994,7 +994,7 @@
 
                 <form method="post"
                       enctype="multipart/form-data"
-                      action="{% url 'projects:activity_data_submit' card.activity.pk %}">
+                      action="{% url 'projects:activity_data_submit' card.activity %}">
 
                     {% csrf_token %}
 

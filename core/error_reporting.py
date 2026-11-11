@@ -39,10 +39,19 @@ def _request_details(request):
 
 def create_error_report(request, exception):
     report_id = uuid.uuid4().hex
+    frames = traceback.extract_tb(exception.__traceback__) if exception.__traceback__ else []
+    location = frames[-1] if frames else None
     details = {
         "report_id": report_id,
         "exception_type": type(exception).__name__,
         "exception_message": str(exception) or "No exception message was provided.",
+        "exception_repr": repr(exception),
+        "error_location": {
+            "file": location.filename if location else "Unavailable",
+            "line": location.lineno if location else "Unavailable",
+            "function": location.name if location else "Unavailable",
+            "source": location.line if location and location.line else "Unavailable",
+        },
         "traceback": "".join(traceback.format_exception(type(exception), exception, exception.__traceback__)),
         "request": _request_details(request),
     }

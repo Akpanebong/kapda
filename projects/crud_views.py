@@ -38,7 +38,7 @@ def activity_data_review(request, pk):
         reviewed_record.verified_by = request.user
         reviewed_record.save(update_fields=["verification_status", "comments", "verified_by", "updated_at"])
         messages.success(request, "Activity data review saved successfully.")
-        return redirect("projects:activity_data_detail", pk=record.pk)
+        return redirect("projects:activity_data_detail", pk=record)
     return render(request, "projects/activity_data_review.html", {"object": record, "form": form})
 
 @login_required

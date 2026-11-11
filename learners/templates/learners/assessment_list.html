@@ -99,7 +99,7 @@
 
                         <!-- Learner -->
                         <td>
-                            <a href="{% url 'learners:assessment_detail' item.pk %}"
+                            <a href="{% url 'learners:assessment_detail' item %}"
                                class="fw-semibold text-decoration-none">
                                 {{ item.learner }}
                             </a>
@@ -147,7 +147,7 @@
                         <!-- Actions -->
                         <td class="text-end text-nowrap">
 
-                            <a href="{% url 'learners:assessment_update' item.pk %}"
+                            <a href="{% url 'learners:assessment_update' item %}"
                                class="btn btn-sm btn-outline-kapda"
                                title="Edit assessment"
                                aria-label="Edit assessment">

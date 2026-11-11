@@ -7,6 +7,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .form_helpers import add_date_time_pickers, model_fields
 
 
+def identifier_lookup(identifier):
+    filters = {"pk": int(identifier)}
+    slug = getattr(identifier, "slug", "")
+    if slug:
+        filters["slug"] = slug
+    return filters
+
+
 def model_form(model, form_class=None):
     return form_class or modelform_factory(model, fields=model_fields(model))
 
@@ -39,7 +47,7 @@ def list_records(request, model, template, context_name=None):
 
 
 def detail_record(request, model, pk, template):
-    record = get_object_or_404(model, pk=pk)
+    record = get_object_or_404(model, **identifier_lookup(pk))
     return render(request, template, {"object": record, "record": record, "model": model})
 
 
@@ -59,7 +67,7 @@ def create_record(request, model, template, list_url, form_class=None, form_kwar
 
 
 def update_record(request, model, pk, template, list_url, form_class=None):
-    obj = get_object_or_404(model, pk=pk)
+    obj = get_object_or_404(model, **identifier_lookup(pk))
     form_type = model_form(model, form_class)
     form = add_date_time_pickers(form_type(request.POST or None, request.FILES or None, instance=obj))
     if request.method == "POST" and form.is_valid():
@@ -70,7 +78,7 @@ def update_record(request, model, pk, template, list_url, form_class=None):
 
 
 def delete_record(request, model, pk, list_url):
-    obj = get_object_or_404(model, pk=pk)
+    obj = get_object_or_404(model, **identifier_lookup(pk))
     if request.method == "POST":
         obj.delete()
         messages.success(request, f"{model._meta.verbose_name.title()} deleted.")
