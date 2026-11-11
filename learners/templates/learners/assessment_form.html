@@ -1,11 +1,41 @@
 {% extends "base.html" %}
-{% block title %}{{ model_name|default:"Record" }} | KAPDA{% endblock %}
+{% block title %}Add assessments | KAPDA{% endblock %}
 {% block content %}
-<div class="page-intro"><div><h1>{% if creating %}Add{% else %}Edit{% endif %} {{ model_name|default:"record" }}</h1><p>Complete the fields below and save the record.</p></div></div>
-<form method="post" enctype="multipart/form-data" class="panel form-panel">
-{% csrf_token %}
-{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-<div class="row g-3">{% for field in form %}<div class="col-md-6{% if field.field.widget.attrs.rows %} col-12{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
-<div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-light border" href="javascript:history.back()">Cancel</a><button class="btn btn-kapda" type="submit">{% if creating %}Save{% else %}Update{% endif %}</button></div>
+<div class="page-intro"><div><h1>{% if creating %}Add{% else %}Edit{% endif %} learner assessments</h1><p>Enter the learner, term and maximum score once, then add one row for each subject.</p></div></div>
+<form method="post" class="panel form-panel">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="form-grid">
+        {% for field in form %}
+        <div class="{% if field.name == 'comments' %}span-2{% endif %}">
+            <label class="form-label" for="{{ field.id_for_label }}">
+                {{ field.label }}{% if field.field.required %}<span class="required"> *</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}
+    </div>
+    <hr class="my-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div><h2 class="h5 mb-1">Subject results</h2>
+            <p class="text-muted mb-0">Add the subject, score and grade for each subject.</p>
+        </div><button type="button" class="btn btn-outline-primary" id="add-subject">
+        <i class="bi bi-plus-lg me-1"></i>Add another subject</button></div>
+    {{ subject_forms.management_form }}
+    {% if subject_forms.non_form_errors %}<div class="alert alert-danger">
+    {{ subject_forms.non_form_errors }}</div>{% endif %}
+    <div id="subject-rows">{% for subject_form in subject_forms %}
+        <div class="row g-2 align-items-end subject-row mb-2">
+            {% for field in subject_form %}<div class="col-md-3">
+            <label class="form-label" for="{{ field.id_for_label }}">
+                {{ field.label }}</label>{{ field }}{% for error in field.errors %}
+            <div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}<div class="col-md-1"><button type="button" class="btn btn-outline-danger remove-subject" title="Remove row">&times;</button></div></div>{% endfor %}</div>
+    <template id="subject-empty-form">
+        <div class="row g-2 align-items-end subject-row mb-2">
+            {% for field in subject_forms.empty_form %}<div class="col-md-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}<div class="col-md-1"><button type="button" class="btn btn-outline-danger remove-subject" title="Remove row">&times;</button></div></div></template>
+    <div class="form-actions"><a class="btn btn-light border" href="javascript:history.back()">Cancel</a><button class="btn btn-kapda" type="submit">{% if creating %}Save assessments{% else %}Update assessments{% endif %}</button></div>
 </form>
 {% endblock %}
+{% block scripts %}<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.getElementById('subject-rows'), total = document.getElementById('id_subjects-TOTAL_FORMS'), template = document.getElementById('subject-empty-form').innerHTML;
+    document.getElementById('add-subject').addEventListener('click', function () { rows.insertAdjacentHTML('beforeend', template.replaceAll('__prefix__', total.value)); total.value = Number(total.value) + 1; });
+    rows.addEventListener('click', function (event) { if (event.target.classList.contains('remove-subject')) { const row = event.target.closest('.subject-row'); if (rows.querySelectorAll('.subject-row').length > 1) row.remove(); } });
+});
+</script>{% endblock %}

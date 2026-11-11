@@ -40,8 +40,8 @@ def governance_dashboard(request):
 @login_required
 def governance_member_list(request):
     records = GovernanceMember.objects.select_related("school").order_by("full_name")
-    return _list(request, "Governance members", "governance members", ["Name", "School", "Body", "Position", "Active"], records,
-                 ([r.full_name, r.school, r.get_body_display(), r.position, "Yes" if r.active else "No"] for r in records), reverse("governance:governance_member_create"), "governance:governance_member_update", "governance:governance_member_delete", "governance/governance_member_list.html")
+    return _list(request, "Governance members", "governance members", ["Name", "School", "Body", "Position", "Village", "Active"], records,
+                 ([r.full_name, r.school, r.get_body_display(), r.position, r.village, "Yes" if r.active else "No"] for r in records), reverse("governance:governance_member_create"), "governance:governance_member_update", "governance:governance_member_delete", "governance/governance_member_list.html")
 
 @login_required
 @record_editor_required

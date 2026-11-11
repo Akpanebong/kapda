@@ -113,6 +113,7 @@ class PeaceCommitteeMember(TimeStampedModel):
     sex = models.CharField(max_length=1, choices=[("F", "Female"), ("M", "Male"), ("O", "Other / not stated")])
     age_group = models.CharField(max_length=60, blank=True)
     position = models.CharField(max_length=120, blank=True)
+    village = models.CharField(max_length=120, blank=True, null=True)
     parish = models.CharField(max_length=120, blank=True)
     sub_county = models.CharField(max_length=120, blank=True)
     supported_date = models.DateField(null=True, blank=True)
@@ -125,6 +126,7 @@ class PeaceCommitteeMember(TimeStampedModel):
 class PeaceCommitteeMeeting(TimeStampedModel):
     committee = models.ForeignKey(PeaceCommittee, on_delete=models.CASCADE, related_name="meetings")
     parish = models.CharField(max_length=120)
+    village = models.CharField(max_length=120, blank=True, null=True)
     sub_county = models.CharField(max_length=120)
     meeting_date = models.DateField()
     female_participants = models.PositiveIntegerField(default=0)

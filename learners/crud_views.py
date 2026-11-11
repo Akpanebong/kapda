@@ -1,10 +1,20 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect
 from django.shortcuts import render
+from types import SimpleNamespace
 from accounts.access import record_editor_required
 from core.crud_support import create_record, delete_record, detail_record, list_records, update_record
-from .forms import AttendanceRecordForm, LearnerSupportForm
+from .forms import (
+    AssessmentDetailsForm,
+    AssessmentSubjectFormSet,
+    AttendanceRecordForm,
+    LearnerSupportForm,
+    UNEBResultForm,
+    UNEBSubjectFormSet,
+)
 from .models import Assessment, AttendanceRecord, ClassMovement, Enrolment, Learner, LearnerProject, LearnerStatusHistory, UNEBResult
 from .models import LearnerSupport
 
@@ -98,15 +108,189 @@ def _crud(model, name, template):
             lambda request, pk: update_record(request, model, pk, f"learners/{template}_form.html", f"learners:{name}_list"),
             lambda request, pk: delete_record(request, model, pk, f"learners:{name}_list"))
 
-def _export(name, model, template):
+def _export(name, model, template, context_name=None):
     views = _crud(model, name, template)
-    globals()[f"{name}_list"] = login_required(views[0]); globals()[f"{name}_detail"] = login_required(views[1])
+    list_view = lambda request: list_records(request, model, f"learners/{template}_list.html", context_name or name)
+    globals()[f"{name}_list"] = login_required(list_view); globals()[f"{name}_detail"] = login_required(views[1])
     globals()[f"{name}_create"] = record_editor_required(login_required(views[2])); globals()[f"{name}_update"] = record_editor_required(login_required(views[3])); globals()[f"{name}_delete"] = record_editor_required(login_required(views[4]))
 
 _export("class_movement", ClassMovement, "class_movement")
-_export("assessment", Assessment, "assessment")
-_export("uneb_result", UNEBResult, "uneb_result")
+_export("assessment", Assessment, "assessment", "assessments")
+_export("uneb_result", UNEBResult, "uneb_result", "uneb_results")
 _export("learner_status_history", LearnerStatusHistory, "learner_status_history")
+
+
+def _assessment_groups(queryset):
+    grouped = {}
+    for assessment in queryset:
+        key = (assessment.learner_id, assessment.enrolment_id, assessment.term_id)
+        if key not in grouped:
+            grouped[key] = SimpleNamespace(
+                pk=assessment.pk,
+                learner=assessment.learner,
+                enrolment=assessment.enrolment,
+                term=assessment.term,
+                comments=assessment.comments,
+                created_at=assessment.created_at,
+                updated_at=assessment.updated_at,
+                subjects=[],
+            )
+        grouped[key].subjects.append({
+            "subject": assessment.subject,
+            "score": assessment.score,
+            "maximum_score": assessment.maximum_score,
+            "percentage": assessment.percentage,
+            "grade": assessment.grade,
+        })
+    return list(grouped.values())
+
+
+@login_required
+def assessment_list(request):
+    queryset = Assessment.objects.select_related("learner", "enrolment", "term").order_by(
+        "learner__last_name", "learner__first_name", "term__start_date", "subject"
+    )
+    return render(request, "learners/assessment_list.html", {"assessments": _assessment_groups(queryset)})
+
+
+@login_required
+def assessment_detail(request, pk):
+    assessment = get_object_or_404(Assessment.objects.select_related("learner", "enrolment", "term"), pk=pk)
+    queryset = Assessment.objects.filter(
+        learner_id=assessment.learner_id,
+        enrolment_id=assessment.enrolment_id,
+        term_id=assessment.term_id,
+    ).select_related("learner", "enrolment", "term").order_by("subject")
+    group = _assessment_groups(queryset)[0]
+    return render(request, "learners/assessment_detail.html", {"object": assessment, "assessment_group": group})
+
+
+@login_required
+@record_editor_required
+def assessment_create(request):
+    initial = {"learner": request.GET.get("learner")} if request.GET.get("learner") else None
+    form = AssessmentDetailsForm(request.POST or None, initial=initial)
+    subject_forms = AssessmentSubjectFormSet(request.POST or None, prefix="subjects")
+    if request.method == "POST" and form.is_valid() and subject_forms.is_valid():
+        rows = [row for row in subject_forms.cleaned_data if row and row.get("subject")]
+        if not rows:
+            subject_forms.non_form_errors = lambda: ["Add at least one subject row."]
+        else:
+            with transaction.atomic():
+                for row in rows:
+                    Assessment.objects.create(
+                        learner=form.cleaned_data["learner"],
+                        enrolment=form.cleaned_data["enrolment"],
+                        term=form.cleaned_data["term"],
+                        maximum_score=form.cleaned_data["maximum_score"],
+                        comments=form.cleaned_data["comments"],
+                        subject=row["subject"],
+                        score=row["score"],
+                        grade=row["grade"],
+                    )
+            messages.success(request, f"{len(rows)} assessment subject(s) recorded successfully.")
+            return redirect("learners:assessment_list")
+    return render(request, "learners/assessment_form.html", {
+        "form": form,
+        "subject_forms": subject_forms,
+        "creating": True,
+        "model_name": "assessment",
+    })
+
+
+@login_required
+@record_editor_required
+def assessment_update(request, pk):
+    assessment = get_object_or_404(Assessment.objects.select_related("learner", "enrolment", "term"), pk=pk)
+    group_queryset = Assessment.objects.filter(
+        learner_id=assessment.learner_id,
+        enrolment_id=assessment.enrolment_id,
+        term_id=assessment.term_id,
+    ).order_by("subject")
+    initial_subjects = [
+        {"subject": item.subject, "score": item.score, "grade": item.grade}
+        for item in group_queryset
+    ]
+    form = AssessmentDetailsForm(request.POST or None, instance=assessment)
+    subject_forms = AssessmentSubjectFormSet(request.POST or None, initial=initial_subjects, prefix="subjects")
+    if request.method == "POST" and form.is_valid() and subject_forms.is_valid():
+        rows = [row for row in subject_forms.cleaned_data if row and row.get("subject")]
+        if not rows:
+            subject_forms.non_form_errors = lambda: ["Add at least one subject row."]
+        else:
+            with transaction.atomic():
+                group_queryset.delete()
+                for row in rows:
+                    Assessment.objects.create(
+                        learner=form.cleaned_data["learner"],
+                        enrolment=form.cleaned_data["enrolment"],
+                        term=form.cleaned_data["term"],
+                        maximum_score=form.cleaned_data["maximum_score"],
+                        comments=form.cleaned_data["comments"],
+                        subject=row["subject"],
+                        score=row["score"],
+                        grade=row["grade"],
+                    )
+            messages.success(request, f"{len(rows)} assessment subject(s) updated successfully.")
+            return redirect("learners:assessment_list")
+    return render(request, "learners/assessment_form.html", {
+        "form": form,
+        "subject_forms": subject_forms,
+        "creating": False,
+        "model_name": "assessment",
+        "object": assessment,
+    })
+
+
+@login_required
+@record_editor_required
+def uneb_result_create(request):
+    initial = {"learner": request.GET.get("learner")} if request.GET.get("learner") else None
+    form = UNEBResultForm(request.POST or None, initial=initial)
+    subject_forms = UNEBSubjectFormSet(request.POST or None, prefix="subjects")
+    if request.method == "POST" and form.is_valid() and subject_forms.is_valid():
+        rows = [row for row in subject_forms.cleaned_data if row and row.get("subject")]
+        if not rows:
+            subject_forms.non_form_errors = lambda: ["Add at least one subject performance row."]
+        else:
+            result = form.save(commit=False)
+            result.subjects = {row["subject"].strip(): row["performance"].strip() for row in rows}
+            result.recorded_by = request.user
+            result.save()
+            messages.success(request, "UNEB result recorded successfully.")
+            return redirect("learners:uneb_result_list")
+    return render(request, "learners/uneb_result_form.html", {
+        "form": form,
+        "subject_forms": subject_forms,
+        "creating": True,
+        "model_name": "UNEB result",
+    })
+
+
+@login_required
+@record_editor_required
+def uneb_result_update(request, pk):
+    result = get_object_or_404(UNEBResult, pk=pk)
+    initial_subjects = [{"subject": subject, "performance": performance} for subject, performance in (result.subjects or {}).items()]
+    form = UNEBResultForm(request.POST or None, instance=result)
+    subject_forms = UNEBSubjectFormSet(request.POST or None, initial=initial_subjects, prefix="subjects")
+    if request.method == "POST" and form.is_valid() and subject_forms.is_valid():
+        rows = [row for row in subject_forms.cleaned_data if row and row.get("subject")]
+        if not rows:
+            subject_forms.non_form_errors = lambda: ["Add at least one subject performance row."]
+        else:
+            result = form.save(commit=False)
+            result.subjects = {row["subject"].strip(): row["performance"].strip() for row in rows}
+            result.save()
+            messages.success(request, "UNEB result updated successfully.")
+            return redirect("learners:uneb_result_list")
+    return render(request, "learners/uneb_result_form.html", {
+        "form": form,
+        "subject_forms": subject_forms,
+        "creating": False,
+        "model_name": "UNEB result",
+        "object": result,
+    })
 
 @login_required
 def learner_support_list(request): return list_records(request, LearnerSupport, "learners/learner_support_list.html", "learner_support")

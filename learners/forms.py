@@ -1,8 +1,16 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .models import AttendanceRecord, Learner, Enrolment, LearnerProject, LearnerSupport, LearnerEmployment, LearnerStatusHistory
+from .models import Assessment, AttendanceRecord, Learner, Enrolment, LearnerProject, LearnerSupport, LearnerEmployment, LearnerStatusHistory, UNEBResult
 from projects.models import Project
+
+
+def _add_form_control_classes(form):
+    for field in form.fields.values():
+        classes = field.widget.attrs.get("class", "").split()
+        if "form-control" not in classes:
+            classes.append("form-control")
+        field.widget.attrs["class"] = " ".join(classes)
 
 
 class AttendanceRecordForm(forms.ModelForm):
@@ -59,6 +67,63 @@ class EnrolmentForm(forms.ModelForm):
         fields = ["school","project","academic_year","class_level"]
 
 
+class AssessmentDetailsForm(forms.ModelForm):
+    class Meta:
+        model = Assessment
+        fields = ["learner", "enrolment", "term", "maximum_score", "comments"]
+        widgets = {"comments": forms.Textarea(attrs={"rows": 2})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control_classes(self)
+
+
+class AssessmentSubjectForm(forms.Form):
+    subject = forms.CharField(max_length=100, label="Subject")
+    score = forms.DecimalField(min_value=0, max_digits=6, decimal_places=2, label="Score")
+    grade = forms.CharField(max_length=10, required=False, label="Grade")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control_classes(self)
+
+
+class UNEBResultForm(forms.ModelForm):
+    class Meta:
+        model = UNEBResult
+        exclude = ["subjects", "recorded_by"]
+        widgets = {"remarks": forms.Textarea(attrs={"rows": 2})}
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control_classes(self)
+
+
+class UNEBSubjectForm(forms.Form):
+    subject = forms.CharField(max_length=100, label="Subject")
+    performance = forms.CharField(max_length=30, label="Performance / grade")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control_classes(self)
+
+
+class SupportMaterialForm(forms.Form):
+    material = forms.ChoiceField(choices=LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES, label="Material")
+    quantity = forms.DecimalField(min_value=0.01, max_digits=10, decimal_places=2, label="Quantity")
+    unit = forms.CharField(max_length=40, initial="pieces", label="Unit")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control_classes(self)
+
+
+AssessmentSubjectFormSet = forms.formset_factory(AssessmentSubjectForm, extra=1)
+UNEBSubjectFormSet = forms.formset_factory(UNEBSubjectForm, extra=1)
+SupportMaterialFormSet = forms.formset_factory(SupportMaterialForm, extra=1)
+
+
 class LearnerEmploymentForm(forms.ModelForm):
     class Meta:
         model = LearnerEmployment
@@ -108,7 +173,8 @@ class LearnerStatusHistoryForm(forms.ModelForm):
 class LearnerSupportForm(forms.ModelForm):
     class Meta:
         model = LearnerSupport
-        fields = ["learner", "project", "support_type", "scholastic_material", "support_type_other", "quantity", "unit", "distribution_date", "term", "notes"]
+        fields = ["learner", "project", "support_type", "scholastic_material",
+                  "support_type_other", "quantity", "unit", "distribution_date", "term", "notes"]
         widgets = {
             "distribution_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 2}),
@@ -117,6 +183,9 @@ class LearnerSupportForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         learner = kwargs.pop("learner", None)
         super().__init__(*args, **kwargs)
+        _add_form_control_classes(self)
+        self.fields["quantity"].required = False
+        self.fields["unit"].required = False
         if learner is not None:
             self.fields["learner"].initial = learner.pk
             self.fields["learner"].disabled = True
@@ -129,10 +198,15 @@ class LearnerSupportForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        if cleaned.get("support_type") == "scholastic_materials" and not cleaned.get("scholastic_material"):
-            self.add_error("scholastic_material", "Select the scholastic material distributed.")
         if cleaned.get("support_type") != "scholastic_materials":
             cleaned["scholastic_material"] = ""
+            if not cleaned.get("quantity"):
+                self.add_error("quantity", "Enter the quantity of support provided.")
+            if not cleaned.get("unit", "").strip():
+                self.add_error("unit", "Enter the unit, for example pieces, packages, or sessions.")
+        else:
+            cleaned["quantity"] = None
+            cleaned["unit"] = ""
         if cleaned.get("support_type") == "other" and not cleaned.get("support_type_other", "").strip():
             raise ValidationError({"support_type_other": "Specify the other type of support."})
         if cleaned.get("support_type") != "other":

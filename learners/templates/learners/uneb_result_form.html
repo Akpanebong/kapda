@@ -1,11 +1,292 @@
+
 {% extends "base.html" %}
-{% block title %}{{ model_name|default:"Record" }} | KAPDA{% endblock %}
+
+{% block title %}{{ model_name }} | KAPDA{% endblock %}
+
 {% block content %}
-<div class="page-intro"><div><h1>{% if creating %}Add{% else %}Edit{% endif %} {{ model_name|default:"record" }}</h1><p>Complete the fields below and save the record.</p></div></div>
-<form method="post" enctype="multipart/form-data" class="panel form-panel">
-{% csrf_token %}
-{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-<div class="row g-3">{% for field in form %}<div class="col-md-6{% if field.field.widget.attrs.rows %} col-12{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
-<div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-light border" href="javascript:history.back()">Cancel</a><button class="btn btn-kapda" type="submit">{% if creating %}Save{% else %}Update{% endif %}</button></div>
+
+<div class="page-intro d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1>
+            <i class="bi bi-award me-2"></i>
+            {% if creating %}Add{% else %}Edit{% endif %} UNEB Result
+        </h1>
+        <p class="text-muted mb-0">
+            Record examination details and individual subject performance.
+        </p>
+    </div>
+
+    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<form method="post" class="panel form-panel" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Examination information -->
+    <div class="mb-4">
+        <h2 class="h5 mb-1">
+            <i class="bi bi-file-earmark-text me-2"></i>
+            Examination Information
+        </h2>
+        <p class="text-muted small">
+            Enter the learner's examination and school details.
+        </p>
+
+        <div class="form-grid">
+            {% for field in form %}
+                <div class="{% if field.name == 'remarks' %}span-2{% endif %}">
+                    <label class="form-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                            <span class="required">*</span>
+                        {% endif %}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Subject performance -->
+    <div class="mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <h2 class="h5 mb-1">
+                    <i class="bi bi-journal-check me-2"></i>
+                    Subject Performance
+                </h2>
+                <p class="text-muted small mb-0">
+                    Add each examination subject and its corresponding grade or score.
+                </p>
+            </div>
+
+            <button type="button"
+                    class="btn btn-outline-kapda"
+                    id="add-uneb-subject">
+                <i class="bi bi-plus-lg me-1"></i>
+                Add Subject
+            </button>
+        </div>
+    </div>
+
+    {{ subject_forms.management_form }}
+
+    {% if subject_forms.non_form_errors %}
+        <div class="alert alert-danger">
+            {% for error in subject_forms.non_form_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div id="uneb-subject-rows">
+
+        {% for subject_form in subject_forms %}
+
+            <div class="uneb-subject-row border rounded-3 p-3 mb-3">
+                <div class="row g-3 align-items-end">
+
+                    {% for field in subject_form %}
+                        {% if field.is_hidden %}
+                            {{ field }}
+                        {% else %}
+                            <div class="col-md-5">
+                                <label class="form-label"
+                                       for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="required">*</span>
+                                    {% endif %}
+                                </label>
+
+                                {{ field }}
+
+                                {% for error in field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="col-md-2">
+                        <button type="button"
+                                class="btn btn-outline-danger remove-uneb-subject w-100"
+                                title="Remove subject">
+                            <i class="bi bi-trash me-1"></i>
+                            Remove
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+    <!-- Empty subject form template -->
+    <template id="uneb-empty-form">
+        <div class="uneb-subject-row border rounded-3 p-3 mb-3">
+            <div class="row g-3 align-items-end">
+
+                {% for field in subject_forms.empty_form %}
+                    {% if field.is_hidden %}
+                        {{ field }}
+                    {% else %}
+                        <div class="col-md-5">
+                            <label class="form-label"
+                                   for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="required">*</span>
+                                {% endif %}
+                            </label>
+                            {{ field }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <div class="col-md-2">
+                    <button type="button"
+                            class="btn btn-outline-danger remove-uneb-subject w-100"
+                            title="Remove subject">
+                        <i class="bi bi-trash me-1"></i>
+                        Remove
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </template>
+
+    <div class="alert alert-light border mt-3 mb-4">
+        <i class="bi bi-info-circle me-2 text-primary"></i>
+        <strong>Note:</strong>
+        Enter grades or scores using the format required by the examination level.
+        For example, Mathematics — 2, English — D, or Biology — 65%.
+    </div>
+
+    <!-- Form actions -->
+    <div class="form-actions d-flex flex-wrap justify-content-end gap-2">
+        <a href="javascript:history.back()"
+           class="btn btn-light border">
+            Cancel
+        </a>
+
+        <button type="submit" class="btn btn-kapda">
+            <i class="bi bi-check-circle me-1"></i>
+            {% if creating %}Save UNEB Result{% else %}Update UNEB Result{% endif %}
+        </button>
+    </div>
+
 </form>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const rows = document.getElementById('uneb-subject-rows');
+    const totalForms = document.getElementById('id_subjects-TOTAL_FORMS');
+    const emptyTemplate = document.getElementById('uneb-empty-form');
+
+    const addButton = document.getElementById('add-uneb-subject');
+
+    if (!rows || !totalForms || !emptyTemplate || !addButton) {
+        return;
+    }
+
+    // Add a new subject row.
+    addButton.addEventListener('click', function () {
+
+        const index = Number(totalForms.value);
+
+        const html = emptyTemplate.innerHTML.replace(
+            /__prefix__/g,
+            index
+        );
+
+        rows.insertAdjacentHTML('beforeend', html);
+
+        totalForms.value = index + 1;
+
+        const newRow = rows.lastElementChild;
+
+        if (newRow) {
+            const firstInput = newRow.querySelector(
+                'input:not([type="hidden"]), select, textarea'
+            );
+
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }
+    });
+
+    // Remove a subject row.
+    rows.addEventListener('click', function (event) {
+
+        const removeButton = event.target.closest(
+            '.remove-uneb-subject'
+        );
+
+        if (!removeButton) {
+            return;
+        }
+
+        const row = removeButton.closest('.uneb-subject-row');
+
+        if (!row) {
+            return;
+        }
+
+        const rowsList = rows.querySelectorAll('.uneb-subject-row');
+
+        // Preserve at least one visible subject row.
+        if (rowsList.length <= 1) {
+            row.querySelectorAll(
+                'input:not([type="hidden"]), select, textarea'
+            ).forEach(function (field) {
+                if (field.type === 'checkbox' || field.type === 'radio') {
+                    field.checked = false;
+                } else {
+                    field.value = '';
+                }
+            });
+
+            return;
+        }
+
+        // Remove the row from the form.
+        row.remove();
+
+    });
+
+});
+</script>
 {% endblock %}

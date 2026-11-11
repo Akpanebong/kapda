@@ -22,7 +22,7 @@ class GovernanceStyledForm(forms.ModelForm):
 class GovernanceMemberForm(GovernanceStyledForm):
     class Meta:
         model = GovernanceMember
-        fields = ["school", "body", "full_name", "sex", "position", "phone", "active", "trained_topics"]
+        fields = ["school", "body", "full_name", "sex", "position", "phone", "village", "active", "trained_topics"]
         widgets = {"trained_topics": forms.Textarea(attrs={"rows": 2})}
 
 

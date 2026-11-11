@@ -7,34 +7,47 @@
     {% csrf_token %}
     {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
     <div class="form-grid">
-        {% for field in form %}
-            <div id="field-wrap-{{ field.name }}"{% if field.name == "support_type_other" or field.name == "scholastic_material" %} class="conditional-support-field"{% endif %}>
-            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
-            {{ field }}
-            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-        </div>
-        {% endfor %}
+        {% for field in form %}{% if field.name != "scholastic_material" and field.name != "quantity" and field.name != "unit" %}
+        <div id="field-wrap-{{ field.name }}"{% if field.name == "support_type_other" %} class="conditional-support-field"{% endif %}><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required"> *</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+        {% endif %}{% endfor %}
+    </div>
+    <div id="general-quantity-section" class="row g-2 mt-3">
+        <div class="col-md-6"><label class="form-label" for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }}<span class="required"> *</span></label>{{ form.quantity }}{% for error in form.quantity.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+        <div class="col-md-6"><label class="form-label" for="{{ form.unit.id_for_label }}">{{ form.unit.label }}<span class="required"> *</span></label>{{ form.unit }}{% for error in form.unit.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+    </div>
+    <div id="materials-section" class="mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-2"><div><h2 class="h5 mb-1">Scholastic materials</h2><p class="text-muted mb-0">Add every material the learner received, including quantity and unit.</p></div><button type="button" class="btn btn-outline-primary" id="add-material">
+            <i class="bi bi-plus-lg me-1"></i>Add another material</button></div>
+        {{ material_forms.management_form }}
+        {% if material_forms.non_form_errors %}
+        <div class="alert alert-danger">{{ material_forms.non_form_errors }}</div>{% endif %}
+        <div id="material-rows">
+            {% for material_form in material_forms %}
+            <div class="row g-2 align-items-end material-row mb-2">
+                {% for field in material_form %}<div class="col-md-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}
+            </div>{% endfor %}</div>{% endfor %}<div class="col-md-1">
+                <button type="button" class="btn btn-outline-danger remove-material">&times;</button>
+            </div></div>{% endfor %}</div>
+        <template id="material-empty-form">
+            <div class="row g-2 align-items-end material-row mb-2">
+                {% for field in material_forms.empty_form %}
+                <div class="col-md-3"><label class="form-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}</label>{{ field }}</div>{% endfor %}<div class="col-md-1">
+                <button type="button" class="btn btn-outline-danger remove-material">&times;</button>
+            </div></div></template>
     </div>
     <div class="form-actions"><a class="btn btn-light border" href="{% url 'learners:detail' learner.pk %}">Cancel</a><button class="btn btn-kapda" type="submit"><i class="bi bi-check2-circle me-1"></i> Save support</button></div>
 </form>
 {% endblock %}
-{% block scripts %}
-<script>
+{% block scripts %}<script>
 document.addEventListener('DOMContentLoaded', function () {
-    const type = document.getElementById('id_support_type');
-    const otherWrap = document.getElementById('field-wrap-support_type_other');
-    const otherInput = document.getElementById('id_support_type_other');
-    const materialWrap = document.getElementById('field-wrap-scholastic_material');
-    const materialInput = document.getElementById('id_scholastic_material');
-    function toggleOther() {
-        const visible = type && type.value === 'other';
-        if (otherWrap) otherWrap.hidden = !visible;
-        if (otherInput) otherInput.required = visible;
-        const materialVisible = type && type.value === 'scholastic_materials';
-        if (materialWrap) materialWrap.hidden = !materialVisible;
-        if (materialInput) materialInput.required = materialVisible;
-    }
-    if (type) { type.addEventListener('change', toggleOther); toggleOther(); }
+    const type = document.getElementById('id_support_type'), otherWrap = document.getElementById('field-wrap-support_type_other'), otherInput = document.getElementById('id_support_type_other'), section = document.getElementById('materials-section'), general = document.getElementById('general-quantity-section'), quantity = document.getElementById('id_quantity'), unit = document.getElementById('id_unit');
+    function toggleFields() { const scholastic = type && type.value === 'scholastic_materials', other = type && type.value === 'other'; if (section) section.hidden = !scholastic; if (general) general.hidden = scholastic; if (quantity) quantity.required = !scholastic; if (unit) unit.required = !scholastic; if (otherWrap) otherWrap.hidden = !other; if (otherInput) otherInput.required = other; }
+    if (type) { type.addEventListener('change', toggleFields); toggleFields(); }
+    const rows = document.getElementById('material-rows'), total = document.getElementById('id_materials-TOTAL_FORMS'), template = document.getElementById('material-empty-form').innerHTML;
+    document.getElementById('add-material').addEventListener('click', function () { rows.insertAdjacentHTML('beforeend', template.replaceAll('__prefix__', total.value)); total.value = Number(total.value) + 1; });
+    rows.addEventListener('click', function (event) { if (event.target.classList.contains('remove-material')) { const row = event.target.closest('.material-row'); if (rows.querySelectorAll('.material-row').length > 1) row.remove(); } });
 });
-</script>
-{% endblock %}
+</script>{% endblock %}

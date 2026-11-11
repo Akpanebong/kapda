@@ -808,7 +808,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ support.project.name|default:"—" }}</td>
-                            <td>{{ support.quantity|default:"—" }} {{ support.unit|default:"" }}</td>
+                            <td>{% if support.material_items %}{% for item in support.material_items %}<span class="d-block">{{ item.material|title }}: {{ item.quantity }} {{ item.unit }}</span>{% endfor %}{% else %}{{ support.quantity|default:"—" }} {{ support.unit|default:"" }}{% endif %}</td>
                             <td>{{ support.term|default:"—" }}</td>
                             <td>{{ support.notes|default:"—" }}</td>
                         </tr>

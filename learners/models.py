@@ -300,7 +300,27 @@ class LearnerSupport(TimeStampedModel):
     scholastic_material = models.CharField(max_length=40, choices=SCHOLASTIC_MATERIAL_CHOICES, blank=True, verbose_name="Scholastic material")
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     unit = models.CharField(max_length=40, default="package")
+    material_items = models.JSONField(default=list, blank=True, help_text="Multiple scholastic materials with quantities and units")
     distribution_date = models.DateField()
     term = models.ForeignKey(Term, null=True, blank=True, on_delete=models.SET_NULL)
     notes = models.TextField(blank=True)
     recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ["-created_at", "support_type"]
+
+    @property
+    def material_lines(self):
+        if self.material_items:
+            return self.material_items
+        if self.scholastic_material:
+            return [{"material": self.scholastic_material, "quantity": str(self.quantity), "unit": self.unit}]
+        return []
+
+    @property
+    def material_summary(self):
+        labels = dict(self.SCHOLASTIC_MATERIAL_CHOICES)
+        return "; ".join(
+            f"{labels.get(item.get('material'), item.get('material', ''))}: {item.get('quantity', '')} {item.get('unit', '')}".strip()
+            for item in self.material_lines
+        )

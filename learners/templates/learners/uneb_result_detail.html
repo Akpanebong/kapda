@@ -1,1 +1,126 @@
-{% extends "base.html" %}{% block title %}UNEB result | KAPDA{% endblock %}{% block content %}<div class="page-intro"><h1>{{ object }}</h1></div>{% endblock %}
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}UNEB Result Details | KAPDA{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+
+    <!-- Page heading -->
+    <div class="page-intro d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-award me-2"></i>UNEB Result Details
+            </h1>
+            <p class="text-muted mb-0">
+                Examination result information and learner performance.
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="javascript:history.back()"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+
+            {% if object.pk %}
+                <a href="{% url 'learners:uneb_result_update' object.pk %}"
+                   class="btn btn-kapda">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Result
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Result summary -->
+    <div class="panel mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h4 class="mb-1">{{ object.learner }}</h4>
+                <p class="text-muted mb-0">
+                    UNEB Examination Result
+                </p>
+            </div>
+
+            <span class="badge bg-success-subtle text-success px-3 py-2">
+                {{ object.level }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Examination information -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-6 col-xl-3">
+            <div class="panel h-100">
+                <small class="text-muted">Examination Year</small>
+                <h4 class="mt-2 mb-0">
+                    {{ object.examination_year }}
+                </h4>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="panel h-100">
+                <small class="text-muted">Candidate Number</small>
+                <h5 class="mt-2 mb-0">
+                    {{ object.candidate_number|default:"Not provided" }}
+                </h5>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="panel h-100">
+                <small class="text-muted">Examination Level</small>
+                <h5 class="mt-2 mb-0">
+                    {{ object.level|default:"Not specified" }}
+                </h5>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="panel h-100">
+                <small class="text-muted">Academic Year</small>
+                <h5 class="mt-2 mb-0">
+                    {{ object.academic_year|default:"Not specified" }}
+                </h5>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- School information -->
+    <div class="panel mb-4">
+        <h5 class="mb-3">
+            <i class="bi bi-building me-2"></i>School Information
+        </h5>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <small class="text-muted">School</small>
+                <div class="fw-semibold">{{ object.school }}</div>
+            </div>
+
+            <div class="col-md-6">
+                <small class="text-muted">Learner</small>
+                <div class="fw-semibold">{{ object.learner }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject results -->
+    <div class="panel">
+        <h5 class="mb-3">
+            <i class="bi bi-journal-check me-2"></i>Subject Performance
+        </h5>
+
+        {% if object.subjects %}
+        <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Subject</th><th>Performance / grade</th></tr></thead><tbody>{% for subject, performance in object.subjects.items %}<tr><td>{{ subject }}</td><td>{{ performance }}</td></tr>{% endfor %}</tbody></table></div>
+        {% else %}<div class="alert alert-light border mb-0"><i class="bi bi-info-circle me-2"></i>No subject performance has been recorded.</div>{% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

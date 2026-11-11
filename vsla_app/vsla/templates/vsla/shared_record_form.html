@@ -32,6 +32,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const group = document.getElementById('id_group');
     const member = document.getElementById('id_member');
     if (!group || !member) return;
+    const interestRate = document.getElementById('id_interest_rate');
+    const durationWeeks = document.getElementById('id_duration_weeks');
+
+    function syncLoanDefaults() {
+        const selected = group.selectedOptions[0];
+        if (!selected) return;
+        if (interestRate && selected.dataset.interestRate !== undefined) {
+            interestRate.value = selected.dataset.interestRate;
+        }
+        if (durationWeeks && selected.dataset.durationWeeks !== undefined) {
+            durationWeeks.value = selected.dataset.durationWeeks;
+        }
+    }
 
     function syncMembers() {
         const groupId = group.value;
@@ -54,8 +67,12 @@ document.addEventListener('DOMContentLoaded', function () {
             member.value = selected.value;
         }
     });
-    group.addEventListener('change', syncMembers);
+    group.addEventListener('change', function () {
+        syncMembers();
+        syncLoanDefaults();
+    });
     syncMembers();
+    syncLoanDefaults();
 });
 </script>
 {% endblock %}

@@ -495,8 +495,8 @@ def learner_export_xlsx(request):
         [x.learner.reg_no, x.learner.full_name, x.academic_year.name, x.school.name, x.project.name, x.class_level, x.get_outcome_display(), "Yes" if x.is_current else "No"]
         for x in Enrolment.objects.filter(learner_id__in=learner_ids).select_related("learner", "academic_year", "school", "project").order_by("learner__last_name", "-academic_year__start_date")
     ])
-    add_sheet("Support history", ["KAPDA ID", "Learner", "Project", "Support type", "Other support type", "Quantity", "Unit", "Distribution date", "Term", "Notes"], [
-        [x.learner.reg_no, x.learner.full_name, x.project.name, x.get_support_type_display(), x.support_type_other, x.quantity, x.unit, x.distribution_date, x.term.name if x.term else "", x.notes]
+    add_sheet("Support history", ["KAPDA ID", "Learner", "Project", "Support type", "Other support type", "Material details", "Quantity", "Unit", "Distribution date", "Term", "Notes"], [
+        [x.learner.reg_no, x.learner.full_name, x.project.name, x.get_support_type_display(), x.support_type_other, x.material_summary, x.quantity, x.unit, x.distribution_date, x.term.name if x.term else "", x.notes]
         for x in LearnerSupport.objects.filter(learner_id__in=learner_ids).select_related("learner", "project", "term").order_by("learner__last_name", "-distribution_date")
     ])
     add_sheet("Attendance", ["KAPDA ID", "Learner", "Academic year", "Term", "School", "Days open", "Days present", "Days absent", "Attendance rate %", "Follow-up required", "Follow-up notes"], [

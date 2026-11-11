@@ -40,6 +40,19 @@ class MemberSelect(forms.Select):
         return option
 
 
+class LoanGroupSelect(forms.Select):
+    """Select widget carrying a group's loan defaults for client-side syncing."""
+    loan_defaults = {}
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        defaults = self.loan_defaults.get(str(getattr(value, "value", value)))
+        if defaults:
+            option["attrs"]["data-interest-rate"] = str(defaults["interest_rate"])
+            option["attrs"]["data-duration-weeks"] = str(defaults["duration_weeks"])
+        return option
+
+
 class ProjectSelect(forms.Select):
     project_donors = {}
 
@@ -115,7 +128,22 @@ class LoanForm(StyledModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        groups = VSLAGroup.objects.order_by("name")
+        self.fields["group"].widget = LoanGroupSelect(attrs={"class": "form-select"})
+        self.fields["group"].widget.choices = self.fields["group"].choices
+        self.fields["group"].widget.loan_defaults = {
+            str(group.pk): {
+                "interest_rate": group.loan_interest_rate,
+                "duration_weeks": group.loan_duration_weeks,
+            }
+            for group in groups
+        }
         group_id = self.data.get("group") or self.initial.get("group") or getattr(self.instance, "group_id", None)
+        if group_id and not self.is_bound:
+            group = VSLAGroup.objects.filter(pk=group_id).first()
+            if group:
+                self.fields["interest_rate"].initial = group.loan_interest_rate
+                self.fields["duration_weeks"].initial = group.loan_duration_weeks
         if group_id:
             self.fields["member"].queryset = VSLAMember.objects.filter(group_id=group_id).order_by("last_name", "first_name")
         else:

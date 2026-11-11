@@ -12,6 +12,7 @@ class GovernanceMember(TimeStampedModel):
     sex=models.CharField(max_length=1,choices=[("F","Female"),("M","Male"),("O","Other / not stated")])
     position=models.CharField(max_length=100)
     phone=models.CharField(max_length=30,blank=True)
+    village=models.CharField(max_length=160,blank=True)
     active=models.BooleanField(default=True)
     trained_topics=models.TextField(blank=True)
 

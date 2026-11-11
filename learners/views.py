@@ -15,7 +15,7 @@ from django.utils.dateparse import parse_date
 from core.models import AcademicYear, AuditEvent, School
 from .models import Learner, LearnerProject, Enrolment, AttendanceRecord, ClassMovement, LearnerSupport, UNEBResult, LearnerEmployment, LearnerStatusHistory
 from monitoring.models import FollowUpAction, MHMSession, WASHFacility
-from .forms import LearnerForm, EnrolmentForm, LearnerSupportForm, LearnerEmploymentForm, LearnerStatusHistoryForm
+from .forms import LearnerForm, EnrolmentForm, LearnerSupportForm, LearnerEmploymentForm, LearnerStatusHistoryForm, SupportMaterialFormSet
 from accounts.access import record_editor_required
 from projects.models import Project
 
@@ -93,6 +93,7 @@ def supported_learners_by_school(request, school_id):
         "school": school,
         "project_breakdown": project_breakdown,
         "rows": rows,
+        "material_columns": LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES,
         "projects": Project.objects.filter(active=True).order_by("name"),
         "support_types": LearnerSupport._meta.get_field("support_type").choices,
         "materials": LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES,
@@ -107,7 +108,10 @@ def _school_support_records(request, school):
         qs = qs.filter(Q(learner__reg_no__icontains=filters["q"]) | Q(learner__first_name__icontains=filters["q"]) | Q(learner__last_name__icontains=filters["q"]))
     if filters["project"].isdigit(): qs = qs.filter(project_id=filters["project"])
     if filters["support_type"] in dict(LearnerSupport._meta.get_field("support_type").choices): qs = qs.filter(support_type=filters["support_type"])
-    if filters["scholastic_material"] in dict(LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES): qs = qs.filter(scholastic_material=filters["scholastic_material"])
+    if filters["scholastic_material"] in dict(LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES):
+        material = filters["scholastic_material"]
+        matching_ids = [support.pk for support in qs if any(item.get("material") == material for item in support.material_lines)]
+        qs = qs.filter(pk__in=matching_ids)
     if filters["class_level"]: qs = qs.filter(learner__enrolments__class_level=filters["class_level"], learner__enrolments__is_current=True)
     if parse_date(filters["date_from"]): qs = qs.filter(distribution_date__gte=parse_date(filters["date_from"]))
     if parse_date(filters["date_to"]): qs = qs.filter(distribution_date__lte=parse_date(filters["date_to"]))
@@ -120,9 +124,26 @@ def _distribution_rows(supports, school):
         current_enrolment = support.learner.enrolments.filter(school=school, is_current=True).first()
         if support.learner_id not in grouped:
             grouped[support.learner_id] = {"learner": support.learner, "class_level": current_enrolment.class_level if current_enrolment else support.learner.current_class, "materials": {}}
-        material = support.scholastic_material if support.support_type == "scholastic_materials" else ("sanitary_pads" if support.support_type == "sanitary_pads_mhm" else "")
-        if material:
-            grouped[support.learner_id]["materials"][material] = grouped[support.learner_id]["materials"].get(material, Decimal("0")) + (support.quantity or Decimal("0"))
+        if support.support_type == "scholastic_materials":
+            for item in support.material_lines:
+                material = item.get("material")
+                if material:
+                    quantity = Decimal(str(item.get("quantity") or "0"))
+                    unit = (item.get("unit") or "").strip()
+                    grouped[support.learner_id]["materials"].setdefault(material, {})[unit] = grouped[support.learner_id]["materials"].setdefault(material, {}).get(unit, Decimal("0")) + quantity
+        elif support.support_type == "sanitary_pads_mhm":
+            material_units = grouped[support.learner_id]["materials"].setdefault("sanitary_pads", {})
+            material_units[support.unit] = material_units.get(support.unit, Decimal("0")) + (support.quantity or Decimal("0"))
+    material_columns = list(LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES)
+    for row in grouped.values():
+        row["materials"] = {
+            material: "; ".join(
+                f"{format(quantity.normalize(), 'f')} {unit}".strip()
+                for unit, quantity in units.items()
+            )
+            for material, units in row["materials"].items()
+        }
+        row["material_values"] = [row["materials"].get(value, "") for value, label in material_columns]
     return list(grouped.values())
 
 
@@ -193,11 +214,12 @@ def _styled_distribution_document(Document, school, project, distribution_date, 
             tc_pr.append(shd)
 
     document.add_paragraph().paragraph_format.space_after = Pt(2)
-    table = document.add_table(rows=1, cols=9)
+    material_columns = list(LearnerSupport.SCHOLASTIC_MATERIAL_CHOICES)
+    table = document.add_table(rows=1, cols=4 + len(material_columns))
     table.autofit = False
     table.style = "Table Grid"
-    widths = [0.42, 3.05, 0.62, 0.68, 0.68, 0.68, 0.78, 0.68, 1.35]
-    headers = ["S/N", "Name", "Class", "Soap", "Pads", "Pens", "Pencils", "Books", "Signature"]
+    widths = [0.35, 2.25, 0.5] + [0.62] * len(material_columns) + [1.0]
+    headers = ["S/N", "Name", "Class"] + [label for value, label in material_columns] + ["Signature"]
 
     def shade(cell, fill, color="FFFFFF", bold=True):
         tc_pr = cell._tc.get_or_add_tcPr()
@@ -232,7 +254,7 @@ def _styled_distribution_document(Document, school, project, distribution_date, 
     for index, row_data in enumerate(rows, start=1):
         cells = table.add_row().cells
         materials = row_data["materials"]
-        values = [index, row_data["learner"].full_name, row_data["class_level"] or "", materials.get("soap", ""), materials.get("sanitary_pads", ""), materials.get("pens", ""), materials.get("pencils", ""), materials.get("books", ""), ""]
+        values = [index, row_data["learner"].full_name, row_data["class_level"] or ""] + [materials.get(value, "") for value, label in material_columns] + [""]
         for cell, value, width in zip(cells, values, widths):
             cell.width = Inches(width)
             set_cell(cell, value, centered=(cell is not cells[1]))
@@ -340,14 +362,30 @@ def employment_create(request, pk):
 def support_create(request, pk):
     learner = get_object_or_404(Learner, pk=pk)
     form = LearnerSupportForm(request.POST or None, learner=learner)
-    if request.method == "POST" and form.is_valid():
+    material_forms = SupportMaterialFormSet(request.POST or None, prefix="materials")
+    if request.method == "POST" and form.is_valid() and (form.cleaned_data.get("support_type") != "scholastic_materials" or material_forms.is_valid()):
+        if form.cleaned_data.get("support_type") == "scholastic_materials":
+            materials = [row for row in material_forms.cleaned_data if row and row.get("material")]
+            if not materials:
+                material_forms.non_form_errors = lambda: ["Add at least one scholastic material."]
+                return render(request, "learners/support_form.html", {"form": form, "material_forms": material_forms, "learner": learner})
+        else:
+            materials = []
         support = form.save(commit=False)
         support.learner = learner
         support.recorded_by = request.user
+        support.material_items = [
+            {"material": row["material"], "quantity": str(row["quantity"]), "unit": row["unit"].strip()}
+            for row in materials
+        ]
+        if materials:
+            support.scholastic_material = materials[0]["material"]
+            support.quantity = materials[0]["quantity"]
+            support.unit = materials[0]["unit"].strip()
         support.save()
         messages.success(request, "Learner support recorded successfully.")
         return redirect("learners:detail", pk=learner.pk)
-    return render(request, "learners/support_form.html", {"form": form, "learner": learner})
+    return render(request, "learners/support_form.html", {"form": form, "material_forms": material_forms, "learner": learner})
 
 @login_required
 @record_editor_required
